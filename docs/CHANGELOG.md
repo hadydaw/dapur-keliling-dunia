@@ -9,3 +9,7 @@
 - File: project.godot, export_presets.cfg, .github/workflows/build-apk.yml
 - Penyebab error ekspor: kompresi tekstur ETC2/ASTC belum aktif (wajib untuk ekspor Android renderer Mobile); sebelumnya juga path Java/Android SDK dan build-tools 34 belum diatur
 - Hasil uji: menunggu hasil GitHub Actions
+
+## 2026-11-14 - uji render nyata
+- File: scripts/main.gd (opsi uji `-- --screen=NAMA --area=N --level=N`)
+- Hasil uji: Godot 4.3 dijalankan di Xvfb + lavapipe (Vulkan CPU) dengan Movie Maker; menu, peta dunia, pilih level, level masak, toko, dan buku resep tampil tanpa error skrip. Interaksi sentuh belum diuji.

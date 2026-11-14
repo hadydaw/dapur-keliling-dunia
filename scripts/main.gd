@@ -13,7 +13,17 @@ var current: Control = null
 
 func _ready() -> void:
 	get_tree().set_auto_accept_quit(false)
-	_go("menu", {})
+	# Opsi uji (hanya dipakai saat dijalankan dari terminal): -- --screen=NAMA --area=N --level=N
+	var screen := "menu"
+	var p := {}
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--screen="):
+			screen = a.substr(9)
+		elif a.begins_with("--area="):
+			p["area"] = int(a.substr(7))
+		elif a.begins_with("--level="):
+			p["level"] = int(a.substr(8))
+	_go(screen, p)
 
 
 func _go(screen: String, params: Dictionary) -> void:
