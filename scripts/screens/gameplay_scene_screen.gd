@@ -376,39 +376,13 @@ func _draw_tex_clipped(tex: Texture2D, pos: Vector2, frac: float, s: float) -> v
 	fx.draw_texture_rect_region(tex, dst, src)
 
 
-## Timer lingkaran dengan jam pasir yang pasirnya turun dan berputar di akhir.
-func _draw_timer(center: Vector2, r: float, frac: float) -> void:
-	fx.draw_circle(center, r, Color(0.1, 0.04, 0.02, 0.72))
-	fx.draw_arc(center, r * 0.86, -PI * 0.5, -PI * 0.5 + TAU * clampf(frac, 0.0, 1.0), 48, Color(1, 0.78, 0.2), maxf(3.0, r * 0.16))
-	var hw: float = r * 0.38
-	var hh: float = r * 0.52
-	var cream := Color(1, 0.93, 0.7)
-	var sand := Color(1, 0.72, 0.2)
-	fx.draw_polyline(PackedVector2Array([center + Vector2(-hw, -hh), center + Vector2(hw, -hh), center + Vector2(0, 0),
-		center + Vector2(hw, hh), center + Vector2(-hw, hh), center + Vector2(0, 0), center + Vector2(-hw, -hh)]), cream, maxf(2.0, r * 0.07))
-	var top_k: float = 1.0 - clampf(frac, 0.0, 1.0)
-	if top_k > 0.02:
-		var tw: float = hw * top_k
-		var ty: float = -hh + hh * (1.0 - top_k)
-		fx.draw_colored_polygon(PackedVector2Array([center + Vector2(-tw, ty), center + Vector2(tw, ty),
-			center + Vector2(0, 0)]), sand)
-	var bot_k: float = clampf(frac, 0.0, 1.0)
-	if bot_k > 0.02:
-		var bw: float = hw * bot_k
-		var by: float = hh - hh * bot_k
-		fx.draw_colored_polygon(PackedVector2Array([center + Vector2(0, by), center + Vector2(bw, hh), center + Vector2(-bw, hh)]), sand)
-	if frac < 0.98:
-		fx.draw_line(center + Vector2(0, -hh * 0.05), center + Vector2(0, hh * 0.92), sand, maxf(1.5, r * 0.05))
-
-
 func _draw_dispenser(s: float) -> void:
 	var dd: Dictionary = scene["dispenser"]
 	match jar["state"]:
 		"filling":
 			var f: float = float(jar["t"]) / maxf(float(jar["dur"]), 0.01)
-			# dispenser perlahan terisi (memudar); timer jam pasir berjalan di atasnya
+			# dispenser perlahan terisi (memudar)
 			fx.draw_texture_rect(jar_tex, Rect2(_m(dd["full_pos"]), jar_tex.get_size() * s), false, Color(1, 1, 1, smoothstep(0.0, 1.0, f)))
-			_draw_timer(_m(dd["timer"]), 30.0 * s, f)
 		"full":
 			fx.draw_texture_rect(jar_tex, Rect2(_m(dd["full_pos"]), jar_tex.get_size() * s), false)
 	# gelas: terisi bertahap (cairan naik) saat memasak, penuh saat matang
@@ -419,11 +393,8 @@ func _draw_dispenser(s: float) -> void:
 		if slot["state"] == "cooking":
 			var f: float = float(slot["t"]) / maxf(float(slot["dur"]), 0.01)
 			_draw_tex_clipped(glass_tex[i], gp, f, s)
-			_draw_timer(_m(slot["pos"] + Vector2(0, -52)), 17.0 * s, f)
 		elif slot["state"] == "ready":
 			fx.draw_texture_rect(glass_tex[i], Rect2(_m(gp), glass_tex[i].get_size() * s), false)
-			var a: float = 0.55 + 0.45 * sin(pulse * 6.0)
-			fx.draw_arc(_m(slot["pos"]), 33.0 * s, 0.0, TAU, 40, Color(0.3, 1, 0.4, a), maxf(3.0, 4.0 * s))
 
 
 func _on_fx_draw() -> void:
@@ -539,21 +510,15 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 	match st:
 		"cooking":
 			fx.draw_circle(c, r * 0.68, col.darkened(0.25))
-			var frac: float = float(slot["t"]) / maxf(float(slot["dur"]), 0.01)
-			fx.draw_arc(c, r * 0.88, -PI * 0.5, -PI * 0.5 + TAU * frac, 40, Color(1, 0.7, 0.15), maxf(4.0, r * 0.14))
 			_text(c, letter, int(r * 0.75), Color(1, 1, 1, 0.75))
 		"ready":
 			fx.draw_circle(c, r * 0.72, col)
-			var a: float = 0.55 + 0.45 * sin(pulse * 6.0)
-			fx.draw_arc(c, r * 0.9, 0.0, TAU, 40, Color(0.3, 1, 0.4, a), maxf(4.0, r * 0.16))
 			_text(c, letter, int(r * 0.8), Color.WHITE)
 		"burnt":
 			fx.draw_circle(c, r * 0.72, Color(0.1, 0.08, 0.08))
-			fx.draw_arc(c, r * 0.9, 0.0, TAU, 40, Color(0.85, 0.15, 0.1), maxf(4.0, r * 0.16))
 			_text(c, "X", int(r * 0.8), Color(1, 0.5, 0.4))
 		"full":
 			fx.draw_circle(c, r * 0.62, col)
-			fx.draw_arc(c, r * 0.72, 0.0, TAU, 40, Color(1, 1, 1, 0.9), maxf(3.0, r * 0.1))
 			_text(c, letter, int(r * 0.7), Color.WHITE)
 
 

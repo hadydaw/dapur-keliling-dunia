@@ -192,3 +192,9 @@
 - Isi: avatar = nomor level, strip = nama area + bar target, pil = Waktu/Target/Hasil/Koin, gir = Jeda (tetap "BtnJeda"), Misi/Toko (toast), panel Menu Level berisi hidangan level. Pelanggan digeser kiri (316/611/906/1202) agar tidak tertutup panel menu.
 - Platform yang diuji: render 1280x720 dan 2400x1080 (Linux headless); belum diuji di HP.
 - Hasil tes: 5 suite 0 gagal.
+
+## 2026-11-15 - Hapus sisa cincin timer
+- File: scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
+- Alasan: cincin/jam pasir masih muncul di gelas es teh, dispenser, dan cakram pengganti.
+- Isi: semua busur timer/penanda matang dan fungsi _draw_timer dihapus; matang ditandai bunyi bel.
+- Hasil tes: gameplay_scene_test 0 gagal; render belum diulang.
