@@ -76,3 +76,10 @@
 - File: scripts/screens/world_map_screen.gd, assets/ui/{plate_nama,star_full,star_empty,btn_back,ic_gembok}.png (baru, transparan), scripts/ui/star_icon.gd (dihapus, diganti aset)
 - Perubahan: papan nama, bintang penuh/kosong, tombol panah kembali, dan gembok di tengah pulau terkunci kini dari aset pemilik; teks (nama, bintang X/15, "Butuh N") tetap digambar kode. Area teks papan dua baris: nama dan bintang (negara dihapus karena papan terlalu pendek)
 - Hasil tes: peta 16/16, menu 13/13 lulus; render asli 1280x720 (progres awal) dan 2400x1080 (15 bintang). Belum diuji di HP.
+
+## 2026-11-14 - Pilih Level dengan latar per area
+- File: scripts/screens/level_select_screen.gd (ditulis ulang), scripts/ui/level_medal.gd (baru), assets/level_bg_{indonesia,meksiko,jepang,prancis}.jpg (latar dari pemilik), tests/level_select_test.gd + .tscn
+- Tampilan: latar pemandangan tiap area, papan nama area di atas, bar koin, tombol kembali, 5 medali level berjalur lengkung ringan; tiap level menampilkan 3 bintang dan target; level terkunci memakai medali gembok
+- Interaksi: ketuk level terbuka -> gameplay; level terkunci -> pesan "Selesaikan Level N dulu"; animasi ketuk sama seperti layar lain
+- Sementara: medali level terbuka digambar kode (aset lvl_open.png belum ada; otomatis dipakai bila ditambahkan ke assets/ui/); medali terkunci memakai ic_gembok.png
+- Hasil tes: Pilih Level 16/16, Peta 16/16, Menu 13/13 lulus; render asli 1280x720 (Indonesia) dan 2400x1080 (Prancis). Belum diuji di HP.
