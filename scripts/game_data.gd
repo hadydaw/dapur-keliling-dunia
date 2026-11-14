@@ -41,12 +41,16 @@ const AREAS := [
 # Resep gaya Cooking Madness: bahan (rak bawah) -> alat masak -> wadah saji -> pelanggan.
 # "serve" kosong = disajikan langsung dari alatnya (gelas es teh). "burns": false = tidak gosong.
 const RECIPES := {
-	"es_teh": {"ingredient": "es", "appliance": "dispenser", "serve": "", "burns": false},
+	"es_teh": {"ingredient": "es", "appliance": "dispenser", "serve": "", "burns": false, "refill": true},
 	"nasi_goreng": {"ingredient": "nasi", "appliance": "wok", "serve": "plate"},
 	"sate_ayam": {"ingredient": "tusuk_ayam", "appliance": "grill", "serve": "plate"},
 	"soto_ayam": {"ingredient": "ayam", "appliance": "pot", "serve": "bowl"},
 	"ikan_bakar": {"ingredient": "ikan", "appliance": "grill", "serve": "plate"},
 }
+
+# Dispenser: ketuk es mengisi penuh (JAR_FILL_TIME detik), tiap gelas mengurangi 1 porsi.
+const JAR_CAPACITY := 4
+const JAR_FILL_TIME := 3.0
 
 const APPLIANCE_NAMES := {
 	"dispenser": "Gelas", "grill": "Panggangan", "wok": "Wajan", "pot": "Panci",
@@ -69,6 +73,14 @@ const SCENES := {
 				Vector2(860, 553), Vector2(950, 553), Vector2(1045, 553)]},
 			"wok": {"r": 52.0, "points": [Vector2(1170, 442), Vector2(1305, 445), Vector2(1185, 523), Vector2(1325, 525)]},
 			"pot": {"r": 48.0, "points": [Vector2(1445, 440), Vector2(1555, 438), Vector2(1470, 515), Vector2(1580, 518)]},
+		},
+		"dispenser": {
+			"hot": Rect2(62, 372, 148, 152),      # area ketuk dispenser
+			"timer": Vector2(130, 452),            # pusat timer jam pasir di dispenser
+			"full_image": "res://assets/scene/indo_dispenser_penuh.png",
+			"full_pos": Vector2(34, 360),
+			"glass_images": ["res://assets/scene/indo_gelas_0.png", "res://assets/scene/indo_gelas_1.png", "res://assets/scene/indo_gelas_2.png"],
+			"glass_pos": [Vector2(24, 510), Vector2(79, 510), Vector2(135, 510)],
 		},
 		"ingredients": {
 			"es": {"name": "Es Batu", "rect": Rect2(105, 735, 225, 150)},

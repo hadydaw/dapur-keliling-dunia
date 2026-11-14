@@ -19,6 +19,9 @@ var pause_btn: Control
 var scale_f: float = 1.0
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
+var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
+var jar_tex: Texture2D
+var glass_tex: Array = []
 const FOCUS_Y := 540.0   # titik gambar yang dijaga di tengah layar
 const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan
 
@@ -47,6 +50,11 @@ func _ready() -> void:
 	body_style = _round_box(Color.WHITE, 0, 0)
 	body_style.corner_radius_top_left = 40
 	body_style.corner_radius_top_right = 40
+	if scene.has("dispenser"):
+		var dd: Dictionary = scene["dispenser"]
+		jar_tex = load(dd["full_image"])
+		for gp in dd["glass_images"]:
+			glass_tex.append(load(gp))
 	for spot in scene["customer_spots"]:
 		customer_panels.append({"spot": spot})
 	_build_appliances()
@@ -106,6 +114,8 @@ func _build_hotspots() -> void:
 			var r: float = slots[i]["r"]
 			var c: Vector2 = slots[i]["pos"]
 			_make_hot(Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), _on_slot.bind(aname, i))
+	if scene.has("dispenser"):
+		_make_hot(scene["dispenser"]["hot"], _on_dispenser)
 	for id in scene["ingredients"]:
 		_make_hot(scene["ingredients"][id]["rect"], _on_ingredient.bind(id))
 
@@ -209,6 +219,9 @@ func _on_ingredient(id: String) -> void:
 		_toast("%s belum dipakai di level ini" % scene["ingredients"][id]["name"])
 		return
 	var kind: String = GameData.RECIPES[dish]["appliance"]
+	if GameData.RECIPES[dish].get("refill", false):
+		_refill_jar()
+		return
 	var slot := _free_slot(kind)
 	if slot.is_empty():
 		_toast("%s penuh" % GameData.APPLIANCE_NAMES[kind])
@@ -219,13 +232,49 @@ func _on_ingredient(id: String) -> void:
 	slot["dur"] = float(GameData.DISHES[dish]["cook"]) * GameState.cook_mult()
 
 
+func _refill_jar() -> void:
+	match jar["state"]:
+		"filling":
+			_toast("Dispenser sedang diisi...")
+		"full":
+			_toast("Dispenser masih penuh")
+		_:
+			jar["state"] = "filling"
+			jar["t"] = 0.0
+			jar["dur"] = GameData.JAR_FILL_TIME * GameState.cook_mult()
+
+
+func _on_dispenser() -> void:
+	if not running or paused:
+		return
+	match jar["state"]:
+		"empty":
+			_toast("Dispenser kosong. Ketuk es di rak bawah")
+		"filling":
+			_toast("Dispenser sedang diisi...")
+		"full":
+			var slot := _free_slot("dispenser")
+			if slot.is_empty():
+				_toast("Gelas penuh")
+				return
+			slot["state"] = "cooking"
+			slot["dish"] = "es_teh"
+			slot["t"] = 0.0
+			slot["dur"] = float(GameData.DISHES["es_teh"]["cook"]) * GameState.cook_mult()
+			jar["uses"] = int(jar["uses"]) - 1
+			if int(jar["uses"]) <= 0:
+				jar["state"] = "empty"
+
+
 func _on_slot(kind: String, i: int) -> void:
 	if not running or paused:
 		return
 	var slot: Dictionary = appliances[kind][i]
 	match slot["state"]:
 		"empty":
-			if kind != "plate" and kind != "bowl":
+			if kind == "dispenser":
+				_toast("Ketuk dispenser untuk mengisi gelas")
+			elif kind != "plate" and kind != "bowl":
 				_toast("Ketuk bahan di rak bawah")
 		"cooking":
 			_toast("Masih memasak...")
@@ -258,6 +307,11 @@ func _serve_from(slot: Dictionary) -> void:
 # ---------- loop ----------
 func _update_slots(delta: float) -> void:
 	pulse += delta
+	if jar["state"] == "filling":
+		jar["t"] = float(jar["t"]) + delta
+		if float(jar["t"]) >= float(jar["dur"]):
+			jar["state"] = "full"
+			jar["uses"] = GameData.JAR_CAPACITY
 	for kind in appliances:
 		for slot in appliances[kind]:
 			match slot["state"]:
@@ -289,11 +343,79 @@ func _text(pos: Vector2, txt: String, fs: int, col: Color) -> void:
 	fx.draw_string(font, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 
 
+func _draw_tex_clipped(tex: Texture2D, pos: Vector2, frac: float, s: float) -> void:
+	# Gambar lapisan dari bawah ke atas sebanyak `frac` (cairan naik).
+	var sz: Vector2 = tex.get_size()
+	var h: float = sz.y * clampf(frac, 0.0, 1.0)
+	if h <= 0.5:
+		return
+	var src := Rect2(0, sz.y - h, sz.x, h)
+	var dst := Rect2(_m(pos + Vector2(0, sz.y - h)), Vector2(sz.x, h) * s)
+	fx.draw_texture_rect_region(tex, dst, src)
+
+
+## Timer lingkaran dengan jam pasir yang pasirnya turun dan berputar di akhir.
+func _draw_timer(center: Vector2, r: float, frac: float) -> void:
+	fx.draw_circle(center, r, Color(0.1, 0.04, 0.02, 0.72))
+	fx.draw_arc(center, r * 0.86, -PI * 0.5, -PI * 0.5 + TAU * clampf(frac, 0.0, 1.0), 48, Color(1, 0.78, 0.2), maxf(3.0, r * 0.16))
+	var hw: float = r * 0.38
+	var hh: float = r * 0.52
+	var cream := Color(1, 0.93, 0.7)
+	var sand := Color(1, 0.72, 0.2)
+	fx.draw_polyline(PackedVector2Array([center + Vector2(-hw, -hh), center + Vector2(hw, -hh), center + Vector2(0, 0),
+		center + Vector2(hw, hh), center + Vector2(-hw, hh), center + Vector2(0, 0), center + Vector2(-hw, -hh)]), cream, maxf(2.0, r * 0.07))
+	var top_k: float = 1.0 - clampf(frac, 0.0, 1.0)
+	if top_k > 0.02:
+		var tw: float = hw * top_k
+		var ty: float = -hh + hh * (1.0 - top_k)
+		fx.draw_colored_polygon(PackedVector2Array([center + Vector2(-tw, ty), center + Vector2(tw, ty),
+			center + Vector2(0, 0)]), sand)
+	var bot_k: float = clampf(frac, 0.0, 1.0)
+	if bot_k > 0.02:
+		var bw: float = hw * bot_k
+		var by: float = hh - hh * bot_k
+		fx.draw_colored_polygon(PackedVector2Array([center + Vector2(0, by), center + Vector2(bw, hh), center + Vector2(-bw, hh)]), sand)
+	if frac < 0.98:
+		fx.draw_line(center + Vector2(0, -hh * 0.05), center + Vector2(0, hh * 0.92), sand, maxf(1.5, r * 0.05))
+
+
+func _draw_dispenser(s: float) -> void:
+	var dd: Dictionary = scene["dispenser"]
+	match jar["state"]:
+		"filling":
+			var f: float = float(jar["t"]) / maxf(float(jar["dur"]), 0.01)
+			# dispenser perlahan terisi (memudar); timer jam pasir berjalan di atasnya
+			fx.draw_texture_rect(jar_tex, Rect2(_m(dd["full_pos"]), jar_tex.get_size() * s), false, Color(1, 1, 1, smoothstep(0.0, 1.0, f)))
+			_draw_timer(_m(dd["timer"]), 30.0 * s, f)
+		"full":
+			fx.draw_texture_rect(jar_tex, Rect2(_m(dd["full_pos"]), jar_tex.get_size() * s), false)
+	# gelas: terisi bertahap (cairan naik) saat memasak, penuh saat matang
+	var slots: Array = appliances["dispenser"]
+	for i in slots.size():
+		var slot: Dictionary = slots[i]
+		var gp: Vector2 = dd["glass_pos"][i]
+		if slot["state"] == "cooking":
+			var f: float = float(slot["t"]) / maxf(float(slot["dur"]), 0.01)
+			_draw_tex_clipped(glass_tex[i], gp, f, s)
+			_draw_timer(_m(slot["pos"] + Vector2(0, -52)), 17.0 * s, f)
+		elif slot["state"] == "ready":
+			fx.draw_texture_rect(glass_tex[i], Rect2(_m(gp), glass_tex[i].get_size() * s), false)
+			var a: float = 0.55 + 0.45 * sin(pulse * 6.0)
+			fx.draw_arc(_m(slot["pos"]), 33.0 * s, 0.0, TAU, 40, Color(0.3, 1, 0.4, a), maxf(3.0, 4.0 * s))
+
+
 func _on_fx_draw() -> void:
 	if scale_f <= 0.0:
 		return
 	var s: float = scale_f
+	if scene.has("dispenser"):
+		_draw_dispenser(s)
 	for kind in appliances:
+		if kind == "dispenser" and scene.has("dispenser"):
+			for slot in appliances[kind]:
+				if slot["state"] == "locked":
+					_draw_slot(slot, s)
+			continue
 		for slot in appliances[kind]:
 			_draw_slot(slot, s)
 	for k in customer_panels.size():

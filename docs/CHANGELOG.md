@@ -111,3 +111,10 @@
 - Perubahan: layar baru memakai satu latar dengan area ketuk tak terlihat di atas rak bahan, 3 gelas, 6 panggangan, 4 wajan, 4 panci, 6 piring, 6 mangkuk. Slot aktif 2 + level upgrade "slot" (maks. fisik); sisanya diredupkan. Es teh tidak gosong; masakan lain gosong bila terlambat. Menu ke-5 Ikan Bakar dibuka di level 5. Logika pelanggan, bayar, jeda, bintang dipakai ulang dari layar lama. Layar lama tetap untuk area tanpa latar (Meksiko, Jepang, Prancis) dan untuk tes classic.
 - Sementara: masakan, pelanggan, dan gelembung pesanan digambar dari kode (lingkaran huruf, siluet) sampai aset ikon dan pelanggan asli ada. Bar target dan HUD juga sementara.
 - Diuji: gameplay_scene_test 20 cek (ketukan sungguhan, semua area ketuk >=44px di 1280x720), render 1280x720 dan 2400x1080. Semua tes lain 0 gagal. Belum diuji di HP. Keseimbangan (target level) belum disimulasi ulang untuk mekanik baru.
+
+## 2026-11-14 - Proses es teh: dispenser penuh, gelas terisi, timer jam pasir
+- File: assets/scene/indo_dispenser_penuh.png, indo_gelas_0..2.png (dipotong dari 2 gambar user), scripts/game_data.gd (JAR_CAPACITY, JAR_FILL_TIME, data "dispenser" di SCENES, resep es_teh "refill"), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Alasan: permintaan user: ketuk termos es -> dispenser terisi penuh dengan timer jam pasir (gelas tetap kosong); ketuk dispenser -> gelas pertama terisi dengan timer; gelas matang diketuk untuk disajikan.
+- Perubahan: dispenser punya status kosong/terisi/penuh dengan kapasitas 4 gelas (konstanta di game_data, bisa diubah), lalu perlu isi ulang. Timer lingkaran dengan jam pasir beranimasi di dispenser dan di tiap gelas yang terisi. Es teh tetap tidak gosong.
+- Catatan: keadaan "kosong" masih memakai dispenser latar lama yang ukurannya lebih kecil dari dispenser baru, jadi ada sedikit perubahan ukuran saat terisi; akan rapi bila ada gambar dispenser kosong bergaya baru.
+- Diuji: gameplay_scene_test 30 cek (ketukan sungguhan), render 5 tahap. Semua tes lain 0 gagal. Belum diuji di HP.

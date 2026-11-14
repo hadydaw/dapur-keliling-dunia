@@ -2,6 +2,8 @@ extends Control
 ## Uji layar Main bergaya Cooking Madness (latar penuh + area ketuk).
 ## Jalankan: godot --headless --path . res://tests/gameplay_scene_test.tscn
 
+const GameData = preload("res://scripts/game_data.gd")
+
 var fails := 0
 var main: Node
 
@@ -48,6 +50,12 @@ func _tap_slot(g: Node, kind: String, i: int) -> void:
 	await _frames()
 
 
+func _tap_dispenser(g: Node) -> void:
+	var r: Rect2 = g.scene["dispenser"]["hot"]
+	_tap(g.offset + (r.position + r.size * 0.5) * g.scale_f)
+	await _frames()
+
+
 func _order(g: Node, items: Array) -> void:
 	var served: Array = []
 	for i in items:
@@ -75,17 +83,38 @@ func _ready() -> void:
 			small += 1
 	_check(small == 0, "semua area ketuk minimal 44px (%d terlalu kecil dari %d)" % [small, g.hotspots.size()])
 
-	# --- es teh: es -> gelas -> pelanggan ---
+	# --- es teh: termos es -> dispenser penuh -> ketuk dispenser -> gelas -> pelanggan ---
 	_order(g, ["es_teh"])
+	await _tap_dispenser(g)
+	_check(g.jar["state"] == "empty" and g.appliances["dispenser"][0]["state"] == "empty", "dispenser kosong: ketuk dispenser tidak mengisi gelas")
 	await _tap_ingredient(g, "es")
-	_check(g.appliances["dispenser"][0]["state"] == "cooking", "ketuk cooler: gelas terisi mulai diproses")
+	_check(g.jar["state"] == "filling", "ketuk termos es: dispenser mulai terisi (timer)")
+	_check(g.appliances["dispenser"][0]["state"] == "empty", "gelas tetap kosong saat dispenser diisi")
+	await _tap_dispenser(g)
+	_check(g.appliances["dispenser"][0]["state"] == "empty", "dispenser belum penuh: gelas tidak terisi")
+	g._update_slots(1.5)
+	_check(g.jar["state"] == "filling", "dispenser masih terisi setelah 1,5 detik")
+	g._update_slots(2.0)
+	_check(g.jar["state"] == "full" and g.jar["uses"] == GameData.JAR_CAPACITY, "dispenser penuh setelah waktu isi")
+	await _tap_ingredient(g, "es")
+	_check(g.jar["state"] == "full", "ketuk es saat penuh: tidak mengulang")
+	await _tap_dispenser(g)
+	_check(g.appliances["dispenser"][0]["state"] == "cooking", "ketuk dispenser sekali: gelas pertama terisi (timer)")
+	_check(g.appliances["dispenser"][1]["state"] == "empty", "gelas kedua tetap kosong")
+	_check(g.jar["uses"] == GameData.JAR_CAPACITY - 1, "satu porsi terpakai")
 	g._update_slots(3.5)
-	_check(g.appliances["dispenser"][0]["state"] == "ready", "es teh matang setelah 3 detik")
+	_check(g.appliances["dispenser"][0]["state"] == "ready", "gelas es teh matang setelah 3 detik")
 	g._update_slots(30.0)
 	_check(g.appliances["dispenser"][0]["state"] == "ready", "es teh tidak gosong")
 	await _tap_slot(g, "dispenser", 0)
 	_check(g.earned > 0 and g.customers.is_empty(), "ketuk gelas matang: pelanggan membayar")
 	_check(g.appliances["dispenser"][0]["state"] == "empty", "gelas kosong lagi setelah disajikan")
+	# habis setelah JAR_CAPACITY gelas -> perlu isi ulang
+	g.jar["uses"] = 1
+	await _tap_dispenser(g)
+	_check(g.jar["state"] == "empty", "porsi terakhir diambil: dispenser kosong lagi")
+	g._reset(g.appliances["dispenser"][0])
+	g._reset(g.appliances["dispenser"][1])
 
 	# --- nasi goreng: nasi -> wajan -> piring -> pelanggan ---
 	g.earned = 0
