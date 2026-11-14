@@ -165,6 +165,19 @@ func _ready() -> void:
 	await _tap_ingredient(g, "ikan")
 	_check(g.appliances["grill"][0]["state"] == "cooking" and g.appliances["grill"][0]["dish"] == "ikan_bakar", "ikan masuk panggangan")
 
+	# --- ekspresi pelanggan mengikuti kesabaran ---
+	g.customers.clear()
+	_order(g, ["es_teh"])
+	var cu: Dictionary = g.customers[0]
+	cu["patience"] = 38.0
+	_check(g._customer_mood(cu) == "senang", "kesabaran tinggi: pelanggan senang")
+	cu["patience"] = 20.0
+	_check(g._customer_mood(cu) == "biasa", "kesabaran sedang: ekspresi biasa")
+	cu["patience"] = 5.0
+	_check(g._customer_mood(cu) == "marah", "kesabaran rendah: pelanggan marah")
+	_check(g.customer_tex.size() == 3 and g.customer_tex["marah"] != null, "tiga gambar ekspresi termuat")
+	g.customers.clear()
+
 	# --- tombol Jeda ---
 	var jeda: Control = g.find_child("BtnJeda", true, false)
 	_tap(jeda.get_global_rect().get_center())

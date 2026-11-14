@@ -22,6 +22,7 @@ var pulse: float = 0.0
 var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
 var glass_tex: Array = []
+var customer_tex: Dictionary = {}
 const FOCUS_Y := 540.0   # titik gambar yang dijaga di tengah layar
 const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan
 
@@ -55,6 +56,9 @@ func _ready() -> void:
 		jar_tex = load(dd["full_image"])
 		for gp in dd["glass_images"]:
 			glass_tex.append(load(gp))
+	if scene.has("customer_art"):
+		for mood in ["senang", "biasa", "marah"]:
+			customer_tex[mood] = load(scene["customer_art"][mood])
 	for spot in scene["customer_spots"]:
 		customer_panels.append({"spot": spot})
 	_build_appliances()
@@ -133,7 +137,7 @@ func _build_hud() -> void:
 	var row := UI.hbox(10)
 	v.add_child(row)
 	goal_bar = ProgressBar.new()
-	goal_bar.custom_minimum_size = Vector2(180, 18)
+	goal_bar.custom_minimum_size = Vector2(140, 18)
 	goal_bar.max_value = float(params["target"])
 	goal_bar.show_percentage = false
 	goal_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -186,7 +190,7 @@ func _layout() -> void:
 	coins_label.add_theme_font_size_override("font_size", int(22.0 * u))
 	time_label.add_theme_font_size_override("font_size", int(32.0 * u))
 	time_label.custom_minimum_size = Vector2(96.0 * u, 0)
-	goal_bar.custom_minimum_size = Vector2(180.0 * u, 18.0 * u)
+	goal_bar.custom_minimum_size = Vector2(140.0 * u, 18.0 * u)
 	hud_panel.reset_size()
 	time_panel.reset_size()
 	time_panel.position = Vector2(size.x - time_panel.size.x - 14.0 * u, 12.0 * u)
@@ -456,22 +460,38 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 			_text(c, letter, int(r * 0.7), Color.WHITE)
 
 
+func _customer_mood(cust: Dictionary) -> String:
+	var ratio: float = float(cust["patience"]) / float(cust["max"])
+	if ratio > GameData.MOOD_HAPPY_ABOVE:
+		return "senang"
+	if ratio < GameData.MOOD_ANGRY_BELOW:
+		return "marah"
+	return "biasa"
+
+
 func _draw_customer(cust: Dictionary, spot: Vector2, s: float) -> void:
-	var col := Color.from_hsv(float(hash(cust["name"]) % 100) / 100.0, 0.45, 0.9)
-	var head: Vector2 = _m(spot + Vector2(0, -30))
-	body_style.bg_color = col.darkened(0.2)
-	fx.draw_style_box(body_style, Rect2(_m(spot + Vector2(-44, -2)), Vector2(88, 52) * s))
-	fx.draw_circle(head, 30.0 * s, col)
-	_text(_m(spot + Vector2(0, 22)), cust["name"], int(17.0 * s), Color.WHITE)
-	# bar kesabaran
 	var ratio: float = clampf(float(cust["patience"]) / float(cust["max"]), 0.0, 1.0)
-	var bp: Vector2 = _m(spot + Vector2(-40, -80))
+	var top_y: float = spot.y - 40.0
+	if customer_tex.is_empty():
+		var col := Color.from_hsv(float(hash(cust["name"]) % 100) / 100.0, 0.45, 0.9)
+		body_style.bg_color = col.darkened(0.2)
+		fx.draw_style_box(body_style, Rect2(_m(spot + Vector2(-44, -2)), Vector2(88, 52) * s))
+		fx.draw_circle(_m(spot + Vector2(0, -30)), 30.0 * s, col)
+		top_y = spot.y - 70.0
+	else:
+		var tex: Texture2D = customer_tex[_customer_mood(cust)]
+		var h: float = float(scene["customer_art"]["height"])
+		var w: float = tex.get_size().x * h / tex.get_size().y
+		top_y = spot.y - h
+		fx.draw_texture_rect(tex, Rect2(_m(Vector2(spot.x - w * 0.5, top_y)), Vector2(w, h) * s), false)
+	# bar kesabaran di atas kepala
+	var bp: Vector2 = _m(Vector2(spot.x - 40, top_y - 10))
 	fx.draw_rect(Rect2(bp, Vector2(80, 10) * s), Color(0, 0, 0, 0.6))
 	fx.draw_rect(Rect2(bp, Vector2(80.0 * ratio, 10) * s), Color(1.0 - 0.6 * ratio, 0.4 + 0.6 * ratio, 0.3))
-	# gelembung pesanan
+	# gelembung pesanan di atas bar
 	var n: int = cust["items"].size()
 	var bh: float = n * 34.0 + 12.0
-	var btop: Vector2 = spot + Vector2(36, -34.0 - bh)  # di samping kanan pelanggan
+	var btop: Vector2 = Vector2(spot.x - 88, top_y - 16.0 - bh)
 	fx.draw_style_box(bubble_style, Rect2(_m(btop), Vector2(176, bh) * s))
 	for k in n:
 		var id: String = cust["items"][k]

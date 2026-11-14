@@ -38,6 +38,10 @@ const AREAS := [
 ]
 
 
+# Ekspresi pelanggan menurut sisa kesabaran (0..1).
+const MOOD_HAPPY_ABOVE := 0.55
+const MOOD_ANGRY_BELOW := 0.25
+
 # Resep gaya Cooking Madness: bahan (rak bawah) -> alat masak -> wadah saji -> pelanggan.
 # "serve" kosong = disajikan langsung dari alatnya (gelas es teh). "burns": false = tidak gosong.
 const RECIPES := {
@@ -62,7 +66,14 @@ const SCENES := {
 	"indonesia": {
 		"image": "res://assets/scene_indonesia.jpg",
 		"size": Vector2(1672, 941),
-		"customer_spots": [Vector2(420, 330), Vector2(660, 330), Vector2(900, 330), Vector2(1140, 330)],
+		# Pelanggan berdiri di celah antar alat masak (kaki = garis konter), kepala + bahu terlihat.
+		"customer_spots": [Vector2(505, 402), Vector2(800, 402), Vector2(1190, 402), Vector2(1480, 402)],
+		"customer_art": {
+			"senang": "res://assets/customers/pria_batik_senang.png",
+			"biasa": "res://assets/customers/pria_batik_biasa.png",
+			"marah": "res://assets/customers/pria_batik_marah.png",
+			"height": 118.0,      # tinggi gambar di latar (piksel gambar latar)
+		},
 		"appliances": {
 			"dispenser": {"r": 30.0, "points": [Vector2(66, 556), Vector2(120, 556), Vector2(176, 556)]},
 			"grill": {"r": 36.0, "points": [Vector2(283, 472), Vector2(370, 472), Vector2(452, 472),

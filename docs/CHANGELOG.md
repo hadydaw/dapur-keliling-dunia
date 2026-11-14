@@ -118,3 +118,8 @@
 - Perubahan: dispenser punya status kosong/terisi/penuh dengan kapasitas 4 gelas (konstanta di game_data, bisa diubah), lalu perlu isi ulang. Timer lingkaran dengan jam pasir beranimasi di dispenser dan di tiap gelas yang terisi. Es teh tetap tidak gosong.
 - Catatan: keadaan "kosong" masih memakai dispenser latar lama yang ukurannya lebih kecil dari dispenser baru, jadi ada sedikit perubahan ukuran saat terisi; akan rapi bila ada gambar dispenser kosong bergaya baru.
 - Diuji: gameplay_scene_test 30 cek (ketukan sungguhan), render 5 tahap. Semua tes lain 0 gagal. Belum diuji di HP.
+
+## 2026-11-14 - Pelanggan bergambar (3 ekspresi)
+- File: assets/customers/pria_batik_{senang,biasa,marah}.png (dipotong dari gambar user), scripts/game_data.gd (customer_art, posisi customer_spots, MOOD_*), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: siluet sementara diganti pelanggan bergambar (kepala + bahu, berdiri di celah antar alat masak). Ekspresi mengikuti sisa kesabaran: senang di atas 55%, biasa 25-55%, marah di bawah 25% (konstanta di game_data). Bar kesabaran dan gelembung pesanan di atas kepala; posisi diatur agar tidak menabrak HUD di layar 16:9 maupun 20:9. Sementara semua pelanggan memakai orang yang sama.
+- Diuji: 4 cek baru (ekspresi per kesabaran, tekstur termuat), render 1280x720 dan 2400x1080. Semua tes lain 0 gagal. Belum diuji di HP.
