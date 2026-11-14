@@ -47,13 +47,23 @@ jobs:
           godot --headless --verbose --import || true
 
       - name: Export APK
+        shell: bash
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /tmp/debug.keystore
           GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -v -p build/android
-          godot --headless --verbose --export-debug "Android" build/android/dapur-keliling-dunia.apk
+          set +e
+          godot --headless --verbose --export-debug "Android" build/android/dapur-keliling-dunia.apk 2>&1 | tee export.log
+          code=${PIPESTATUS[0]}
+          if [ ! -f build/android/dapur-keliling-dunia.apk ]; then
+            echo "===== DETAIL ERROR ====="
+            grep -n -B2 -A8 "configuration errors" export.log | cat -v
+            echo "===== ISI SDK ====="
+            ls -la "${ANDROID_HOME:-/usr/lib/android-sdk}" "${ANDROID_HOME:-/usr/lib/android-sdk}/build-tools" "${ANDROID_HOME:-/usr/lib/android-sdk}/platforms" 2>&1 || true
+            exit 1
+          fi
 
       - name: Unggah APK
         uses: actions/upload-artifact@v4
