@@ -531,7 +531,7 @@ func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
 	var bx: float = spot.x + 92.0
 	if bx + bw > img_w - 2.0:
 		bx = spot.x - 92.0 - bw
-	var btop: Vector2 = Vector2(bx, top_y - 6.0)
+	var btop: Vector2 = Vector2(bx, spot.y - 184.0)  # di bawah panel waktu
 	fx.draw_style_box(bubble_style, Rect2(_m(btop), Vector2(bw, bh) * s))
 	# bar kesabaran vertikal di kanan ikon (terisi dari bawah)
 	var bar_x: float = btop.x + bw - 22.0

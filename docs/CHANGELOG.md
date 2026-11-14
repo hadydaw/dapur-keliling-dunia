@@ -136,3 +136,8 @@
 - Alasan: gambar pelanggan terpotong di dada; kini kaki disembunyikan konter yang digambar menimpa pelanggan
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Pelanggan ditinggikan (tidak tampak tenggelam)
+- File: scripts/game_data.gd (spot y 426, tinggi 215, mask kiri), scripts/screens/gameplay_scene_screen.gd (gelembung di bawah panel waktu)
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)
