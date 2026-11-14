@@ -67,12 +67,12 @@ const SCENES := {
 		"image": "res://assets/scene_indonesia.jpg",
 		"size": Vector2(1672, 941),
 		# Pelanggan berdiri di celah antar alat masak (kaki = garis konter), kepala + bahu terlihat.
-		"customer_spots": [Vector2(505, 402), Vector2(800, 402), Vector2(1190, 402), Vector2(1480, 402)],
+		"customer_spots": [Vector2(505, 402), Vector2(800, 402), Vector2(1190, 402), Vector2(1466, 402)],
 		"customer_art": {
 			"senang": "res://assets/customers/pria_batik_senang.png",
 			"biasa": "res://assets/customers/pria_batik_biasa.png",
 			"marah": "res://assets/customers/pria_batik_marah.png",
-			"height": 118.0,      # tinggi gambar di latar (piksel gambar latar)
+			"height": 168.0,      # tinggi gambar di latar (piksel gambar latar)
 		},
 		"appliances": {
 			"dispenser": {"r": 30.0, "points": [Vector2(66, 556), Vector2(120, 556), Vector2(176, 556)]},

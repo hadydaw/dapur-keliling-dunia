@@ -484,21 +484,39 @@ func _draw_customer(cust: Dictionary, spot: Vector2, s: float) -> void:
 		var w: float = tex.get_size().x * h / tex.get_size().y
 		top_y = spot.y - h
 		fx.draw_texture_rect(tex, Rect2(_m(Vector2(spot.x - w * 0.5, top_y)), Vector2(w, h) * s), false)
-	# bar kesabaran di atas kepala
-	var bp: Vector2 = _m(Vector2(spot.x - 40, top_y - 10))
-	fx.draw_rect(Rect2(bp, Vector2(80, 10) * s), Color(0, 0, 0, 0.6))
-	fx.draw_rect(Rect2(bp, Vector2(80.0 * ratio, 10) * s), Color(1.0 - 0.6 * ratio, 0.4 + 0.6 * ratio, 0.3))
-	# gelembung pesanan di atas bar
+	# gelembung pesanan vertikal di sebelah kanan pelanggan, hanya gambar menu (tanpa teks);
+	# pindah ke kiri bila mepet tepi layar. Bila DISHES[id] punya "icon", gambar itu yang dipakai.
 	var n: int = cust["items"].size()
-	var bh: float = n * 34.0 + 12.0
-	var btop: Vector2 = Vector2(spot.x - 88, top_y - 16.0 - bh)
-	fx.draw_style_box(bubble_style, Rect2(_m(btop), Vector2(176, bh) * s))
+	var bw: float = 94.0
+	var row_h: float = 60.0
+	var bh: float = n * row_h + 10.0
+	var img_w: float = scene["size"].x
+	var bx: float = spot.x + 92.0
+	if bx + bw > img_w - 2.0:
+		bx = spot.x - 92.0 - bw
+	var btop: Vector2 = Vector2(bx, top_y - 6.0)
+	fx.draw_style_box(bubble_style, Rect2(_m(btop), Vector2(bw, bh) * s))
+	# bar kesabaran vertikal di kanan ikon (terisi dari bawah)
+	var bar_x: float = btop.x + bw - 22.0
+	var bar_top: float = btop.y + 8.0
+	var bar_h: float = bh - 16.0
+	fx.draw_rect(Rect2(_m(Vector2(bar_x, bar_top)), Vector2(12.0, bar_h) * s), Color(0, 0, 0, 0.55))
+	fx.draw_rect(Rect2(_m(Vector2(bar_x, bar_top + bar_h * (1.0 - ratio))), Vector2(12.0, bar_h * ratio) * s),
+		Color(1.0 - 0.6 * ratio, 0.4 + 0.6 * ratio, 0.3))
 	for k in n:
 		var id: String = cust["items"][k]
 		var done: bool = cust["served"][k]
-		var rc: Vector2 = _m(btop + Vector2(22, 6.0 + 17.0 + k * 34.0))
-		fx.draw_circle(rc, 13.0 * s, Color.html(GameData.DISHES[id]["color"]))
-		var nm: String = GameData.DISHES[id]["name"]
-		var tcol: Color = Color(0.3, 0.55, 0.3) if done else Color(0.25, 0.1, 0.05)
-		fx.draw_string(font, _m(btop + Vector2(42, 6.0 + 17.0 + k * 34.0)) + Vector2(0, 7.0 * s), ("OK " if done else "") + nm,
-			HORIZONTAL_ALIGNMENT_LEFT, int(128.0 * s), int(15.0 * s), tcol)
+		var c: Vector2 = Vector2(btop.x + 36.0, btop.y + 5.0 + row_h * 0.5 + k * row_h)
+		var d: Dictionary = GameData.DISHES[id]
+		if d.has("icon"):
+			var tex: Texture2D = load(d["icon"])
+			fx.draw_texture_rect(tex, Rect2(_m(c - Vector2(26, 26)), Vector2(52, 52) * s), false, Color(1, 1, 1, 0.45 if done else 1.0))
+		else:
+			var dc := Color.html(d["color"])
+			fx.draw_circle(_m(c), 25.0 * s, dc.darkened(0.15))
+			fx.draw_arc(_m(c), 25.0 * s, 0.0, TAU, 32, Color(1, 1, 1, 0.8), maxf(2.0, 2.5 * s))
+			_text(_m(c), String(d["name"]).substr(0, 1), int(26.0 * s), Color.WHITE)
+		if done:
+			fx.draw_arc(_m(c), 27.0 * s, 0.0, TAU, 32, Color(0.2, 0.75, 0.3), maxf(3.0, 4.0 * s))
+			fx.draw_polyline(PackedVector2Array([_m(c + Vector2(-12, 0)), _m(c + Vector2(-3, 10)), _m(c + Vector2(14, -10))]),
+				Color(0.2, 0.9, 0.35), maxf(3.0, 5.0 * s))

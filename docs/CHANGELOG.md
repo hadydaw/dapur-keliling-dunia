@@ -123,3 +123,10 @@
 - File: assets/customers/pria_batik_{senang,biasa,marah}.png (dipotong dari gambar user), scripts/game_data.gd (customer_art, posisi customer_spots, MOOD_*), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: siluet sementara diganti pelanggan bergambar (kepala + bahu, berdiri di celah antar alat masak). Ekspresi mengikuti sisa kesabaran: senang di atas 55%, biasa 25-55%, marah di bawah 25% (konstanta di game_data). Bar kesabaran dan gelembung pesanan di atas kepala; posisi diatur agar tidak menabrak HUD di layar 16:9 maupun 20:9. Sementara semua pelanggan memakai orang yang sama.
 - Diuji: 4 cek baru (ekspresi per kesabaran, tekstur termuat), render 1280x720 dan 2400x1080. Semua tes lain 0 gagal. Belum diuji di HP.
+
+## 2026-11-14 - Pelanggan lebih besar, gelembung pesanan vertikal berisi ikon + bar kesabaran
+- File: scripts/screens/gameplay_scene_screen.gd, scripts/game_data.gd (tinggi pelanggan 168, spot kanan 1466)
+- Alasan: pelanggan terlalu kecil; gelembung dibuat vertikal di kanan pelanggan, tanpa teks; bar kesabaran pindah ke dalam gelembung (vertikal, kanan ikon)
+- Dampak: layar gameplay berbasis scene (area Indonesia)
+- Platform yang diuji: render 1280x720 dan 2400x1080 (20:9); belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)
