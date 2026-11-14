@@ -22,9 +22,11 @@ jobs:
           cp -r /root/.local/share/godot/export_templates/. ~/.local/share/godot/export_templates/
           ls -la ~/.local/share/godot/export_templates/
 
-      - name: Buat debug keystore
+      - name: Pakai debug keystore tetap
         run: |
-          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore /tmp/debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+          # Kunci TETAP (keystore/debug.keystore di repo) supaya APK baru bisa menimpa versi lama di HP.
+          # Hanya untuk build debug; jangan dipakai untuk rilis Play Store.
+          cp keystore/debug.keystore /tmp/debug.keystore
 
       - name: Pasang Android build-tools 34 dan platform 34
         shell: bash

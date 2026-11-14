@@ -5,3 +5,4 @@ build/
 *.keystore
 export_credentials.cfg
 android/
+!keystore/debug.keystore

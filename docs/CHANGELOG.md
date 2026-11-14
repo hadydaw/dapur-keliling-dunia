@@ -44,3 +44,10 @@
 - File: scripts/screens/menu_screen.gd, tests/menu_test.gd
 - Perilaku: tombol mengecil ke 92% saat ditekan, membal ke 106% lalu kembali 100% saat dilepas (+ sedikit gelap saat ditekan)
 - Hasil tes: tes headless 13/13 lulus (termasuk uji skala saat ditekan dan kembali normal). Belum diuji di HP.
+
+## 2026-11-14 - Kunci tanda tangan APK tetap
+- File: keystore/debug.keystore (baru), .github/workflows/build-apk.yml, .gitignore
+- Masalah: tiap build membuat keystore baru, jadi APK baru "bentrok dengan paket yang sudah ada" dan tidak bisa menimpa versi lama di HP
+- Perbaikan: keystore debug tetap disimpan di repo dan dipakai tiap build. Hanya untuk debug, bukan rilis Play Store
+- Dampak: versi yang sudah terpasang (kunci lama) harus dihapus SEKALI; setelah itu update langsung menimpa
+- Hasil tes: lihat verifikasi tanda tangan APK hasil build di laporan
