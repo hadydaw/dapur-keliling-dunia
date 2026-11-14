@@ -1,6 +1,7 @@
 extends Control
 
 const UI = preload("res://scripts/ui_kit.gd")
+const AnimatedBg = preload("res://scripts/ui/animated_bg.gd")
 
 signal navigate(screen: String, params: Dictionary)
 
@@ -14,15 +15,16 @@ func setup(_p: Dictionary) -> void:
 
 func _ready() -> void:
 	UI.fill(self)
-	UI.background(self, Color(0.13, 0.09, 0.16))
+	add_child(AnimatedBg.new())
 	var mc := UI.margin_root(self, 24)
 	var center := CenterContainer.new()
 	mc.add_child(center)
+	var card := UI.panel(Color(0.1, 0.04, 0.14, 0.55), 28)
+	center.add_child(card)
 	var v := UI.vbox(16)
-	center.add_child(v)
+	card.add_child(v)
 	v.add_child(UI.label("DAPUR KELILING DUNIA", 64, Color(1, 0.82, 0.4), HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(UI.label("Masak, layani, dan jelajahi dunia", 28, Color(1, 1, 1, 0.8), HORIZONTAL_ALIGNMENT_CENTER))
-	v.add_child(UI.spacer())
 	var play := UI.button("Main", Vector2(380, 76), Color(0.15, 0.65, 0.3), 34)
 	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	play.pressed.connect(func(): navigate.emit("world_map", {}))
