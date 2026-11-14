@@ -71,3 +71,8 @@
 - Interaksi: ketuk pulau -> pilih level; ketuk pulau terkunci -> pesan "Kumpulkan N bintang lagi"; animasi ketuk sama seperti menu
 - Sementara kode: papan nama, ikon bintang, tombol kembali digambar kode (aset prompt peta belum dikirim); bisa diganti aset
 - Hasil tes: peta 16/16 lulus, menu 13/13 lulus; render asli 1280x720 dan 2400x1080. Belum diuji di HP.
+
+## 2026-11-14 - Peta Dunia memakai aset gambar (papan nama, bintang, gembok, panah)
+- File: scripts/screens/world_map_screen.gd, assets/ui/{plate_nama,star_full,star_empty,btn_back,ic_gembok}.png (baru, transparan), scripts/ui/star_icon.gd (dihapus, diganti aset)
+- Perubahan: papan nama, bintang penuh/kosong, tombol panah kembali, dan gembok di tengah pulau terkunci kini dari aset pemilik; teks (nama, bintang X/15, "Butuh N") tetap digambar kode. Area teks papan dua baris: nama dan bintang (negara dihapus karena papan terlalu pendek)
+- Hasil tes: peta 16/16, menu 13/13 lulus; render asli 1280x720 (progres awal) dan 2400x1080 (15 bintang). Belum diuji di HP.

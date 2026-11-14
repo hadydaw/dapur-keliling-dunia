@@ -4,7 +4,6 @@ extends Control
 
 const UI = preload("res://scripts/ui_kit.gd")
 const GameData = preload("res://scripts/game_data.gd")
-const StarIcon = preload("res://scripts/ui/star_icon.gd")
 const BG := preload("res://assets/world_map_bg.jpg")
 const ASSET_DIR := "res://assets/ui/"
 
@@ -14,10 +13,13 @@ signal navigate(screen: String, params: Dictionary)
 const ISLAND_X := [0.14, 0.385, 0.625, 0.865]
 const COLUMN_W := 0.215
 const COLUMN_Y := [0.06, 0.90]
-const PLATE_Y := 0.625
-const PLATE_W := 0.195
+const PLATE_Y := 0.615
+const PLATE_W := 0.23
 # Porsi kelebihan tinggi yang dipotong dari ATAS saat layar lebih lebar dari 16:9
 const CROP_TOP := 0.25
+# Area teks di dalam papan nama (pecahan lebar/tinggi papan)
+const NAME_RECT := Rect2(0.13, 0.20, 0.74, 0.30)
+const STAR_RECT := Rect2(0.28, 0.50, 0.44, 0.28)
 
 var bg_rect: TextureRect
 var plates: Array = []
@@ -29,6 +31,7 @@ var star_label: Label
 var toast_label: Label
 var toast_time: float = 0.0
 var glow_tex: GradientTexture2D
+var locks: Array = []
 
 
 func setup(_p: Dictionary) -> void:
@@ -82,43 +85,30 @@ func _build_area(i: int) -> void:
 	add_child(shade)
 	shades.append(shade)
 
-	# papan nama (kayu + tepi emas), isi: nama, tempat, bintang
-	var plate := PanelContainer.new()
-	var sb := UI.style(Color(0.23, 0.09, 0.063, 0.94) if unlocked else Color(0.16, 0.14, 0.14, 0.94), 18, Color(0.95, 0.72, 0.2) if unlocked else Color(0.5, 0.45, 0.4), 4)
-	sb.content_margin_top = 6
-	sb.content_margin_bottom = 6
-	plate.add_theme_stylebox_override("panel", sb)
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	plate.add_child(v)
-	var name_l := UI.label(a["name"] if unlocked else "Terkunci", 26, Color(1, 0.93, 0.7), HORIZONTAL_ALIGNMENT_CENTER)
+	# papan nama (aset) + nama + bintang
+	var plate := _asset("plate_nama")
+	plate.modulate = Color.WHITE if unlocked else Color(0.6, 0.6, 0.62)
+	var name_l := UI.label(a["name"] if unlocked else "Terkunci", 24, Color(1, 0.93, 0.7), HORIZONTAL_ALIGNMENT_CENTER)
 	name_l.name = "Nama"
-	var place_l := UI.label(a["place"] if unlocked else "Butuh %d bintang" % int(a["stars_needed"]), 20, Color(1, 1, 1, 0.8), HORIZONTAL_ALIGNMENT_CENTER)
-	place_l.name = "Tempat"
-	for l in [name_l, place_l]:
+	var count_text: String = "%d / %d" % [GameState.area_stars(i), GameData.LEVELS_PER_AREA * 3] if unlocked else "Butuh %d" % int(a["stars_needed"])
+	var count_l := UI.label(count_text, 22, Color(1, 0.88, 0.4) if unlocked else Color(0.85, 0.85, 0.85), HORIZONTAL_ALIGNMENT_LEFT)
+	for l in [name_l, count_l]:
 		l.add_theme_color_override("font_outline_color", Color(0.12, 0.04, 0.02))
 		l.add_theme_constant_override("outline_size", 5)
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(l)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 6)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var star := StarIcon.new()
-	star.custom_minimum_size = Vector2(28, 28)
-	star.filled = unlocked
+		l.clip_text = true
+		plate.add_child(l)
+	var star := TextureRect.new()
+	star.texture = load(ASSET_DIR + ("star_full.png" if unlocked else "star_empty.png"))
+	star.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	star.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	star.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(star)
-	var star_l := UI.label("%d / %d" % [GameState.area_stars(i), GameData.LEVELS_PER_AREA * 3] if unlocked else "-", 24, Color(1, 0.88, 0.4) if unlocked else Color(0.7, 0.7, 0.7))
-	star_l.add_theme_color_override("font_outline_color", Color(0.12, 0.04, 0.02))
-	star_l.add_theme_constant_override("outline_size", 5)
-	star_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(star_l)
-	v.add_child(row)
-	add_child(plate)
-	plates.append(plate)
+	plate.add_child(star)
+	plates.append({"root": plate, "name": name_l, "count": count_l, "star": star})
+	# gembok di tengah pulau terkunci
+	var lock := _asset("ic_gembok")
+	lock.visible = not unlocked
+	locks.append(lock)
 
 	# kolom ketuk: seluruh pulau + papan namanya
 	var b := TextureButton.new()
@@ -139,11 +129,7 @@ func _build_top() -> void:
 	star_label = _num()
 	# tombol kanan atas: Resep, Toko, Menu
 	for it in [["ic_resep", "recipes", 150], ["ic_toko", "shop", 82], ["btn_back", "menu", 14]]:
-		var tr: TextureRect
-		if it[0] == "btn_back":
-			tr = _back_icon()
-		else:
-			tr = _asset(it[0])
+		var tr: TextureRect = _asset(it[0])
 		var b := TextureButton.new()
 		b.ignore_texture_size = true
 		b.focus_mode = Control.FOCUS_NONE
@@ -160,32 +146,6 @@ func _asset(name: String) -> TextureRect:
 	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tr.stretch_mode = TextureRect.STRETCH_SCALE
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(tr)
-	return tr
-
-
-## Tombol kembali: lingkaran kayu bertepi emas dengan panah krem (digambar kode).
-func _back_icon() -> TextureRect:
-	var tr := TextureRect.new()
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var img := Image.create(128, 128, false, Image.FORMAT_RGBA8)
-	var c := Vector2(63.5, 63.5)
-	for y in 128:
-		for x in 128:
-			var d: float = Vector2(x, y).distance_to(c)
-			if d <= 62.0:
-				var col := Color(0.95, 0.72, 0.2) if d > 54.0 else Color(0.23, 0.09, 0.063)
-				img.set_pixel(x, y, col)
-	var cream := Color(1.0, 0.92, 0.7)
-	for y in range(36, 93):
-		for x in range(30, 98):
-			var yy: float = absf(y - 63.5)
-			var in_head: bool = x >= 30 and x <= 62 and yy <= (x - 30) * 0.85
-			var in_tail: bool = x > 56 and x <= 94 and yy <= 9.0
-			if in_head or in_tail:
-				img.set_pixel(x, y, cream)
-	tr.texture = ImageTexture.create_from_image(img)
 	add_child(tr)
 	return tr
 
@@ -226,13 +186,30 @@ func _layout() -> void:
 		columns[i].position = col_tl
 		columns[i].size = col_br - col_tl
 		var pw: float = PLATE_W * r.size.x
-		var plate: PanelContainer = plates[i]
-		plate.size = Vector2(pw, 0)
-		plate.reset_size()
-		plate.size.x = pw
+		var plate: TextureRect = plates[i]["root"]
+		var ph: float = pw * plate.texture.get_height() / plate.texture.get_width()
 		var pc := _to_screen(Vector2(cx, PLATE_Y))
 		plate.position = Vector2(pc.x - pw * 0.5, pc.y)
+		plate.size = Vector2(pw, ph)
 		plate.pivot_offset = plate.size * 0.5
+		var nl: Label = plates[i]["name"]
+		nl.position = NAME_RECT.position * plate.size
+		nl.size = NAME_RECT.size * plate.size
+		nl.add_theme_font_size_override("font_size", int(ph * 0.21))
+		var st: TextureRect = plates[i]["star"]
+		var srect := Rect2(STAR_RECT.position * plate.size, STAR_RECT.size * plate.size)
+		var star_w: float = srect.size.y
+		st.position = srect.position
+		st.size = Vector2(star_w, star_w)
+		var cl: Label = plates[i]["count"]
+		cl.position = Vector2(srect.position.x + star_w + 6.0, srect.position.y)
+		cl.size = Vector2(srect.size.x - star_w - 6.0, srect.size.y)
+		cl.add_theme_font_size_override("font_size", int(ph * 0.2))
+		var lk: TextureRect = locks[i]
+		var lw: float = 0.075 * r.size.x
+		var lc := _to_screen(Vector2(cx, 0.36))
+		lk.position = lc - Vector2(lw, lw) * 0.5
+		lk.size = Vector2(lw, lw * lk.texture.get_height() / lk.texture.get_width())
 		var sh: TextureRect = shades[i]
 		var ic := _to_screen(Vector2(cx, 0.36))
 		var rad: float = 0.2 * r.size.x
