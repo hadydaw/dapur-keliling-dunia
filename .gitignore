@@ -1,0 +1,7 @@
+.godot/
+.import/
+*.translation
+build/
+*.keystore
+export_credentials.cfg
+android/
