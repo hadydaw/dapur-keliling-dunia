@@ -26,6 +26,21 @@ jobs:
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore /tmp/debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
 
+      - name: Atur path Java dan Android SDK untuk Godot
+        run: |
+          JAVA_DIR="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(which javac || which java)")")")}"
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/lib/android-sdk}}"
+          echo "JAVA_DIR=$JAVA_DIR"
+          echo "SDK_DIR=$SDK_DIR"
+          ls "$SDK_DIR" || true
+          ls "$SDK_DIR/build-tools" || true
+          for d in "$HOME/.config/godot" /root/.config/godot; do
+            mkdir -p "$d"
+            for f in editor_settings-4.3.tres editor_settings-4.tres; do
+              printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/java_sdk_path = "%s"\nexport/android/android_sdk_path = "%s"\n' "$JAVA_DIR" "$SDK_DIR" > "$d/$f"
+            done
+          done
+
       - name: Import proyek
         run: |
           # Import pertama membangun cache; exit code boleh non-nol, ekspor di bawah yang menentukan.
