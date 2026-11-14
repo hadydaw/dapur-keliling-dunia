@@ -29,15 +29,19 @@ static func label(text: String, size: int = 26, color: Color = Color.WHITE, alig
 ## lalu dikecilkan bila lebar tidak muat (angka panjang tidak keluar dari bar).
 static func fit_label(l: Label, text: String, rect: Rect2, height_ratio: float = 0.8, min_size: int = 10) -> void:
 	l.text = text
-	l.position = rect.position
-	l.size = rect.size
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	var font: Font = l.get_theme_font("font")
 	var fs: int = int(rect.size.y * height_ratio)
 	while fs > min_size and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > rect.size.x:
 		fs -= 1
 	l.add_theme_font_size_override("font_size", fs)
+	# Pusat visual huruf (setengah tinggi huruf besar, ~0,7 em di atas garis dasar)
+	# diletakkan tepat di tengah kotak, bukan pusat kotak baris teks.
+	var asc: float = font.get_ascent(fs)
+	var line_h: float = font.get_height(fs)
+	l.position = Vector2(rect.position.x, rect.get_center().y - (asc - 0.35 * fs))
+	l.size = Vector2(rect.size.x, line_h)
 
 
 static func wrap_label(text: String, size: int = 22, color: Color = Color.WHITE) -> Label:

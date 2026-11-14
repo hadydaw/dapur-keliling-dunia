@@ -91,3 +91,10 @@
 - Platform diuji: render 1280x720 (Menu, Peta Dunia, Pilih Level) lewat Godot + lavapipe; belum diuji di HP.
 - Hasil tes: menu_test, world_map_test, level_select_test, gameplay_test semuanya 0 gagal.
 - Catatan: font game tebal bergaya (Lilita One/Baloo/Fredoka) tidak bisa diunduh dari sandbox; sementara memakai Lora. Bisa diganti dengan TTF dari user.
+
+## 2026-11-14 - Koreksi pemusatan teks (tahap 2)
+- File: scripts/ui_kit.gd (fit_label)
+- Alasan: teks masih terlihat turun di papan nama dan bar; kotak baris teks dipusatkan, bukan huruf.
+- Perubahan: fit_label kini memusatkan huruf (garis dasar dihitung dari ascent font, pusat huruf = garis dasar - 0,35 em) di tengah area kayu; diukur ulang dari aset (kayu bersih berpusat ~0,52 tinggi aset).
+- Diuji: render 1280x720 diperbesar dan dicek; medali "1" juga terpusat di lingkaran dalam. Belum diuji di HP.
+- Hasil tes: menu, peta dunia, pilih level, gameplay semuanya 0 gagal.
