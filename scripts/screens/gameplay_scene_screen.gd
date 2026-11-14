@@ -58,6 +58,8 @@ func _ready() -> void:
 				continue
 			art_tex[dish] = {}
 			for st in scene["stage_art"][dish]:
+				if st == "rects":
+					continue
 				var arr: Array = []
 				for path in scene["stage_art"][dish][st]:
 					arr.append(load(path))
@@ -521,6 +523,8 @@ func _draw_stage_art(slot: Dictionary, st: String, _c: Vector2, _r: float, s: fl
 	if not art_tex.has(dish) or not art_tex[dish].has(st):
 		return false
 	var rects: Dictionary = scene["stage_art"]["rects"]
+	if scene["stage_art"][dish].has("rects"):
+		rects = scene["stage_art"][dish]["rects"]   # ukuran potongan khusus hidangan
 	if not rects.has(slot["kind"]):
 		return false
 	var texs: Array = art_tex[dish][st]

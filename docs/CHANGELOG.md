@@ -172,3 +172,9 @@
 - Catatan: potongan panci berbentuk elips (tepi memudar); uap/asap pada gambar sumber tidak ikut dipotong
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Resep ikan bakar: 4 tahap bergambar + ikon (semua resep Indonesia kini bergambar)
+- File: assets/scene/ikan/*.png (pemanggang mentah/matang/gosong x6 slot, ikan di piring x6), assets/icons/ikan_bakar.png, scripts/game_data.gd (stage_art ikan_bakar dengan "rects" khusus hidangan karena ikan lebih lebar), scripts/screens/gameplay_scene_screen.gd (rect potongan per hidangan)
+- Catatan: uap/asap pada gambar sumber tidak ikut dipotong
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)

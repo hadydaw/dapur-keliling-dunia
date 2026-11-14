@@ -8,7 +8,7 @@ const DISHES := {
 	"nasi_goreng": {"name": "Nasi Goreng", "station": "Wajan", "cook": 6.0, "price": 30, "color": "d98c33", "icon": "res://assets/icons/nasi_goreng.png"},
 	"sate_ayam": {"name": "Sate Ayam", "station": "Panggangan", "cook": 8.0, "price": 40, "color": "a0522d", "icon": "res://assets/icons/sate_ayam.png"},
 	"soto_ayam": {"name": "Soto Ayam", "station": "Panci", "cook": 10.0, "price": 50, "color": "e0b341", "icon": "res://assets/icons/soto_ayam.png"},
-	"ikan_bakar": {"name": "Ikan Bakar", "station": "Panggangan", "cook": 9.0, "price": 60, "color": "8fa3ad"},
+	"ikan_bakar": {"name": "Ikan Bakar", "station": "Panggangan", "cook": 9.0, "price": 60, "color": "8fa3ad", "icon": "res://assets/icons/ikan_bakar.png"},
 
 	"limonada": {"name": "Limonada", "station": "Dispenser", "cook": 3.0, "price": 20, "color": "8bc34a"},
 	"taco": {"name": "Taco Pedas", "station": "Plancha", "cook": 6.0, "price": 45, "color": "e67e22"},
@@ -82,6 +82,13 @@ const SCENES := {
 		# "rects": area potongan relatif terhadap pusat slot (piksel gambar latar).
 		"stage_art": {
 			"rects": {"grill": Rect2(-46, -46, 92, 98), "plate": Rect2(-50, -42, 104, 78), "wok": Rect2(-62, -34, 124, 68), "pot": Rect2(-58, -34, 116, 68), "bowl": Rect2(-50, -40, 100, 76)},
+			"ikan_bakar": {
+				"rects": {"grill": Rect2(-52, -36, 104, 76), "plate": Rect2(-52, -44, 108, 82)},   # lebih lebar dari sate
+				"cooking": ["res://assets/scene/ikan/cooking_0.png", "res://assets/scene/ikan/cooking_1.png", "res://assets/scene/ikan/cooking_2.png", "res://assets/scene/ikan/cooking_3.png", "res://assets/scene/ikan/cooking_4.png", "res://assets/scene/ikan/cooking_5.png"],
+				"ready": ["res://assets/scene/ikan/ready_0.png", "res://assets/scene/ikan/ready_1.png", "res://assets/scene/ikan/ready_2.png", "res://assets/scene/ikan/ready_3.png", "res://assets/scene/ikan/ready_4.png", "res://assets/scene/ikan/ready_5.png"],
+				"burnt": ["res://assets/scene/ikan/burnt_0.png", "res://assets/scene/ikan/burnt_1.png", "res://assets/scene/ikan/burnt_2.png", "res://assets/scene/ikan/burnt_3.png", "res://assets/scene/ikan/burnt_4.png", "res://assets/scene/ikan/burnt_5.png"],
+				"full": ["res://assets/scene/ikan/full_0.png", "res://assets/scene/ikan/full_1.png", "res://assets/scene/ikan/full_2.png", "res://assets/scene/ikan/full_3.png", "res://assets/scene/ikan/full_4.png", "res://assets/scene/ikan/full_5.png"],
+			},
 			"soto_ayam": {
 				"cooking": ["res://assets/scene/soto/cooking_0.png", "res://assets/scene/soto/cooking_1.png", "res://assets/scene/soto/cooking_2.png", "res://assets/scene/soto/cooking_3.png"],
 				"ready": ["res://assets/scene/soto/ready_0.png", "res://assets/scene/soto/ready_1.png", "res://assets/scene/soto/ready_2.png", "res://assets/scene/soto/ready_3.png"],
