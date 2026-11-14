@@ -178,3 +178,10 @@
 - Catatan: uap/asap pada gambar sumber tidak ikut dipotong
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-15 - Gelembung pesanan memakai bingkai gambar baru (bar emosi vertikal)
+- File: assets/ui/bubble_pesanan.png (+ .import), scripts/screens/gameplay_scene_screen.gd (`_draw_bubble`: bingkai gambar ukuran tetap, ikon dipusatkan di kertas, bar kesabaran terisi dari bawah di slot kanan)
+- Alasan: user menyediakan bingkai gelembung dengan slot bar emosi (senang di atas, marah di bawah)
+- Catatan: ukuran gelembung kini tetap (muat 2 item, maksimum pesanan saat ini); 1 item memakai ikon sedikit lebih besar
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)

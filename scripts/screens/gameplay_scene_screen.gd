@@ -7,6 +7,7 @@ extends "res://scripts/screens/gameplay_screen.gd"
 var scene: Dictionary = {}
 var bg: TextureRect
 var fx: Control
+var bubble_tex: Texture2D            # bingkai gelembung pesanan (ada slot bar kesabaran vertikal di kanan)
 var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
 var ting_count: int = 0
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
@@ -64,6 +65,7 @@ func _ready() -> void:
 				for path in scene["stage_art"][dish][st]:
 					arr.append(load(path))
 				art_tex[dish][st] = arr
+	bubble_tex = load("res://assets/ui/bubble_pesanan.png")
 	ting_player = AudioStreamPlayer.new()
 	ting_player.stream = load("res://assets/audio/ting.wav")
 	ting_player.volume_db = -4.0
@@ -574,36 +576,40 @@ func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
 	# gelembung pesanan vertikal di sebelah kanan pelanggan, hanya gambar menu (tanpa teks);
 	# pindah ke kiri bila mepet tepi layar. Bila DISHES[id] punya "icon", gambar itu yang dipakai.
 	var n: int = cust["items"].size()
-	var bw: float = 94.0
-	var row_h: float = 60.0
-	var bh: float = n * row_h + 10.0
+	var bw: float = 96.0
+	var bh: float = bw * 480.0 / 296.0   # rasio gambar bingkai
 	var img_w: float = scene["size"].x
 	var bx: float = spot.x + 92.0
 	if bx + bw > img_w - 2.0:
 		bx = spot.x - 92.0 - bw
 	var btop: Vector2 = Vector2(bx, spot.y - 184.0)  # di bawah panel waktu
-	fx.draw_style_box(bubble_style, Rect2(_m(btop), Vector2(bw, bh) * s))
-	# bar kesabaran vertikal di kanan ikon (terisi dari bawah)
-	var bar_x: float = btop.x + bw - 22.0
-	var bar_top: float = btop.y + 8.0
-	var bar_h: float = bh - 16.0
-	fx.draw_rect(Rect2(_m(Vector2(bar_x, bar_top)), Vector2(12.0, bar_h) * s), Color(0, 0, 0, 0.55))
-	fx.draw_rect(Rect2(_m(Vector2(bar_x, bar_top + bar_h * (1.0 - ratio))), Vector2(12.0, bar_h * ratio) * s),
-		Color(1.0 - 0.6 * ratio, 0.4 + 0.6 * ratio, 0.3))
+	fx.draw_texture_rect(bubble_tex, Rect2(_m(btop), Vector2(bw, bh) * s), false)
+	# bar kesabaran: terisi dari bawah (penuh = senang di atas, kosong = marah di bawah)
+	var bar_x: float = btop.x + bw * 0.818
+	var bar_w: float = bw * 0.058
+	var bar_top: float = btop.y + bh * 0.272
+	var bar_h: float = bh * 0.462
+	fx.draw_rect(Rect2(_m(Vector2(bar_x, bar_top + bar_h * (1.0 - ratio))), Vector2(bar_w, bar_h * ratio) * s),
+		Color(1.0 - 0.6 * ratio, 0.45 + 0.55 * ratio, 0.25))
+	# ikon pesanan di area kertas (kiri bar), dipusatkan secara vertikal
+	var area_top: float = btop.y + bh * 0.21
+	var area_h: float = bh * 0.66
+	var icon: float = 52.0 if n > 1 else 60.0
+	var cx: float = btop.x + bw * 0.43
 	for k in n:
 		var id: String = cust["items"][k]
 		var done: bool = cust["served"][k]
-		var c: Vector2 = Vector2(btop.x + 36.0, btop.y + 5.0 + row_h * 0.5 + k * row_h)
+		var c: Vector2 = Vector2(cx, area_top + area_h * (k + 0.5) / float(n))
 		var d: Dictionary = GameData.DISHES[id]
 		if icon_tex.has(id):
 			var tex: Texture2D = icon_tex[id]
-			fx.draw_texture_rect(tex, Rect2(_m(c - Vector2(30, 30)), Vector2(60, 60) * s), false, Color(1, 1, 1, 0.45 if done else 1.0))
+			fx.draw_texture_rect(tex, Rect2(_m(c - Vector2(icon, icon) * 0.5), Vector2(icon, icon) * s), false, Color(1, 1, 1, 0.45 if done else 1.0))
 		else:
 			var dc := Color.html(d["color"])
-			fx.draw_circle(_m(c), 25.0 * s, dc.darkened(0.15))
-			fx.draw_arc(_m(c), 25.0 * s, 0.0, TAU, 32, Color(1, 1, 1, 0.8), maxf(2.0, 2.5 * s))
-			_text(_m(c), String(d["name"]).substr(0, 1), int(26.0 * s), Color.WHITE)
+			fx.draw_circle(_m(c), icon * 0.42 * s, dc.darkened(0.15))
+			fx.draw_arc(_m(c), icon * 0.42 * s, 0.0, TAU, 32, Color(1, 1, 1, 0.8), maxf(2.0, 2.5 * s))
+			_text(_m(c), String(d["name"]).substr(0, 1), int(icon * 0.45 * s), Color.WHITE)
 		if done:
-			fx.draw_arc(_m(c), 27.0 * s, 0.0, TAU, 32, Color(0.2, 0.75, 0.3), maxf(3.0, 4.0 * s))
+			fx.draw_arc(_m(c), icon * 0.5 * s, 0.0, TAU, 32, Color(0.2, 0.75, 0.3), maxf(3.0, 4.0 * s))
 			fx.draw_polyline(PackedVector2Array([_m(c + Vector2(-12, 0)), _m(c + Vector2(-3, 10)), _m(c + Vector2(14, -10))]),
 				Color(0.2, 0.9, 0.35), maxf(3.0, 5.0 * s))
