@@ -74,11 +74,24 @@ func _make_button(id: String, target: Control) -> void:
 	var b := TextureButton.new()
 	b.ignore_texture_size = true
 	b.focus_mode = Control.FOCUS_NONE
-	b.button_down.connect(func() -> void: target.modulate = Color(0.78, 0.78, 0.78))
-	b.button_up.connect(func() -> void: target.modulate = Color.WHITE)
+	b.button_down.connect(_press_anim.bind(target, true))
+	b.button_up.connect(_press_anim.bind(target, false))
 	b.pressed.connect(_on_hotspot.bind(id))
 	add_child(b)
 	buttons[id] = b
+
+
+## Animasi ketuk: mengecil saat ditekan, membal kembali saat dilepas.
+func _press_anim(target: Control, down: bool) -> void:
+	target.pivot_offset = target.size * 0.5
+	var tw := create_tween()
+	if down:
+		target.modulate = Color(0.85, 0.85, 0.85)
+		tw.tween_property(target, "scale", Vector2(0.92, 0.92), 0.07)
+	else:
+		target.modulate = Color.WHITE
+		tw.tween_property(target, "scale", Vector2(1.06, 1.06), 0.09)
+		tw.tween_property(target, "scale", Vector2.ONE, 0.09)
 
 
 func _make_num() -> Label:

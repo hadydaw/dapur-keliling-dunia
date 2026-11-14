@@ -81,5 +81,24 @@ func _ready() -> void:
 	print("%s reset menghapus koin (coins=%d)" % ["OK  " if reset_ok else "GAGAL", gs.coins])
 	if not reset_ok:
 		fails += 1
+	# Animasi ketuk: tombol mengecil saat ditekan, kembali normal saat dilepas
+	main._go("menu", {})
+	for i in 3:
+		await get_tree().process_frame
+	var lb: BaseButton = main.current.buttons["lanjutkan"]
+	var tgt: Control = main.current.nodes["lanjutkan"]
+	main.current.overlay = null
+	lb.button_down.emit()
+	for i in 12:
+		await get_tree().process_frame
+	var shrunk: bool = tgt.scale.x < 0.95
+	lb.button_up.emit()
+	for i in 30:
+		await get_tree().process_frame
+	var back: bool = absf(tgt.scale.x - 1.0) < 0.01
+	print("%s animasi ketuk (mengecil=%s, kembali=%s)" % ["OK  " if shrunk and back else "GAGAL", shrunk, back])
+	if not (shrunk and back):
+		fails += 1
+
 	print("TOTAL GAGAL: %d" % fails)
 	get_tree().quit(1 if fails > 0 else 0)

@@ -39,3 +39,8 @@
 - Loop: video asli (5 dtk) awal dan akhirnya tidak cocok, jadi dibuat crossfade 1 dtk agar mulus
 - Platform diuji: render asli 1280x720 dan 1600x720 (video terbukti bergerak antar frame); tes ketuk 12/12 lulus
 - Belum diuji: di HP (performa decoding video Theora di perangkat nyata)
+
+## 2026-11-14 - Animasi ketuk tombol menu
+- File: scripts/screens/menu_screen.gd, tests/menu_test.gd
+- Perilaku: tombol mengecil ke 92% saat ditekan, membal ke 106% lalu kembali 100% saat dilepas (+ sedikit gelap saat ditekan)
+- Hasil tes: tes headless 13/13 lulus (termasuk uji skala saat ditekan dan kembali normal). Belum diuji di HP.
