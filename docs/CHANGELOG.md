@@ -98,3 +98,9 @@
 - Perubahan: fit_label kini memusatkan huruf (garis dasar dihitung dari ascent font, pusat huruf = garis dasar - 0,35 em) di tengah area kayu; diukur ulang dari aset (kayu bersih berpusat ~0,52 tinggi aset).
 - Diuji: render 1280x720 diperbesar dan dicek; medali "1" juga terpusat di lingkaran dalam. Belum diuji di HP.
 - Hasil tes: menu, peta dunia, pilih level, gameplay semuanya 0 gagal.
+
+## 2026-11-14 - Layar Main: tombol Jeda bergambar
+- File: assets/ui/btn_jeda.png, scripts/ui_kit.gd (icon_button), scripts/screens/gameplay_screen.gd, tests/gameplay_test.gd
+- Alasan: mulai mengganti tampilan layar Main dengan aset asli, satu per satu.
+- Perubahan: tombol Jeda lama (kotak ungu) diganti gambar bulat emas-kayu dengan animasi ketuk; helper UI.icon_button dipakai ulang untuk tombol bergambar berikutnya.
+- Hasil tes: gameplay_test ditambah 3 cek (ukuran >=44px, ketuk membuka jeda, jeda bisa ditutup), semua tes 0 gagal. Belum diuji di HP.

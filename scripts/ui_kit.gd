@@ -44,6 +44,40 @@ static func fit_label(l: Label, text: String, rect: Rect2, height_ratio: float =
 	l.size = Vector2(rect.size.x, line_h)
 
 
+## Tombol bergambar (PNG transparan) dengan animasi ketuk: mengecil lalu membal.
+static func icon_button(tex_path: String, box: Vector2) -> Control:
+	var holder := Control.new()
+	holder.custom_minimum_size = box
+	var img := TextureRect.new()
+	img.texture = load(tex_path)
+	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fill(img)
+	holder.add_child(img)
+	var b := TextureButton.new()
+	b.ignore_texture_size = true
+	b.focus_mode = Control.FOCUS_NONE
+	fill(b)
+	holder.add_child(b)
+	b.button_down.connect(func(): _press(img, true))
+	b.button_up.connect(func(): _press(img, false))
+	holder.set_meta("button", b)
+	return holder
+
+
+static func _press(target: Control, down: bool) -> void:
+	target.pivot_offset = target.size * 0.5
+	var tw := target.create_tween()
+	if down:
+		target.modulate = Color(0.85, 0.85, 0.85)
+		tw.tween_property(target, "scale", Vector2(0.92, 0.92), 0.07)
+	else:
+		target.modulate = Color.WHITE
+		tw.tween_property(target, "scale", Vector2(1.06, 1.06), 0.09)
+		tw.tween_property(target, "scale", Vector2.ONE, 0.09)
+
+
 static func wrap_label(text: String, size: int = 22, color: Color = Color.WHITE) -> Label:
 	var l := label(text, size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -111,6 +111,17 @@ func _ready() -> void:
 	g._on_slot_pressed(ids2[1], 0)
 	_check(g.earned > 0 and g.customers.is_empty(), "pesanan ganda: bayar setelah semua dilayani")
 
+	# --- 6b. tombol Jeda bergambar: ketuk sungguhan membuka & menutup menu jeda ---
+	var jeda: Control = g.find_child("BtnJeda", true, false)
+	_check(jeda != null and jeda.size.x >= 44.0 and jeda.size.y >= 44.0, "tombol Jeda ada dan minimal 44px")
+	if jeda != null:
+		var jc: Vector2 = jeda.get_global_rect().get_center()
+		_tap(jc)
+		await _frames()
+		_check(g.paused, "ketuk tombol Jeda membuka menu jeda")
+		g._close_overlay()
+		_check(not g.paused, "menu jeda bisa ditutup")
+
 	# --- 7. pelanggan pergi bila sabar habis ---
 	_add_customer(g, [id], 1.0, 40.0)
 	g._update_customers(1.5)

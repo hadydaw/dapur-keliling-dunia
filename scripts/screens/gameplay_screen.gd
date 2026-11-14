@@ -69,8 +69,9 @@ func on_back() -> void:
 # ---------- UI ----------
 func _build_top_bar() -> Control:
 	var bar := UI.hbox(16)
-	var pause := UI.button("Jeda", Vector2(130, 60), Color(0.42, 0.36, 0.9), 26)
-	pause.pressed.connect(_toggle_pause)
+	var pause := UI.icon_button("res://assets/ui/btn_jeda.png", Vector2(64, 64))
+	pause.get_meta("button").pressed.connect(_toggle_pause)
+	pause.name = "BtnJeda"
 	bar.add_child(pause)
 	bar.add_child(UI.label("%s - Level %d" % [area["name"], level + 1], 28))
 	bar.add_child(UI.spacer())
