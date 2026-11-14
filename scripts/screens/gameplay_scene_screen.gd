@@ -24,6 +24,7 @@ var pause_btn: Control
 var scale_f: float = 1.0
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
+const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya tergulir naik
 var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
 var glass_tex: Array = []
@@ -33,6 +34,7 @@ const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan
 
 
 func _ready() -> void:
+	max_order_items = 5
 	rng.randomize()
 	area = GameData.AREAS[area_idx]
 	params = GameData.level_params(area_idx, level)
@@ -320,8 +322,32 @@ func _serve_from(slot: Dictionary) -> void:
 
 
 # ---------- loop ----------
+# Animasi gelembung: item yang sudah diberikan memudar & mengecil, sisanya bergulir naik.
+func _anim_bubbles(delta: float) -> void:
+	for c in customers:
+		_step_vis(c, delta)
+
+
+func _step_vis(c: Dictionary, delta: float) -> void:
+	var n: int = c["items"].size()
+	if not c.has("vis"):
+		c["vis"] = []
+	var vis: Array = c["vis"]
+	while vis.size() < n:
+		vis.append({"y": float(vis.size()), "a": 1.0})
+	var pos := 0
+	for k in n:
+		var v: Dictionary = vis[k]
+		if c["served"][k]:
+			v["a"] = move_toward(float(v["a"]), 0.0, delta * 3.5)
+		else:
+			v["y"] = move_toward(float(v["y"]), float(pos), delta * 6.0)
+			pos += 1
+
+
 func _update_slots(delta: float) -> void:
 	pulse += delta
+	_anim_bubbles(delta)
 	if jar["state"] == "filling":
 		jar["t"] = float(jar["t"]) + delta
 		if float(jar["t"]) >= float(jar["dur"]):
@@ -597,22 +623,31 @@ func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
 	# ikon pesanan di area kertas (kiri bar), dipusatkan secara vertikal
 	var area_top: float = btop.y + bh * 0.21
 	var area_h: float = bh * 0.66
-	var icon: float = 52.0 if n > 1 else 60.0
+	var icon: float = 52.0
 	var cx: float = btop.x + bw * 0.43
+	var slot_h: float = area_h / float(BUBBLE_WINDOW)
+	if not cust.has("vis") or cust["vis"].size() < n:
+		_step_vis(cust, 0.0)
+	var left: int = 0
 	for k in n:
+		if not cust["served"][k]:
+			left += 1
+		var v: Dictionary = cust["vis"][k]
 		var id: String = cust["items"][k]
-		var done: bool = cust["served"][k]
-		var c: Vector2 = Vector2(cx, area_top + area_h * (k + 0.5) / float(n))
+		var win: float = clampf(float(BUBBLE_WINDOW) - float(v["y"]), 0.0, 1.0)
+		var alpha: float = float(v["a"]) * win
+		if alpha <= 0.01:
+			continue
+		var sc: float = 0.6 + 0.4 * float(v["a"])
+		var c: Vector2 = Vector2(cx, area_top + slot_h * (float(v["y"]) + 0.5))
 		var d: Dictionary = GameData.DISHES[id]
+		var sz: float = icon * sc
 		if icon_tex.has(id):
-			var tex: Texture2D = icon_tex[id]
-			fx.draw_texture_rect(tex, Rect2(_m(c - Vector2(icon, icon) * 0.5), Vector2(icon, icon) * s), false, Color(1, 1, 1, 0.45 if done else 1.0))
+			fx.draw_texture_rect(icon_tex[id], Rect2(_m(c - Vector2(sz, sz) * 0.5), Vector2(sz, sz) * s), false, Color(1, 1, 1, alpha))
 		else:
 			var dc := Color.html(d["color"])
-			fx.draw_circle(_m(c), icon * 0.42 * s, dc.darkened(0.15))
-			fx.draw_arc(_m(c), icon * 0.42 * s, 0.0, TAU, 32, Color(1, 1, 1, 0.8), maxf(2.0, 2.5 * s))
-			_text(_m(c), String(d["name"]).substr(0, 1), int(icon * 0.45 * s), Color.WHITE)
-		if done:
-			fx.draw_arc(_m(c), icon * 0.5 * s, 0.0, TAU, 32, Color(0.2, 0.75, 0.3), maxf(3.0, 4.0 * s))
-			fx.draw_polyline(PackedVector2Array([_m(c + Vector2(-12, 0)), _m(c + Vector2(-3, 10)), _m(c + Vector2(14, -10))]),
-				Color(0.2, 0.9, 0.35), maxf(3.0, 5.0 * s))
+			fx.draw_circle(_m(c), sz * 0.42 * s, Color(dc.darkened(0.15), alpha))
+			_text(_m(c), String(d["name"]).substr(0, 1), int(sz * 0.45 * s), Color(1, 1, 1, alpha))
+	var hidden: int = left - BUBBLE_WINDOW
+	if hidden > 0:
+		_text(_m(Vector2(cx, btop.y + bh * 0.9)), "+%d" % hidden, int(18.0 * s), Color(1, 0.9, 0.5))

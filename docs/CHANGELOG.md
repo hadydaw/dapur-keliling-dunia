@@ -198,3 +198,8 @@
 - Alasan: cincin/jam pasir masih muncul di gelas es teh, dispenser, dan cakram pengganti.
 - Isi: semua busur timer/penanda matang dan fungsi _draw_timer dihapus; matang ditandai bunyi bel.
 - Hasil tes: gameplay_scene_test 0 gagal; render belum diulang.
+
+## 2026-11-15 - Gelembung pesanan: item selesai hilang, sisanya bergulir naik; pesanan acak
+- File: scripts/screens/gameplay_screen.gd, scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
+- Isi: item yang sudah diberikan memudar dan mengecil (tanpa cincin/centang), item sisa bergulir naik; gelembung menampilkan 2 ikon sekaligus dan penanda "+N" untuk sisanya. Layar scene memberi pesanan acak 1-5 item (layar klasik tetap maks 2 lewat max_order_items).
+- Hasil tes: 5 suite 0 gagal; render urutan animasi dicek; belum diuji di HP.
