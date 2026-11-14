@@ -51,3 +51,10 @@
 - Perbaikan: keystore debug tetap disimpan di repo dan dipakai tiap build. Hanya untuk debug, bukan rilis Play Store
 - Dampak: versi yang sudah terpasang (kunci lama) harus dihapus SEKALI; setelah itu update langsung menimpa
 - Hasil tes: lihat verifikasi tanda tangan APK hasil build di laporan
+
+## 2026-11-14 - Latar menu memenuhi layar (tanpa pinggiran gelap)
+- File: scripts/ui/animated_bg.gd
+- Masalah: di HP 20:9 video tampil "muat semua" dengan pinggiran gambar gelap di kiri dan kanan
+- Perbaikan: mode cover (video menutupi layar, kelebihan dipotong simetris); gambar latar gelap tambahan dihapus
+- Dampak: di 20:9 sedikit bagian atas/bawah video terpotong; di 16:9 tampilan sama. Posisi UI tidak berubah (dihitung dari layar)
+- Hasil tes: render asli 2400x1080 dan 1280x720 tanpa pinggiran; tes ketuk 13/13 lulus. Belum diuji di HP.

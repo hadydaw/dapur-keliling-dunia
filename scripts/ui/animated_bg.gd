@@ -1,5 +1,5 @@
 extends Control
-## Latar menu: gambar penuh (mode "contain", sisi sisa diisi versi gelap gambar yang sama)
+## Latar menu: video/gambar memenuhi layar (mode "cover": tanpa pinggiran, kelebihan dipotong di tengah)
 ## + efek kode (uap, kilau lentera/lampu/api). Koordinat efek dan tombol dalam koordinat gambar (0..1).
 
 const TEX := preload("res://assets/menu_bg.jpg")
@@ -77,9 +77,9 @@ func _ready() -> void:
 	_layout_steam()
 
 
-## Skala "contain": seluruh gambar terlihat, tidak ada yang terpotong.
+## Skala "cover": gambar menutupi seluruh layar; bagian lebih dipotong simetris.
 func image_scale() -> float:
-	return minf(size.x / TEX.get_width(), size.y / TEX.get_height())
+	return maxf(size.x / TEX.get_width(), size.y / TEX.get_height())
 
 
 func image_rect() -> Rect2:
@@ -118,10 +118,7 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	# isi sisi sisa dengan versi "cover" yang digelapkan
-	var cover: float = maxf(size.x / TEX.get_width(), size.y / TEX.get_height())
-	var cs := Vector2(TEX.get_width(), TEX.get_height()) * cover
-	draw_texture_rect(TEX, Rect2((size - cs) * 0.5, cs), false, Color(0.4, 0.35, 0.45))
+	# cadangan (dan bingkai awal sebelum video jalan): gambar diam memenuhi layar
 	draw_texture_rect(TEX, image_rect(), false)
 
 
