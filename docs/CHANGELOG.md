@@ -141,3 +141,9 @@
 - File: scripts/game_data.gd (spot y 426, tinggi 215, mask kiri), scripts/screens/gameplay_scene_screen.gd (gelembung di bawah panel waktu)
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Ikon Es Teh di gelembung pesanan
+- File: assets/icons/es_teh.png (+ .import), scripts/game_data.gd (DISHES.es_teh.icon), scripts/screens/gameplay_scene_screen.gd (cache ikon `icon_tex`, ukuran 60)
+- Catatan: ikon di-cache saat layar dibuka; memuat tekstur tiap frame membuat ikon tampil putih
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)

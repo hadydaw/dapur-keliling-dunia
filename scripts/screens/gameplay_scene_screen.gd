@@ -7,6 +7,7 @@ extends "res://scripts/screens/gameplay_screen.gd"
 var scene: Dictionary = {}
 var bg: TextureRect
 var fx: Control
+var icon_tex: Dictionary = {}        # id hidangan -> Texture2D ikon (di-cache, jangan load tiap frame)
 var cust_fx: Control                 # lapisan pelanggan (di belakang konter)
 var counter: Polygon2D               # siluet konter dari latar, menimpa pelanggan
 var appliances: Dictionary = {}      # nama alat -> Array slot
@@ -45,6 +46,9 @@ func _ready() -> void:
 	bg.stretch_mode = TextureRect.STRETCH_SCALE
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	for id in GameData.DISHES:
+		if GameData.DISHES[id].has("icon"):
+			icon_tex[id] = load(GameData.DISHES[id]["icon"])
 	cust_fx = Control.new()
 	cust_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cust_fx.draw.connect(_on_cust_draw)
@@ -545,9 +549,9 @@ func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
 		var done: bool = cust["served"][k]
 		var c: Vector2 = Vector2(btop.x + 36.0, btop.y + 5.0 + row_h * 0.5 + k * row_h)
 		var d: Dictionary = GameData.DISHES[id]
-		if d.has("icon"):
-			var tex: Texture2D = load(d["icon"])
-			fx.draw_texture_rect(tex, Rect2(_m(c - Vector2(26, 26)), Vector2(52, 52) * s), false, Color(1, 1, 1, 0.45 if done else 1.0))
+		if icon_tex.has(id):
+			var tex: Texture2D = icon_tex[id]
+			fx.draw_texture_rect(tex, Rect2(_m(c - Vector2(30, 30)), Vector2(60, 60) * s), false, Color(1, 1, 1, 0.45 if done else 1.0))
 		else:
 			var dc := Color.html(d["color"])
 			fx.draw_circle(_m(c), 25.0 * s, dc.darkened(0.15))
