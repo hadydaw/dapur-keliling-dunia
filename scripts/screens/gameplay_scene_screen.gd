@@ -19,9 +19,7 @@ var hotspots: Array = []             # {"rect": Rect2 (piksel gambar), "btn": Bu
 var font: Font
 var bubble_style: StyleBoxFlat
 var body_style: StyleBoxFlat
-var title_label: Label
-var time_panel: PanelContainer
-var hud_panel: PanelContainer
+var title_label: Label               # penampung nilai HUD (tidak masuk pohon; digambar di fx)
 var pause_btn: Control
 var scale_f: float = 1.0
 var offset: Vector2 = Vector2.ZERO
@@ -161,35 +159,18 @@ func _build_hotspots() -> void:
 
 
 func _build_hud() -> void:
-	pause_btn = UI.icon_button("res://assets/ui/btn_jeda.png", Vector2(72, 72))
+	# Bingkai HUD sudah ada di gambar latar; di sini hanya area ketuk + penampung nilai.
+	var hud: Dictionary = scene["hud"]
+	_make_hot(hud["gear"], _toggle_pause)
+	pause_btn = hotspots[hotspots.size() - 1]["btn"]
 	pause_btn.name = "BtnJeda"
-	pause_btn.get_meta("button").pressed.connect(_toggle_pause)
-	add_child(pause_btn)
-	hud_panel = UI.panel(Color(0.12, 0.04, 0.02, 0.62), 14)
-	var v := UI.vbox(4)
-	hud_panel.add_child(v)
-	title_label = UI.label("%s - Level %d" % [area["name"], level + 1], 22, Color.WHITE)
-	v.add_child(title_label)
-	var row := UI.hbox(10)
-	v.add_child(row)
+	_make_hot(hud["squares"][0], _toast.bind("Misi segera hadir"))
+	_make_hot(hud["squares"][1], _toast.bind("Toko dibuka dari menu utama"))
+	title_label = UI.label("", 22)
+	coins_label = UI.label("", 22)
+	time_label = UI.label("", 32)
 	goal_bar = ProgressBar.new()
-	goal_bar.custom_minimum_size = Vector2(140, 18)
 	goal_bar.max_value = float(params["target"])
-	goal_bar.show_percentage = false
-	goal_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var bar_bg := _round_box(Color(0, 0, 0, 0.55), 8, 0)
-	var bar_fill := _round_box(Color(0.35, 0.8, 0.3), 8, 0)
-	goal_bar.add_theme_stylebox_override("background", bar_bg)
-	goal_bar.add_theme_stylebox_override("fill", bar_fill)
-	row.add_child(goal_bar)
-	coins_label = UI.label("", 22, Color(1, 0.88, 0.45))
-	row.add_child(coins_label)
-	add_child(hud_panel)
-	time_panel = UI.panel(Color(0.12, 0.04, 0.02, 0.62), 14)
-	time_label = UI.label("", 32, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
-	time_label.custom_minimum_size = Vector2(96, 0)
-	time_panel.add_child(time_label)
-	add_child(time_panel)
 
 
 # ---------- tata letak (mode cover, seperti layar lain) ----------
@@ -220,20 +201,9 @@ func _layout() -> void:
 		b.position = _m(r.position)
 		b.size = r.size * scale_f
 	var u: float = size.y / 720.0
-	pause_btn.position = Vector2(14, 10) * u
-	pause_btn.size = Vector2(72, 72) * u
-	hud_panel.position = Vector2(96, 12) * u
 	toast_label.size = Vector2(size.x, 40.0 * u)
 	toast_label.position = Vector2(0, _m(Vector2(0, TOAST_Y)).y - toast_label.size.y * 0.5)
 	toast_label.add_theme_font_size_override("font_size", int(30.0 * u))
-	title_label.add_theme_font_size_override("font_size", int(22.0 * u))
-	coins_label.add_theme_font_size_override("font_size", int(22.0 * u))
-	time_label.add_theme_font_size_override("font_size", int(32.0 * u))
-	time_label.custom_minimum_size = Vector2(96.0 * u, 0)
-	goal_bar.custom_minimum_size = Vector2(140.0 * u, 18.0 * u)
-	hud_panel.reset_size()
-	time_panel.reset_size()
-	time_panel.position = Vector2(size.x - time_panel.size.x - 14.0 * u, 12.0 * u)
 	fx.queue_redraw()
 	cust_fx.queue_redraw()
 
@@ -474,6 +444,74 @@ func _on_fx_draw() -> void:
 		for c in customers:
 			if c["slot"] == k:
 				_draw_bubble(c, customer_panels[k]["spot"], s)
+	_draw_hud(s)
+
+
+# Teks HUD di atas bingkai kosong pada latar. Hanya data yang benar-benar ada di game.
+func _text_at(pos: Vector2, txt: String, fs: int, col: Color, align: int = 0) -> void:
+	# align: 0 kiri, 1 tengah, 2 kanan; pos = titik awal/tengah/akhir teks (layar)
+	var ts: Vector2 = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+	var x: float = pos.x - (0.0 if align == 0 else (ts.x * 0.5 if align == 1 else ts.x))
+	var p := Vector2(x, pos.y + fs * 0.35)
+	fx.draw_string_outline(font, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, maxi(3, int(fs * 0.18)), Color(0.1, 0.04, 0.02))
+	fx.draw_string(font, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+
+func _draw_hud(s: float) -> void:
+	var hud: Dictionary = scene["hud"]
+	var gold := Color(1, 0.88, 0.45)
+	var target: int = int(params["target"])
+	var t: int = int(ceil(time_left))
+	# avatar: nomor level
+	var av: Rect2 = hud["avatar"]
+	_text_at(_m(av.get_center()), str(level + 1), int(40.0 * s), Color.WHITE, 1)
+	# strip 1: nama area singkat; strip 2: bar target + angka
+	var s1: Rect2 = hud["strip1"]
+	var short_name: String = String(area["name"]).split(" ")[-1]
+	_text_at(_m(s1.get_center()), short_name, int(19.0 * s), gold, 1)
+	var s2: Rect2 = hud["strip2"]
+	var frac: float = clampf(float(earned) / maxf(float(target), 1.0), 0.0, 1.0)
+	var inner := Rect2(s2.position + Vector2(4, 5), s2.size - Vector2(8, 10))
+	if frac > 0.0:
+		fx.draw_rect(Rect2(_m(inner.position), Vector2(inner.size.x * frac, inner.size.y) * s), Color(0.35, 0.82, 0.3))
+	_text_at(_m(s2.get_center()), "%d/%d" % [earned, target], int(16.0 * s), Color.WHITE, 1)
+	# pil: waktu, target, hasil level, koin total
+	var pills: Array = hud["pills"]
+	var vals: Array = [
+		["Waktu", "%d:%02d" % [t / 60, t % 60]],
+		["Target", str(target)],
+		["Hasil", str(earned)],
+		["Koin", str(GameState.coins)],
+	]
+	for i in 4:
+		var pr: Rect2 = pills[i]
+		var c: Vector2 = _m(pr.get_center())
+		_text_at(Vector2(_m(pr.position).x + 14.0 * s, c.y), vals[i][0], int(17.0 * s), Color(0.95, 0.75, 0.45), 0)
+		_text_at(Vector2(_m(pr.position + Vector2(pr.size.x - 14.0, 0)).x, c.y), vals[i][1], int(24.0 * s), Color.WHITE, 2)
+	# tombol gir: simbol jeda (dua batang)
+	var gr: Rect2 = hud["gear"]
+	var gc: Vector2 = gr.get_center()
+	for dx in [-8.0, 8.0]:
+		fx.draw_rect(Rect2(_m(gc + Vector2(dx - 5.0, -14.0)), Vector2(10.0, 28.0) * s), Color(1, 0.93, 0.7))
+	# tombol samping
+	var names := ["Misi", "Toko"]
+	for i in 2:
+		var sq: Rect2 = hud["squares"][i]
+		_text_at(_m(sq.get_center()), names[i], int(21.0 * s), gold, 1)
+	# panel menu: daftar hidangan level ini
+	var ph: Rect2 = hud["panel_head"]
+	_text_at(_m(ph.get_center()), "Menu Level", int(22.0 * s), gold, 1)
+	var pb: Rect2 = hud["panel_body"]
+	var n: int = mini(dishes.size(), 5)
+	var row_h: float = pb.size.y / 5.0
+	for k in n:
+		var id: String = dishes[k]
+		var cy: float = pb.position.y + row_h * (k + 0.5)
+		var d: Dictionary = GameData.DISHES[id]
+		if icon_tex.has(id):
+			fx.draw_texture_rect(icon_tex[id], Rect2(_m(Vector2(pb.position.x + 8.0, cy - 13.0)), Vector2(26, 26) * s), false)
+		_text_at(_m(Vector2(pb.position.x + 40.0, cy)), String(d["name"]), int(17.0 * s), Color(0.28, 0.12, 0.05), 0)
+		_text_at(_m(Vector2(pb.position.x + pb.size.x - 10.0, cy)), str(int(d["price"])), int(17.0 * s), Color(0.55, 0.25, 0.05), 2)
 
 
 func _on_cust_draw() -> void:

@@ -185,3 +185,10 @@
 - Catatan: ukuran gelembung kini tetap (muat 2 item, maksimum pesanan saat ini); 1 item memakai ikon sedikit lebih besar
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-15 - HUD baru memakai bingkai di latar
+- File: assets/scene_indonesia.jpg, scripts/game_data.gd, scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
+- Alasan: latar baru dari user sudah memuat bingkai HUD kosong; game mengisi angkanya.
+- Isi: avatar = nomor level, strip = nama area + bar target, pil = Waktu/Target/Hasil/Koin, gir = Jeda (tetap "BtnJeda"), Misi/Toko (toast), panel Menu Level berisi hidangan level. Pelanggan digeser kiri (316/611/906/1202) agar tidak tertutup panel menu.
+- Platform yang diuji: render 1280x720 dan 2400x1080 (Linux headless); belum diuji di HP.
+- Hasil tes: 5 suite 0 gagal.

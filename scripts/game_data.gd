@@ -67,11 +67,11 @@ const SCENES := {
 		"image": "res://assets/scene_indonesia.jpg",
 		"size": Vector2(1672, 941),
 		# Pelanggan berdiri di celah antar alat masak (kaki = garis konter), kepala + bahu terlihat.
-		"customer_spots": [Vector2(505, 426), Vector2(800, 426), Vector2(1190, 426), Vector2(1466, 426)],
+		"customer_spots": [Vector2(316, 426), Vector2(611, 426), Vector2(906, 426), Vector2(1202, 426)],
 		# siluet bagian atas konter (piksel gambar latar); menimpa pelanggan agar mereka
 		# tampak berdiri di belakang konter, bukan terpotong.
 		"counter_mask": [
-			Vector2(380, 428), Vector2(500, 428), Vector2(502, 396), Vector2(512, 378), Vector2(523, 371), Vector2(535, 378), Vector2(545, 398),
+			Vector2(215, 428), Vector2(380, 428), Vector2(500, 428), Vector2(502, 396), Vector2(512, 378), Vector2(523, 371), Vector2(535, 378), Vector2(545, 398),
 			Vector2(562, 400), Vector2(600, 374), Vector2(650, 352), Vector2(700, 372), Vector2(745, 398), Vector2(755, 392),
 			Vector2(762, 376), Vector2(770, 371), Vector2(780, 378), Vector2(790, 396), Vector2(797, 392), Vector2(806, 376),
 			Vector2(815, 371), Vector2(825, 378), Vector2(832, 408), Vector2(880, 388), Vector2(950, 365), Vector2(1000, 385),
@@ -107,6 +107,18 @@ const SCENES := {
 				"burnt": ["res://assets/scene/sate/burnt_0.png", "res://assets/scene/sate/burnt_1.png", "res://assets/scene/sate/burnt_2.png", "res://assets/scene/sate/burnt_3.png", "res://assets/scene/sate/burnt_4.png", "res://assets/scene/sate/burnt_5.png"],
 				"full": ["res://assets/scene/sate/full_0.png", "res://assets/scene/sate/full_1.png", "res://assets/scene/sate/full_2.png", "res://assets/scene/sate/full_3.png", "res://assets/scene/sate/full_4.png", "res://assets/scene/sate/full_5.png"],
 			},
+		},
+		# Bingkai HUD ikut tergambar di latar (kosong); teks/angka digambar game di atasnya.
+		# Semua dalam piksel gambar latar.
+		"hud": {
+			"avatar": Rect2(24, 20, 84, 84),
+			"strip1": Rect2(124, 24, 114, 26),
+			"strip2": Rect2(124, 68, 114, 26),
+			"pills": [Rect2(268, 20, 182, 40), Rect2(470, 20, 170, 40), Rect2(1142, 20, 200, 40), Rect2(1376, 20, 190, 40)],
+			"gear": Rect2(1588, 12, 68, 68),
+			"squares": [Rect2(20, 134, 83, 86), Rect2(20, 234, 83, 82)],
+			"panel_head": Rect2(1408, 110, 236, 36),
+			"panel_body": Rect2(1408, 158, 236, 142),
 		},
 		"customer_art": {
 			"senang": "res://assets/customers/pria_batik_senang.png",
