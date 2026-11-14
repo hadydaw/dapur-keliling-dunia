@@ -160,3 +160,9 @@
 - Catatan: potongan wajan berbentuk elips (tepi memudar); uap/asap pada gambar sumber tidak ikut dipotong
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Cincin timer dihapus, diganti bel "ting" saat masakan matang
+- File: scripts/screens/gameplay_scene_screen.gd (hapus cincin pada gambar tahap, `_ding()` + `ting_player`), assets/audio/ting.wav (bel sintetis buatan sendiri, 1,1 dtk), tests/gameplay_scene_test.gd (2 cek baru)
+- Catatan: cincin hanya dihapus pada hidangan yang sudah bergambar (es teh, nasi goreng, sate); hidangan tanpa gambar masih memakai lingkaran berhuruf + cincin. Bunyi diputar tiap slot beralih memasak -> matang (termasuk gelas es teh).
+- Platform yang diuji: render 1280x720; bunyi hanya diuji lewat logika (hitungan pemicu), belum didengar di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)

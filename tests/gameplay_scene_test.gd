@@ -106,6 +106,7 @@ func _ready() -> void:
 	_check(g.appliances["dispenser"][0]["state"] == "ready", "gelas es teh matang setelah 3 detik")
 	g._update_slots(30.0)
 	_check(g.appliances["dispenser"][0]["state"] == "ready", "es teh tidak gosong")
+	_check(g.ting_count >= 1, "bel ting berbunyi saat es teh matang")
 	await _tap_slot(g, "dispenser", 0)
 	_check(g.earned > 0 and g.customers.is_empty(), "ketuk gelas matang: pelanggan membayar")
 	_check(g.appliances["dispenser"][0]["state"] == "empty", "gelas kosong lagi setelah disajikan")
@@ -121,7 +122,9 @@ func _ready() -> void:
 	_order(g, ["nasi_goreng"])
 	await _tap_ingredient(g, "nasi")
 	_check(g.appliances["wok"][0]["state"] == "cooking", "ketuk penanak nasi: wajan mulai memasak")
+	var ting_before: int = g.ting_count
 	g._update_slots(7.0)
+	_check(g.ting_count == ting_before + 1, "bel ting berbunyi sekali saat nasi goreng matang")
 	await _tap_slot(g, "wok", 0)
 	_check(g.appliances["plate"][0]["state"] == "full" and g.appliances["wok"][0]["state"] == "empty", "ketuk wajan matang: pindah ke piring")
 	await _tap_slot(g, "plate", 0)

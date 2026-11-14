@@ -7,6 +7,8 @@ extends "res://scripts/screens/gameplay_screen.gd"
 var scene: Dictionary = {}
 var bg: TextureRect
 var fx: Control
+var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
+var ting_count: int = 0
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
 var icon_tex: Dictionary = {}        # id hidangan -> Texture2D ikon (di-cache, jangan load tiap frame)
 var cust_fx: Control                 # lapisan pelanggan (di belakang konter)
@@ -60,6 +62,10 @@ func _ready() -> void:
 				for path in scene["stage_art"][dish][st]:
 					arr.append(load(path))
 				art_tex[dish][st] = arr
+	ting_player = AudioStreamPlayer.new()
+	ting_player.stream = load("res://assets/audio/ting.wav")
+	ting_player.volume_db = -4.0
+	add_child(ting_player)
 	cust_fx = Control.new()
 	cust_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cust_fx.draw.connect(_on_cust_draw)
@@ -355,11 +361,17 @@ func _update_slots(delta: float) -> void:
 					if float(slot["t"]) >= float(slot["dur"]):
 						slot["state"] = "ready"
 						slot["t"] = 0.0
+						_ding()
 				"ready":
 					if GameData.RECIPES[slot["dish"]].get("burns", true):
 						slot["t"] = float(slot["t"]) + delta
 						if float(slot["t"]) >= BURN_WINDOW:
 							slot["state"] = "burnt"
+
+
+func _ding() -> void:
+	ting_count += 1
+	ting_player.play()
 
 
 func _refresh_ui() -> void:
@@ -504,7 +516,7 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 
 
 # Gambar tahap masakan dari latar (mentah/matang/gosong/di piring). true bila dipakai.
-func _draw_stage_art(slot: Dictionary, st: String, c: Vector2, r: float, s: float) -> bool:
+func _draw_stage_art(slot: Dictionary, st: String, _c: Vector2, _r: float, s: float) -> bool:
 	var dish: String = slot["dish"]
 	if not art_tex.has(dish) or not art_tex[dish].has(st):
 		return false
@@ -517,14 +529,6 @@ func _draw_stage_art(slot: Dictionary, st: String, c: Vector2, r: float, s: floa
 		return false
 	var rc: Rect2 = rects[slot["kind"]]
 	fx.draw_texture_rect(texs[idx], Rect2(_m(slot["pos"] + rc.position), rc.size * s), false)
-	r = minf(r, 40.0 * s)   # cincin tidak boleh menimpa alat tetangga (wajan r=52)
-	match st:
-		"cooking":
-			var frac: float = float(slot["t"]) / maxf(float(slot["dur"]), 0.01)
-			fx.draw_arc(c, r * 0.92, -PI * 0.5, -PI * 0.5 + TAU * frac, 40, Color(1, 0.7, 0.15), maxf(4.0, r * 0.14))
-		"ready":
-			var a: float = 0.55 + 0.45 * sin(pulse * 6.0)
-			fx.draw_arc(c, r * 0.92, 0.0, TAU, 40, Color(0.3, 1, 0.4, a), maxf(4.0, r * 0.16))
 	return true
 
 
