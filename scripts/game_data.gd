@@ -8,6 +8,7 @@ const DISHES := {
 	"nasi_goreng": {"name": "Nasi Goreng", "station": "Wajan", "cook": 6.0, "price": 30, "color": "d98c33"},
 	"sate_ayam": {"name": "Sate Ayam", "station": "Panggangan", "cook": 8.0, "price": 40, "color": "a0522d"},
 	"soto_ayam": {"name": "Soto Ayam", "station": "Panci", "cook": 10.0, "price": 50, "color": "e0b341"},
+	"ikan_bakar": {"name": "Ikan Bakar", "station": "Panggangan", "cook": 9.0, "price": 60, "color": "8fa3ad"},
 
 	"limonada": {"name": "Limonada", "station": "Dispenser", "cook": 3.0, "price": 20, "color": "8bc34a"},
 	"taco": {"name": "Taco Pedas", "station": "Plancha", "cook": 6.0, "price": 45, "color": "e67e22"},
@@ -27,7 +28,7 @@ const DISHES := {
 
 const AREAS := [
 	{"id": "indonesia", "name": "Warung Nusantara", "place": "Indonesia", "color": "c0392b", "stars_needed": 0,
-		"dishes": ["es_teh", "nasi_goreng", "sate_ayam", "soto_ayam"]},
+		"dishes": ["es_teh", "nasi_goreng", "sate_ayam", "soto_ayam", "ikan_bakar"]},
 	{"id": "meksiko", "name": "Cantina Fiesta", "place": "Meksiko", "color": "d35400", "stars_needed": 6,
 		"dishes": ["limonada", "taco", "burrito", "quesadilla"]},
 	{"id": "jepang", "name": "Kedai Sakura", "place": "Jepang", "color": "c2185b", "stars_needed": 14,
@@ -37,11 +38,56 @@ const AREAS := [
 ]
 
 
+# Resep gaya Cooking Madness: bahan (rak bawah) -> alat masak -> wadah saji -> pelanggan.
+# "serve" kosong = disajikan langsung dari alatnya (gelas es teh). "burns": false = tidak gosong.
+const RECIPES := {
+	"es_teh": {"ingredient": "es", "appliance": "dispenser", "serve": "", "burns": false},
+	"nasi_goreng": {"ingredient": "nasi", "appliance": "wok", "serve": "plate"},
+	"sate_ayam": {"ingredient": "tusuk_ayam", "appliance": "grill", "serve": "plate"},
+	"soto_ayam": {"ingredient": "ayam", "appliance": "pot", "serve": "bowl"},
+	"ikan_bakar": {"ingredient": "ikan", "appliance": "grill", "serve": "plate"},
+}
+
+const APPLIANCE_NAMES := {
+	"dispenser": "Gelas", "grill": "Panggangan", "wok": "Wajan", "pot": "Panci",
+	"plate": "Piring", "bowl": "Mangkuk",
+}
+
+# Latar per area + titik ketuk (koordinat piksel gambar latar 1672x941).
+const SCENES := {
+	"indonesia": {
+		"image": "res://assets/scene_indonesia.jpg",
+		"size": Vector2(1672, 941),
+		"customer_spots": [Vector2(420, 330), Vector2(660, 330), Vector2(900, 330), Vector2(1140, 330)],
+		"appliances": {
+			"dispenser": {"r": 30.0, "points": [Vector2(66, 556), Vector2(120, 556), Vector2(176, 556)]},
+			"grill": {"r": 36.0, "points": [Vector2(283, 472), Vector2(370, 472), Vector2(452, 472),
+				Vector2(272, 548), Vector2(364, 548), Vector2(455, 548)]},
+			"plate": {"r": 38.0, "points": [Vector2(568, 484), Vector2(655, 484), Vector2(735, 484),
+				Vector2(568, 557), Vector2(655, 557), Vector2(738, 557)]},
+			"bowl": {"r": 36.0, "points": [Vector2(855, 481), Vector2(943, 481), Vector2(1030, 481),
+				Vector2(860, 553), Vector2(950, 553), Vector2(1045, 553)]},
+			"wok": {"r": 52.0, "points": [Vector2(1170, 442), Vector2(1305, 445), Vector2(1185, 523), Vector2(1325, 525)]},
+			"pot": {"r": 48.0, "points": [Vector2(1445, 440), Vector2(1555, 438), Vector2(1470, 515), Vector2(1580, 518)]},
+		},
+		"ingredients": {
+			"es": {"name": "Es Batu", "rect": Rect2(105, 735, 225, 150)},
+			"nasi": {"name": "Nasi", "rect": Rect2(355, 740, 205, 145)},
+			"tusuk_ayam": {"name": "Tusuk Sate Ayam", "rect": Rect2(815, 740, 135, 140)},
+			"ayam": {"name": "Ayam", "rect": Rect2(975, 735, 280, 145)},
+			"ikan": {"name": "Ikan", "rect": Rect2(1285, 735, 285, 145)},
+		},
+	},
+}
+
+
 static func level_params(area_idx: int, level: int) -> Dictionary:
 	var area: Dictionary = AREAS[area_idx]
 	var g: int = area_idx * LEVELS_PER_AREA + level
 	var all_dishes: Array = area["dishes"]
 	var n: int = clampi(2 + level / 2, 2, all_dishes.size())
+	if all_dishes.size() >= 5 and level >= LEVELS_PER_AREA - 1:
+		n = all_dishes.size()  # menu kelima dibuka di level terakhir
 	var ids: Array = all_dishes.slice(0, n)
 	var total_price := 0.0
 	for id in ids:

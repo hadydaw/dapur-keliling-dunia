@@ -4,7 +4,9 @@ extends Control
 const MenuScreen = preload("res://scripts/screens/menu_screen.gd")
 const WorldMapScreen = preload("res://scripts/screens/world_map_screen.gd")
 const LevelSelectScreen = preload("res://scripts/screens/level_select_screen.gd")
+const GameData = preload("res://scripts/game_data.gd")
 const GameplayScreen = preload("res://scripts/screens/gameplay_screen.gd")
+const GameplaySceneScreen = preload("res://scripts/screens/gameplay_scene_screen.gd")
 const RecipeBookScreen = preload("res://scripts/screens/recipe_book_screen.gd")
 const ShopScreen = preload("res://scripts/screens/shop_screen.gd")
 
@@ -32,7 +34,12 @@ func _go(screen: String, params: Dictionary) -> void:
 		"menu": s = MenuScreen.new()
 		"world_map": s = WorldMapScreen.new()
 		"level_select": s = LevelSelectScreen.new()
-		"gameplay": s = GameplayScreen.new()
+		"gameplay":
+			var aid: String = GameData.AREAS[int(params.get("area", 0))]["id"]
+			if GameData.SCENES.has(aid) and not bool(params.get("classic", false)):
+				s = GameplaySceneScreen.new()
+			else:
+				s = GameplayScreen.new()
 		"recipes": s = RecipeBookScreen.new()
 		"shop": s = ShopScreen.new()
 		_:

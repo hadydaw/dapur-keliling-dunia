@@ -61,7 +61,7 @@ func _ready() -> void:
 	# level 1 -> gameplay level 1
 	_tap(_center(ls.medals[0]["button"]))
 	await _frames()
-	_check(_scr() == "gameplay_screen.gd" and main.current.level == 0 and main.current.area_idx == 0, "ketuk level 1 -> gameplay area 0 level 0")
+	_check(_scr() in ["gameplay_screen.gd", "gameplay_scene_screen.gd"] and main.current.level == 0 and main.current.area_idx == 0, "ketuk level 1 -> gameplay area 0 level 0")
 	# selesaikan level 1 dengan 2 bintang -> level 2 terbuka
 	GameState.finish_level("indonesia", 0, 2, 50)
 	await _open(0)
@@ -74,7 +74,7 @@ func _ready() -> void:
 	_check(ls.medals[1]["unlocked"], "level 2 terbuka setelah level 1 selesai")
 	_tap(_center(ls.medals[1]["button"]))
 	await _frames()
-	_check(_scr() == "gameplay_screen.gd" and main.current.level == 1, "ketuk level 2 -> gameplay level 1")
+	_check(_scr() in ["gameplay_screen.gd", "gameplay_scene_screen.gd"] and main.current.level == 1, "ketuk level 2 -> gameplay level 1")
 	# kembali
 	await _open(2)
 	main.current.on_back()

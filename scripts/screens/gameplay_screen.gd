@@ -13,6 +13,7 @@ var area_idx: int = 0
 var level: int = 0
 var area: Dictionary = {}
 var params: Dictionary = {}
+var classic: bool = false
 var dishes: Array = []
 var time_left: float = 0.0
 var earned: int = 0
@@ -40,6 +41,7 @@ var slot_colors := {
 func setup(p: Dictionary) -> void:
 	area_idx = int(p.get("area", 0))
 	level = int(p.get("level", 0))
+	classic = bool(p.get("classic", false))
 
 
 func _ready() -> void:
@@ -354,7 +356,7 @@ func _close_overlay() -> void:
 
 
 func _restart() -> void:
-	navigate.emit("gameplay", {"area": area_idx, "level": level})
+	navigate.emit("gameplay", {"area": area_idx, "level": level, "classic": classic})
 
 
 func _exit_level() -> void:
@@ -362,7 +364,7 @@ func _exit_level() -> void:
 
 
 func _next_level() -> void:
-	navigate.emit("gameplay", {"area": area_idx, "level": level + 1})
+	navigate.emit("gameplay", {"area": area_idx, "level": level + 1, "classic": classic})
 
 
 func _finish() -> void:

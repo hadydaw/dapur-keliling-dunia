@@ -104,3 +104,10 @@
 - Alasan: mulai mengganti tampilan layar Main dengan aset asli, satu per satu.
 - Perubahan: tombol Jeda lama (kotak ungu) diganti gambar bulat emas-kayu dengan animasi ketuk; helper UI.icon_button dipakai ulang untuk tombol bergambar berikutnya.
 - Hasil tes: gameplay_test ditambah 3 cek (ukuran >=44px, ketuk membuka jeda, jeda bisa ditutup), semua tes 0 gagal. Belum diuji di HP.
+
+## 2026-11-14 - Layar Main gaya Cooking Madness (Indonesia)
+- File: assets/scene_indonesia.jpg (latar dari user), scripts/screens/gameplay_scene_screen.gd (baru), scripts/game_data.gd (RECIPES, APPLIANCE_NAMES, SCENES, menu Ikan Bakar), scripts/main.gd (routing), scripts/screens/gameplay_screen.gd (flag classic), tests/gameplay_scene_test.gd/.tscn (baru), tests/gameplay_test.gd, tests/level_select_test.gd
+- Alasan: user ingin game seperti Cooking Madness: latar penuh, pelanggan di depan konter, alur bahan -> alat masak -> piring -> pelanggan.
+- Perubahan: layar baru memakai satu latar dengan area ketuk tak terlihat di atas rak bahan, 3 gelas, 6 panggangan, 4 wajan, 4 panci, 6 piring, 6 mangkuk. Slot aktif 2 + level upgrade "slot" (maks. fisik); sisanya diredupkan. Es teh tidak gosong; masakan lain gosong bila terlambat. Menu ke-5 Ikan Bakar dibuka di level 5. Logika pelanggan, bayar, jeda, bintang dipakai ulang dari layar lama. Layar lama tetap untuk area tanpa latar (Meksiko, Jepang, Prancis) dan untuk tes classic.
+- Sementara: masakan, pelanggan, dan gelembung pesanan digambar dari kode (lingkaran huruf, siluet) sampai aset ikon dan pelanggan asli ada. Bar target dan HUD juga sementara.
+- Diuji: gameplay_scene_test 20 cek (ketukan sungguhan, semua area ketuk >=44px di 1280x720), render 1280x720 dan 2400x1080. Semua tes lain 0 gagal. Belum diuji di HP. Keseimbangan (target level) belum disimulasi ulang untuk mekanik baru.

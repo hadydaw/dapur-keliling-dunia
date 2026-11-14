@@ -21,7 +21,7 @@ func _frames(n: int = 2) -> void:
 
 
 func _open(area: int, level: int) -> Node:
-	main._go("gameplay", {"area": area, "level": level})
+	main._go("gameplay", {"area": area, "level": level, "classic": true})
 	await _frames()
 	var g: Node = main.current
 	g.set_process(false)  # waktu dikendalikan tes
