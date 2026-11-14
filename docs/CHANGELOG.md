@@ -32,3 +32,10 @@
 - Bahasa: bawaan Indonesia; versi *_en.png disiapkan untuk pilihan bahasa di Setelan (belum terhubung)
 - Platform diuji: render asli 1280x720 dan 1600x720 (Xvfb + Godot 4.3); tes ketuk headless 1280x720
 - Hasil tes: ketuk 12/12 lulus. Belum diuji di HP.
+
+## 2026-11-14 - Latar menu berupa video loop
+- File: scripts/ui/animated_bg.gd, assets/menu_bg.ogv (1,6 MB, 1280x720, 4 detik, 24 fps, tanpa audio)
+- Alasan: latar bergerak dari video I2V buatan pemilik; efek kode (uap/kilau) dimatikan saat video ada agar tidak dobel, dan tetap jadi cadangan bila video tidak ada
+- Loop: video asli (5 dtk) awal dan akhirnya tidak cocok, jadi dibuat crossfade 1 dtk agar mulus
+- Platform diuji: render asli 1280x720 dan 1600x720 (video terbukti bergerak antar frame); tes ketuk 12/12 lulus
+- Belum diuji: di HP (performa decoding video Theora di perangkat nyata)

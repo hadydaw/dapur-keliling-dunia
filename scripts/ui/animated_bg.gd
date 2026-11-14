@@ -3,6 +3,8 @@ extends Control
 ## + efek kode (uap, kilau lentera/lampu/api). Koordinat efek dan tombol dalam koordinat gambar (0..1).
 
 const TEX := preload("res://assets/menu_bg.jpg")
+## Video latar (loop mulus, 4 detik). Bila ada, efek kode (uap/kilau) dimatikan agar tidak dobel.
+const VIDEO_PATH := "res://assets/menu_bg.ogv"
 
 const LANTERNS := [Vector2(0.142, 0.105), Vector2(0.187, 0.218)]
 const BULBS := [Vector2(0.511, 0.040), Vector2(0.565, 0.069), Vector2(0.4575, 0.085),
@@ -14,12 +16,24 @@ var t: float = 0.0
 var glow_tex: GradientTexture2D
 var glow_layer: Control
 var steam_nodes: Array = []
+var video: VideoStreamPlayer = null
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
+	if ResourceLoader.exists(VIDEO_PATH):
+		video = VideoStreamPlayer.new()
+		video.stream = load(VIDEO_PATH)
+		video.loop = true
+		video.expand = true
+		video.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(video)
+		video.play()
+		resized.connect(_layout_video)
+		_layout_video()
+		return
 	glow_tex = GradientTexture2D.new()
 	glow_tex.fill = GradientTexture2D.FILL_RADIAL
 	glow_tex.fill_from = Vector2(0.5, 0.5)
@@ -84,12 +98,20 @@ func rect_to_screen(r: Rect2) -> Rect2:
 	return Rect2(a, b - a)
 
 
+func _layout_video() -> void:
+	var r := image_rect()
+	video.position = r.position
+	video.size = r.size
+
+
 func _layout_steam() -> void:
 	for i in steam_nodes.size():
 		steam_nodes[i].position = to_screen(STEAM[i])
 
 
 func _process(delta: float) -> void:
+	if video != null:
+		return
 	t += delta
 	queue_redraw()
 	glow_layer.queue_redraw()
