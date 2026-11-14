@@ -7,6 +7,7 @@ extends "res://scripts/screens/gameplay_screen.gd"
 var scene: Dictionary = {}
 var bg: TextureRect
 var fx: Control
+var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
 var icon_tex: Dictionary = {}        # id hidangan -> Texture2D ikon (di-cache, jangan load tiap frame)
 var cust_fx: Control                 # lapisan pelanggan (di belakang konter)
 var counter: Polygon2D               # siluet konter dari latar, menimpa pelanggan
@@ -49,6 +50,16 @@ func _ready() -> void:
 	for id in GameData.DISHES:
 		if GameData.DISHES[id].has("icon"):
 			icon_tex[id] = load(GameData.DISHES[id]["icon"])
+	if scene.has("stage_art"):
+		for dish in scene["stage_art"]:
+			if dish == "rects":
+				continue
+			art_tex[dish] = {}
+			for st in scene["stage_art"][dish]:
+				var arr: Array = []
+				for path in scene["stage_art"][dish][st]:
+					arr.append(load(path))
+				art_tex[dish][st] = arr
 	cust_fx = Control.new()
 	cust_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cust_fx.draw.connect(_on_cust_draw)
@@ -108,7 +119,7 @@ func _build_appliances() -> void:
 		var pts: Array = def["points"]
 		for i in pts.size():
 			slots.append({
-				"kind": aname, "pos": pts[i], "r": float(def["r"]),
+				"kind": aname, "idx": i, "pos": pts[i], "r": float(def["r"]),
 				"state": "empty" if i < usable else "locked",
 				"dish": "", "t": 0.0, "dur": 0.0,
 			})
@@ -467,6 +478,8 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 		return
 	if st == "empty":
 		return
+	if _draw_stage_art(slot, st, c, r, s):
+		return
 	var col: Color = Color.html(GameData.DISHES[slot["dish"]]["color"]) if slot["dish"] != "" else Color.WHITE
 	var letter: String = GameData.DISHES[slot["dish"]]["name"].substr(0, 1) if slot["dish"] != "" else ""
 	match st:
@@ -488,6 +501,30 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 			fx.draw_circle(c, r * 0.62, col)
 			fx.draw_arc(c, r * 0.72, 0.0, TAU, 40, Color(1, 1, 1, 0.9), maxf(3.0, r * 0.1))
 			_text(c, letter, int(r * 0.7), Color.WHITE)
+
+
+# Gambar tahap masakan dari latar (mentah/matang/gosong/di piring). true bila dipakai.
+func _draw_stage_art(slot: Dictionary, st: String, c: Vector2, r: float, s: float) -> bool:
+	var dish: String = slot["dish"]
+	if not art_tex.has(dish) or not art_tex[dish].has(st):
+		return false
+	var rects: Dictionary = scene["stage_art"]["rects"]
+	if not rects.has(slot["kind"]):
+		return false
+	var texs: Array = art_tex[dish][st]
+	var idx: int = int(slot["idx"])
+	if idx >= texs.size():
+		return false
+	var rc: Rect2 = rects[slot["kind"]]
+	fx.draw_texture_rect(texs[idx], Rect2(_m(slot["pos"] + rc.position), rc.size * s), false)
+	match st:
+		"cooking":
+			var frac: float = float(slot["t"]) / maxf(float(slot["dur"]), 0.01)
+			fx.draw_arc(c, r * 0.92, -PI * 0.5, -PI * 0.5 + TAU * frac, 40, Color(1, 0.7, 0.15), maxf(4.0, r * 0.14))
+		"ready":
+			var a: float = 0.55 + 0.45 * sin(pulse * 6.0)
+			fx.draw_arc(c, r * 0.92, 0.0, TAU, 40, Color(0.3, 1, 0.4, a), maxf(4.0, r * 0.16))
+	return true
 
 
 func _customer_mood(cust: Dictionary) -> String:

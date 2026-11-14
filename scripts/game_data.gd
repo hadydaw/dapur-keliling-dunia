@@ -6,7 +6,7 @@ const LEVELS_PER_AREA := 5
 const DISHES := {
 	"es_teh": {"name": "Es Teh Manis", "station": "Dispenser", "cook": 3.0, "price": 15, "color": "c98b3c", "icon": "res://assets/icons/es_teh.png"},
 	"nasi_goreng": {"name": "Nasi Goreng", "station": "Wajan", "cook": 6.0, "price": 30, "color": "d98c33"},
-	"sate_ayam": {"name": "Sate Ayam", "station": "Panggangan", "cook": 8.0, "price": 40, "color": "a0522d"},
+	"sate_ayam": {"name": "Sate Ayam", "station": "Panggangan", "cook": 8.0, "price": 40, "color": "a0522d", "icon": "res://assets/icons/sate_ayam.png"},
 	"soto_ayam": {"name": "Soto Ayam", "station": "Panci", "cook": 10.0, "price": 50, "color": "e0b341"},
 	"ikan_bakar": {"name": "Ikan Bakar", "station": "Panggangan", "cook": 9.0, "price": 60, "color": "8fa3ad"},
 
@@ -78,6 +78,17 @@ const SCENES := {
 			Vector2(1040, 402), Vector2(1052, 395), Vector2(1060, 378), Vector2(1070, 372), Vector2(1080, 378), Vector2(1092, 400),
 			Vector2(1100, 425), Vector2(1115, 412), Vector2(1380, 410), Vector2(1400, 405), Vector2(1600, 408), Vector2(1672, 412),
 			Vector2(1672, 941), Vector2(380, 941)],
+		# gambar tahap masakan per slot (potongan latar, satu per slot); tanpa gambar -> lingkaran berhuruf.
+		# "rects": area potongan relatif terhadap pusat slot (piksel gambar latar).
+		"stage_art": {
+			"rects": {"grill": Rect2(-46, -46, 92, 98), "plate": Rect2(-50, -42, 104, 78)},
+			"sate_ayam": {
+				"cooking": ["res://assets/scene/sate/cooking_0.png", "res://assets/scene/sate/cooking_1.png", "res://assets/scene/sate/cooking_2.png", "res://assets/scene/sate/cooking_3.png", "res://assets/scene/sate/cooking_4.png", "res://assets/scene/sate/cooking_5.png"],
+				"ready": ["res://assets/scene/sate/ready_0.png", "res://assets/scene/sate/ready_1.png", "res://assets/scene/sate/ready_2.png", "res://assets/scene/sate/ready_3.png", "res://assets/scene/sate/ready_4.png", "res://assets/scene/sate/ready_5.png"],
+				"burnt": ["res://assets/scene/sate/burnt_0.png", "res://assets/scene/sate/burnt_1.png", "res://assets/scene/sate/burnt_2.png", "res://assets/scene/sate/burnt_3.png", "res://assets/scene/sate/burnt_4.png", "res://assets/scene/sate/burnt_5.png"],
+				"full": ["res://assets/scene/sate/full_0.png", "res://assets/scene/sate/full_1.png", "res://assets/scene/sate/full_2.png", "res://assets/scene/sate/full_3.png", "res://assets/scene/sate/full_4.png", "res://assets/scene/sate/full_5.png"],
+			},
+		},
 		"customer_art": {
 			"senang": "res://assets/customers/pria_batik_senang.png",
 			"biasa": "res://assets/customers/pria_batik_biasa.png",

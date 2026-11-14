@@ -147,3 +147,10 @@
 - Catatan: ikon di-cache saat layar dibuka; memuat tekstur tiap frame membuat ikon tampil putih
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Resep sate: 4 tahap bergambar + ikon sate
+- File: assets/scene/sate/*.png (24 potongan: mentah/matang/gosong per slot pemanggang + sate di piring per slot piring), assets/icons/sate_ayam.png, scripts/game_data.gd (stage_art, icon sate), scripts/screens/gameplay_scene_screen.gd (`_draw_stage_art`, cache `art_tex`, slot punya `idx`)
+- Alasan: sate mentah/matang/gosong tampil di atas pemanggang dan sate jadi di atas piring, menggantikan lingkaran berhuruf; ikon sate di gelembung pelanggan
+- Catatan: potongan diambil dari 4 gambar latar buatan user (sejajar dengan latar dasar, selisih maks 1 px); uap/asap di atas pemanggang tidak ikut dipotong
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)
