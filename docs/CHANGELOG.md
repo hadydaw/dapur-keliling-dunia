@@ -166,3 +166,9 @@
 - Catatan: cincin hanya dihapus pada hidangan yang sudah bergambar (es teh, nasi goreng, sate); hidangan tanpa gambar masih memakai lingkaran berhuruf + cincin. Bunyi diputar tiap slot beralih memasak -> matang (termasuk gelas es teh).
 - Platform yang diuji: render 1280x720; bunyi hanya diuji lewat logika (hitungan pemicu), belum didengar di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Resep soto ayam: 4 tahap bergambar + ikon
+- File: assets/scene/soto/*.png (panci mentah/matang/gosong x4 slot, soto di mangkuk x6), assets/icons/soto_ayam.png, scripts/game_data.gd (stage_art soto_ayam, rect "pot" dan "bowl", icon)
+- Catatan: potongan panci berbentuk elips (tepi memudar); uap/asap pada gambar sumber tidak ikut dipotong
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)
