@@ -154,3 +154,9 @@
 - Catatan: potongan diambil dari 4 gambar latar buatan user (sejajar dengan latar dasar, selisih maks 1 px); uap/asap di atas pemanggang tidak ikut dipotong
 - Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Resep nasi goreng: 4 tahap bergambar + ikon
+- File: assets/scene/nasi/*.png (wajan mentah/matang/gosong x4 slot, nasi goreng di piring x6), assets/icons/nasi_goreng.png, scripts/game_data.gd (stage_art nasi_goreng, rect "wok", icon), scripts/screens/gameplay_scene_screen.gd (radius cincin timer dibatasi 40 agar tidak menimpa wajan tetangga)
+- Catatan: potongan wajan berbentuk elips (tepi memudar); uap/asap pada gambar sumber tidak ikut dipotong
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)

@@ -517,6 +517,7 @@ func _draw_stage_art(slot: Dictionary, st: String, c: Vector2, r: float, s: floa
 		return false
 	var rc: Rect2 = rects[slot["kind"]]
 	fx.draw_texture_rect(texs[idx], Rect2(_m(slot["pos"] + rc.position), rc.size * s), false)
+	r = minf(r, 40.0 * s)   # cincin tidak boleh menimpa alat tetangga (wajan r=52)
 	match st:
 		"cooking":
 			var frac: float = float(slot["t"]) / maxf(float(slot["dur"]), 0.01)

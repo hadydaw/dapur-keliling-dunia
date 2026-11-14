@@ -5,7 +5,7 @@ const LEVELS_PER_AREA := 5
 
 const DISHES := {
 	"es_teh": {"name": "Es Teh Manis", "station": "Dispenser", "cook": 3.0, "price": 15, "color": "c98b3c", "icon": "res://assets/icons/es_teh.png"},
-	"nasi_goreng": {"name": "Nasi Goreng", "station": "Wajan", "cook": 6.0, "price": 30, "color": "d98c33"},
+	"nasi_goreng": {"name": "Nasi Goreng", "station": "Wajan", "cook": 6.0, "price": 30, "color": "d98c33", "icon": "res://assets/icons/nasi_goreng.png"},
 	"sate_ayam": {"name": "Sate Ayam", "station": "Panggangan", "cook": 8.0, "price": 40, "color": "a0522d", "icon": "res://assets/icons/sate_ayam.png"},
 	"soto_ayam": {"name": "Soto Ayam", "station": "Panci", "cook": 10.0, "price": 50, "color": "e0b341"},
 	"ikan_bakar": {"name": "Ikan Bakar", "station": "Panggangan", "cook": 9.0, "price": 60, "color": "8fa3ad"},
@@ -81,7 +81,13 @@ const SCENES := {
 		# gambar tahap masakan per slot (potongan latar, satu per slot); tanpa gambar -> lingkaran berhuruf.
 		# "rects": area potongan relatif terhadap pusat slot (piksel gambar latar).
 		"stage_art": {
-			"rects": {"grill": Rect2(-46, -46, 92, 98), "plate": Rect2(-50, -42, 104, 78)},
+			"rects": {"grill": Rect2(-46, -46, 92, 98), "plate": Rect2(-50, -42, 104, 78), "wok": Rect2(-62, -34, 124, 68)},
+			"nasi_goreng": {
+				"cooking": ["res://assets/scene/nasi/cooking_0.png", "res://assets/scene/nasi/cooking_1.png", "res://assets/scene/nasi/cooking_2.png", "res://assets/scene/nasi/cooking_3.png"],
+				"ready": ["res://assets/scene/nasi/ready_0.png", "res://assets/scene/nasi/ready_1.png", "res://assets/scene/nasi/ready_2.png", "res://assets/scene/nasi/ready_3.png"],
+				"burnt": ["res://assets/scene/nasi/burnt_0.png", "res://assets/scene/nasi/burnt_1.png", "res://assets/scene/nasi/burnt_2.png", "res://assets/scene/nasi/burnt_3.png"],
+				"full": ["res://assets/scene/nasi/full_0.png", "res://assets/scene/nasi/full_1.png", "res://assets/scene/nasi/full_2.png", "res://assets/scene/nasi/full_3.png", "res://assets/scene/nasi/full_4.png", "res://assets/scene/nasi/full_5.png"],
+			},
 			"sate_ayam": {
 				"cooking": ["res://assets/scene/sate/cooking_0.png", "res://assets/scene/sate/cooking_1.png", "res://assets/scene/sate/cooking_2.png", "res://assets/scene/sate/cooking_3.png", "res://assets/scene/sate/cooking_4.png", "res://assets/scene/sate/cooking_5.png"],
 				"ready": ["res://assets/scene/sate/ready_0.png", "res://assets/scene/sate/ready_1.png", "res://assets/scene/sate/ready_2.png", "res://assets/scene/sate/ready_3.png", "res://assets/scene/sate/ready_4.png", "res://assets/scene/sate/ready_5.png"],
