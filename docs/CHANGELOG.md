@@ -58,3 +58,9 @@
 - Perbaikan: mode cover (video menutupi layar, kelebihan dipotong simetris); gambar latar gelap tambahan dihapus
 - Dampak: di 20:9 sedikit bagian atas/bawah video terpotong; di 16:9 tampilan sama. Posisi UI tidak berubah (dihitung dari layar)
 - Hasil tes: render asli 2400x1080 dan 1280x720 tanpa pinggiran; tes ketuk 13/13 lulus. Belum diuji di HP.
+
+## 2026-11-14 - Tes otomatis gameplay + simulasi keseimbangan
+- File: tests/gameplay_test.gd, tests/gameplay_test.tscn (baru; tidak mengubah kode game)
+- Cakupan (18 cek, semua lulus): masak->matang, gosong, buang gosong, layani, bayar, tip 25%, pesanan ganda, sabar habis, ambang bintang 0/1/2/3, simpan progres, plus ketuk sungguhan di slot
+- Simulasi bot (pemain ideal, reaksi 0,6 dtk, 3 percobaan/level, 20 level): bot mencapai 184-241% target, jadi 3 bintang (butuh 180%) hampir selalu tercapai oleh pemain sempurna -> target kemungkinan terlalu mudah. Belum diubah; menunggu keputusan pemilik.
+- Belum diuji: rasa bermain manusia di HP
