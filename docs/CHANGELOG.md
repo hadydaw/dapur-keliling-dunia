@@ -24,3 +24,11 @@
 - Isi: gambar penuh sebagai tampilan menu, tombol sentuh transparan di atas tiap tombol, angka koin/bintang asli, konfirmasi Mulai Baru, mode contain untuk layar lebar
 - Hasil uji: tests/menu_test.tscn (headless, klik sungguhan) 12/12 lulus pada 1280x720 dan 1600x720; render nyata kedua ukuran tanpa error. Belum diuji di HP.
 - Catatan: ikon Piala, Surat, Inventaris, Pengaturan baru menampilkan pesan "segera hadir"; titik merah notifikasi masih bagian dari gambar.
+
+## 2026-11-14 - Menu Utama memakai aset terpisah
+- File: scripts/screens/menu_screen.gd, scripts/ui/animated_bg.gd, tests/menu_test.gd, assets/ui/*.png (19 aset transparan, versi Indonesia + Inggris), assets/menu_bg.jpg dipakai sebagai latar
+- Alasan: mockup hanya referensi; teks/warna/angka kini bisa diubah tanpa membuat ulang gambar
+- Dampak: Menu Utama saja. Angka koin/bintang digambar kode (nilai asli). Tata letak dihitung dari tinggi layar, dipusatkan
+- Bahasa: bawaan Indonesia; versi *_en.png disiapkan untuk pilihan bahasa di Setelan (belum terhubung)
+- Platform diuji: render asli 1280x720 dan 1600x720 (Xvfb + Godot 4.3); tes ketuk headless 1280x720
+- Hasil tes: ketuk 12/12 lulus. Belum diuji di HP.

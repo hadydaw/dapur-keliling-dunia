@@ -2,7 +2,7 @@ extends Control
 ## Latar menu: gambar penuh (mode "contain", sisi sisa diisi versi gelap gambar yang sama)
 ## + efek kode (uap, kilau lentera/lampu/api). Koordinat efek dan tombol dalam koordinat gambar (0..1).
 
-const TEX := preload("res://assets/menu_ui.jpg")
+const TEX := preload("res://assets/menu_bg.jpg")
 
 const LANTERNS := [Vector2(0.142, 0.105), Vector2(0.187, 0.218)]
 const BULBS := [Vector2(0.511, 0.040), Vector2(0.565, 0.069), Vector2(0.4575, 0.085),

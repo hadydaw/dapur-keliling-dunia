@@ -50,7 +50,7 @@ func _ready() -> void:
 		main._go("menu", {})
 		for i in 3:
 			await get_tree().process_frame
-		var b: Button = main.current.buttons[id]
+		var b: BaseButton = main.current.buttons[id]
 		var center: Vector2 = b.global_position + b.size * 0.5
 		_tap(center)
 		for i in 3:
@@ -66,7 +66,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 	var gs: Node = GameState
 	gs.coins = 123
-	var mb: Button = main.current.buttons["mulai_baru"]
+	var mb: BaseButton = main.current.buttons["mulai_baru"]
 	_tap(mb.global_position + mb.size * 0.5)
 	for i in 3:
 		await get_tree().process_frame
