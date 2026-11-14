@@ -24,8 +24,9 @@ const ITEMS := [
 	{"id": "bar_koin", "tex": "bar_koin", "a": "l", "x": 16, "y": 16, "w": 230, "touch": false},
 	{"id": "bar_bintang", "tex": "bar_bintang", "a": "l", "x": 258, "y": 16, "w": 230, "touch": false},
 ]
-# Area angka di dalam bar (pecahan lebar dan tinggi bar)
-const NUM_RECT := Rect2(0.27, 0.22, 0.52, 0.56)
+# Area kayu kosong di dalam bar (pecahan lebar/tinggi bar), diukur dari gambar
+const NUM_RECT_COIN := Rect2(0.264, 0.317, 0.532, 0.433)
+const NUM_RECT_STAR := Rect2(0.271, 0.303, 0.526, 0.427)
 # Tombol + pada bar (pecahan), jadi area ketuk menuju Toko
 const PLUS_RECT := Rect2(0.80, 0.10, 0.20, 0.80)
 
@@ -135,17 +136,14 @@ func _layout() -> void:
 		if pb.size.x < 44.0:
 			pb.position.x -= 44.0 - pb.size.x
 			pb.size.x = 44.0
-	_place_num(coin_label, nodes["bar_koin"], str(GameState.coins), u)
-	_place_num(star_label, nodes["bar_bintang"], str(GameState.total_stars()), u)
+	_place_num(coin_label, nodes["bar_koin"], str(GameState.coins), NUM_RECT_COIN)
+	_place_num(star_label, nodes["bar_bintang"], str(GameState.total_stars()), NUM_RECT_STAR)
 	toast_label.position = Vector2(0, size.y * 0.5)
 	toast_label.size = Vector2(size.x, 50)
 
 
-func _place_num(lab: Label, bar: Control, txt: String, u: float) -> void:
-	lab.position = bar.position + NUM_RECT.position * bar.size
-	lab.size = NUM_RECT.size * bar.size
-	lab.text = txt
-	lab.add_theme_font_size_override("font_size", int(26.0 * u))
+func _place_num(lab: Label, bar: Control, txt: String, rel: Rect2) -> void:
+	UI.fit_label(lab, txt, Rect2(bar.position + rel.position * bar.size, rel.size * bar.size), 0.85)
 
 
 func _process(delta: float) -> void:

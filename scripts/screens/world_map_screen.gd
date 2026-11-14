@@ -18,8 +18,9 @@ const PLATE_W := 0.23
 # Porsi kelebihan tinggi yang dipotong dari ATAS saat layar lebih lebar dari 16:9
 const CROP_TOP := 0.25
 # Area teks di dalam papan nama (pecahan lebar/tinggi papan)
-const NAME_RECT := Rect2(0.13, 0.20, 0.74, 0.30)
-const STAR_RECT := Rect2(0.28, 0.50, 0.44, 0.28)
+const NAME_RECT := Rect2(0.098, 0.394, 0.806, 0.231)   # pita kayu bersih (tanpa hiasan emas)
+const NUM_RECT_COIN := Rect2(0.264, 0.317, 0.532, 0.433)
+const NUM_RECT_STAR := Rect2(0.271, 0.303, 0.526, 0.427)
 
 var bg_rect: TextureRect
 var plates: Array = []
@@ -193,18 +194,23 @@ func _layout() -> void:
 		plate.size = Vector2(pw, ph)
 		plate.pivot_offset = plate.size * 0.5
 		var nl: Label = plates[i]["name"]
-		nl.position = NAME_RECT.position * plate.size
-		nl.size = NAME_RECT.size * plate.size
-		nl.add_theme_font_size_override("font_size", int(ph * 0.21))
-		var st: TextureRect = plates[i]["star"]
-		var srect := Rect2(STAR_RECT.position * plate.size, STAR_RECT.size * plate.size)
-		var star_w: float = srect.size.y
-		st.position = srect.position
-		st.size = Vector2(star_w, star_w)
+		UI.fit_label(nl, nl.text, Rect2(NAME_RECT.position * plate.size, NAME_RECT.size * plate.size), 0.92)
+		# baris bintang di bawah papan: ikon + teks, dipusatkan sebagai satu kelompok
 		var cl: Label = plates[i]["count"]
-		cl.position = Vector2(srect.position.x + star_w + 6.0, srect.position.y)
-		cl.size = Vector2(srect.size.x - star_w - 6.0, srect.size.y)
-		cl.add_theme_font_size_override("font_size", int(ph * 0.2))
+		var st: TextureRect = plates[i]["star"]
+		var row_h: float = ph * 0.36
+		var fs: int = int(row_h * 0.85)
+		cl.add_theme_font_size_override("font_size", fs)
+		var tw: float = cl.get_theme_font("font").get_string_size(cl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var group_w: float = row_h + 6.0 + tw
+		var gx: float = (pw - group_w) * 0.5
+		var gy: float = ph * 0.97
+		st.size = Vector2(row_h, row_h)
+		st.position = Vector2(gx, gy)
+		cl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		cl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		cl.position = Vector2(gx + row_h + 6.0, gy)
+		cl.size = Vector2(tw + 4.0, row_h)
 		var lk: TextureRect = locks[i]
 		var lw: float = 0.075 * r.size.x
 		var lc := _to_screen(Vector2(cx, 0.36))
@@ -232,8 +238,8 @@ func _layout() -> void:
 				b.size = Vector2(44, 44)
 	var bar_c: TextureRect = _top("bar_koin")
 	var bar_s: TextureRect = _top("bar_bintang")
-	_place_num(coin_label, bar_c, str(GameState.coins), u)
-	_place_num(star_label, bar_s, str(GameState.total_stars()), u)
+	_place_num(coin_label, bar_c, str(GameState.coins), NUM_RECT_COIN)
+	_place_num(star_label, bar_s, str(GameState.total_stars()), NUM_RECT_STAR)
 	toast_label.position = Vector2(0, size.y * 0.5)
 	toast_label.size = Vector2(size.x, 50)
 
@@ -245,11 +251,8 @@ func _top(id: String) -> TextureRect:
 	return null
 
 
-func _place_num(lab: Label, bar: Control, txt: String, u: float) -> void:
-	lab.position = bar.position + Vector2(0.27, 0.22) * bar.size
-	lab.size = Vector2(0.52, 0.56) * bar.size
-	lab.text = txt
-	lab.add_theme_font_size_override("font_size", int(26.0 * u))
+func _place_num(lab: Label, bar: Control, txt: String, rel: Rect2) -> void:
+	UI.fit_label(lab, txt, Rect2(bar.position + rel.position * bar.size, rel.size * bar.size), 0.85)
 
 
 # ---------- interaksi ----------

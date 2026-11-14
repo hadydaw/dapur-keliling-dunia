@@ -152,9 +152,7 @@ func _layout() -> void:
 	var ph: float = pw * title_plate.texture.get_height() / title_plate.texture.get_width()
 	title_plate.size = Vector2(pw, ph)
 	title_plate.position = Vector2((size.x - pw) * 0.5, 6.0 * u)
-	title_label.position = Vector2(0.13, 0.2) * title_plate.size
-	title_label.size = Vector2(0.74, 0.5) * title_plate.size
-	title_label.add_theme_font_size_override("font_size", int(ph * 0.3))
+	UI.fit_label(title_label, GameData.AREAS[area_idx]["name"], Rect2(Vector2(0.098, 0.394) * title_plate.size, Vector2(0.806, 0.231) * title_plate.size), 0.92)
 	# medali
 	var n: int = medals.size()
 	var step: float = (MEDAL + GAP) * u
@@ -175,9 +173,7 @@ func _layout() -> void:
 			s.size = Vector2(sw, sw)
 			s.position = Vector2(cx + (k - 1) * (sw + 2.0 * u) - sw * 0.5, cy + d * 0.5 + 6.0 * u + (0.0 if k == 1 else -0.0))
 		var tl: Label = e["target"]
-		tl.size = Vector2(d + 40.0 * u, 28.0 * u)
-		tl.position = Vector2(cx - tl.size.x * 0.5, cy + d * 0.5 + 6.0 * u + sw + 2.0 * u)
-		tl.add_theme_font_size_override("font_size", int(20.0 * u))
+		UI.fit_label(tl, tl.text, Rect2(cx - (d + 40.0 * u) * 0.5, cy + d * 0.5 + 6.0 * u + sw + 2.0 * u, d + 40.0 * u, 26.0 * u), 0.85)
 		var b: TextureButton = e["button"]
 		b.position = medal.position - Vector2(10, 10) * u
 		b.size = Vector2(d + 20.0 * u, d + 20.0 * u + (sw + 34.0 * u if e["unlocked"] else 0.0))
@@ -196,10 +192,7 @@ func _layout() -> void:
 			bt.position = tr.position
 			bt.size = Vector2(maxf(tr.size.x, 44.0), maxf(tr.size.y, 44.0))
 	var bar: TextureRect = top_items[0]["node"]
-	coin_label.position = bar.position + Vector2(0.27, 0.22) * bar.size
-	coin_label.size = Vector2(0.52, 0.56) * bar.size
-	coin_label.text = str(GameState.coins)
-	coin_label.add_theme_font_size_override("font_size", int(26.0 * u))
+	UI.fit_label(coin_label, str(GameState.coins), Rect2(bar.position + Vector2(0.264, 0.317) * bar.size, Vector2(0.532, 0.433) * bar.size), 0.85)
 	toast_label.position = Vector2(0, size.y * 0.82)
 	toast_label.size = Vector2(size.x, 50)
 

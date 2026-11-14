@@ -83,3 +83,11 @@
 - Interaksi: ketuk level terbuka -> gameplay; level terkunci -> pesan "Selesaikan Level N dulu"; animasi ketuk sama seperti layar lain
 - Sementara: medali level terbuka digambar kode (aset lvl_open.png belum ada; otomatis dipakai bila ditambahkan ke assets/ui/); medali terkunci memakai ic_gembok.png
 - Hasil tes: Pilih Level 16/16, Peta 16/16, Menu 13/13 lulus; render asli 1280x720 (Indonesia) dan 2400x1080 (Prancis). Belum diuji di HP.
+
+## 2026-11-14 - Font game dan penempatan teks presisi
+- File: assets/fonts/* (Lora variabel bobot 700, Poppins Bold, game_font.tres), project.godot ([gui] font bawaan), scripts/ui_kit.gd (fit_label), menu_screen.gd, world_map_screen.gd, level_select_screen.gd, ui/level_medal.gd
+- Alasan: semua teks memakai font bawaan Godot yang sama dan posisinya tidak pas di papan/bar/medali.
+- Perubahan: font bawaan proyek diganti; teks ditempatkan di area kayu kosong hasil ukur piksel aset (plate_nama, bar_koin, bar_bintang); ukuran font mengikuti tinggi kotak lalu dikecilkan bila tidak muat; baris bintang peta dunia dipindah ke bawah papan dan dipusatkan; angka medali dipusatkan dengan garis dasar yang dihitung dan diberi outline.
+- Platform diuji: render 1280x720 (Menu, Peta Dunia, Pilih Level) lewat Godot + lavapipe; belum diuji di HP.
+- Hasil tes: menu_test, world_map_test, level_select_test, gameplay_test semuanya 0 gagal.
+- Catatan: font game tebal bergaya (Lilita One/Baloo/Fredoka) tidak bisa diunduh dari sandbox; sementara memakai Lora. Bisa diganti dengan TTF dari user.
