@@ -67,12 +67,22 @@ const SCENES := {
 		"image": "res://assets/scene_indonesia.jpg",
 		"size": Vector2(1672, 941),
 		# Pelanggan berdiri di celah antar alat masak (kaki = garis konter), kepala + bahu terlihat.
-		"customer_spots": [Vector2(505, 402), Vector2(800, 402), Vector2(1190, 402), Vector2(1466, 402)],
+		"customer_spots": [Vector2(505, 446), Vector2(800, 446), Vector2(1190, 446), Vector2(1466, 446)],
+		# siluet bagian atas konter (piksel gambar latar); menimpa pelanggan agar mereka
+		# tampak berdiri di belakang konter, bukan terpotong.
+		"counter_mask": [
+			Vector2(380, 436), Vector2(500, 436), Vector2(502, 396), Vector2(512, 378), Vector2(523, 371), Vector2(535, 378), Vector2(545, 398),
+			Vector2(562, 400), Vector2(600, 374), Vector2(650, 352), Vector2(700, 372), Vector2(745, 398), Vector2(755, 392),
+			Vector2(762, 376), Vector2(770, 371), Vector2(780, 378), Vector2(790, 396), Vector2(797, 392), Vector2(806, 376),
+			Vector2(815, 371), Vector2(825, 378), Vector2(832, 408), Vector2(880, 388), Vector2(950, 365), Vector2(1000, 385),
+			Vector2(1040, 402), Vector2(1052, 395), Vector2(1060, 378), Vector2(1070, 372), Vector2(1080, 378), Vector2(1092, 400),
+			Vector2(1100, 425), Vector2(1115, 412), Vector2(1380, 410), Vector2(1400, 405), Vector2(1600, 408), Vector2(1672, 412),
+			Vector2(1672, 941), Vector2(380, 941)],
 		"customer_art": {
 			"senang": "res://assets/customers/pria_batik_senang.png",
 			"biasa": "res://assets/customers/pria_batik_biasa.png",
 			"marah": "res://assets/customers/pria_batik_marah.png",
-			"height": 168.0,      # tinggi gambar di latar (piksel gambar latar)
+			"height": 200.0,      # tinggi gambar di latar (piksel gambar latar)
 		},
 		"appliances": {
 			"dispenser": {"r": 30.0, "points": [Vector2(66, 556), Vector2(120, 556), Vector2(176, 556)]},

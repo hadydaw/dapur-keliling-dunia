@@ -130,3 +130,9 @@
 - Dampak: layar gameplay berbasis scene (area Indonesia)
 - Platform yang diuji: render 1280x720 dan 2400x1080 (20:9); belum diuji di perangkat asli
 - Hasil tes: 5 suite headless lulus (0 gagal)
+
+## 2026-11-14 - Pelanggan berdiri di belakang konter (tidak dipotong)
+- File: scripts/screens/gameplay_scene_screen.gd (lapisan pelanggan + Polygon2D konter), scripts/game_data.gd (counter_mask, spot y 446, tinggi 200)
+- Alasan: gambar pelanggan terpotong di dada; kini kaki disembunyikan konter yang digambar menimpa pelanggan
+- Platform yang diuji: render 1280x720 dan 2400x1080; belum diuji di perangkat asli
+- Hasil tes: 5 suite headless lulus (0 gagal)

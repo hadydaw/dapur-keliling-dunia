@@ -7,6 +7,8 @@ extends "res://scripts/screens/gameplay_screen.gd"
 var scene: Dictionary = {}
 var bg: TextureRect
 var fx: Control
+var cust_fx: Control                 # lapisan pelanggan (di belakang konter)
+var counter: Polygon2D               # siluet konter dari latar, menimpa pelanggan
 var appliances: Dictionary = {}      # nama alat -> Array slot
 var hotspots: Array = []             # {"rect": Rect2 (piksel gambar), "btn": Button}
 var font: Font
@@ -43,6 +45,15 @@ func _ready() -> void:
 	bg.stretch_mode = TextureRect.STRETCH_SCALE
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	cust_fx = Control.new()
+	cust_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cust_fx.draw.connect(_on_cust_draw)
+	add_child(cust_fx)
+	counter = Polygon2D.new()
+	counter.texture = bg.texture
+	counter.polygon = PackedVector2Array(scene["counter_mask"])
+	counter.uv = counter.polygon
+	add_child(counter)
 	fx = Control.new()
 	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fx.draw.connect(_on_fx_draw)
@@ -172,6 +183,10 @@ func _layout() -> void:
 	offset.y = clampf(size.y * 0.5 - FOCUS_Y * scale_f, size.y - img.y * scale_f, 0.0)
 	bg.position = offset
 	bg.size = img * scale_f
+	cust_fx.position = Vector2.ZERO
+	cust_fx.size = size
+	counter.position = offset
+	counter.scale = Vector2(scale_f, scale_f)
 	fx.position = Vector2.ZERO
 	fx.size = size
 	for h in hotspots:
@@ -195,6 +210,7 @@ func _layout() -> void:
 	time_panel.reset_size()
 	time_panel.position = Vector2(size.x - time_panel.size.x - 14.0 * u, 12.0 * u)
 	fx.queue_redraw()
+	cust_fx.queue_redraw()
 
 
 # ---------- interaksi ----------
@@ -337,6 +353,7 @@ func _refresh_ui() -> void:
 	var t: int = int(ceil(time_left))
 	time_label.text = "%d:%02d" % [t / 60, t % 60]
 	fx.queue_redraw()
+	cust_fx.queue_redraw()
 
 
 # ---------- gambar sementara (lingkaran masakan, pelanggan, gelembung pesanan) ----------
@@ -425,7 +442,16 @@ func _on_fx_draw() -> void:
 	for k in customer_panels.size():
 		for c in customers:
 			if c["slot"] == k:
-				_draw_customer(c, customer_panels[k]["spot"], s)
+				_draw_bubble(c, customer_panels[k]["spot"], s)
+
+
+func _on_cust_draw() -> void:
+	if scale_f <= 0.0:
+		return
+	for k in customer_panels.size():
+		for c in customers:
+			if c["slot"] == k:
+				_draw_customer(c, customer_panels[k]["spot"], scale_f)
 
 
 func _draw_slot(slot: Dictionary, s: float) -> void:
@@ -469,21 +495,32 @@ func _customer_mood(cust: Dictionary) -> String:
 	return "biasa"
 
 
+func _top_y(spot: Vector2) -> float:
+	if customer_tex.is_empty():
+		return spot.y - 70.0
+	return spot.y - float(scene["customer_art"]["height"])
+
+
 func _draw_customer(cust: Dictionary, spot: Vector2, s: float) -> void:
 	var ratio: float = clampf(float(cust["patience"]) / float(cust["max"]), 0.0, 1.0)
 	var top_y: float = spot.y - 40.0
 	if customer_tex.is_empty():
 		var col := Color.from_hsv(float(hash(cust["name"]) % 100) / 100.0, 0.45, 0.9)
 		body_style.bg_color = col.darkened(0.2)
-		fx.draw_style_box(body_style, Rect2(_m(spot + Vector2(-44, -2)), Vector2(88, 52) * s))
-		fx.draw_circle(_m(spot + Vector2(0, -30)), 30.0 * s, col)
+		cust_fx.draw_style_box(body_style, Rect2(_m(spot + Vector2(-44, -2)), Vector2(88, 52) * s))
+		cust_fx.draw_circle(_m(spot + Vector2(0, -30)), 30.0 * s, col)
 		top_y = spot.y - 70.0
 	else:
 		var tex: Texture2D = customer_tex[_customer_mood(cust)]
 		var h: float = float(scene["customer_art"]["height"])
 		var w: float = tex.get_size().x * h / tex.get_size().y
 		top_y = spot.y - h
-		fx.draw_texture_rect(tex, Rect2(_m(Vector2(spot.x - w * 0.5, top_y)), Vector2(w, h) * s), false)
+		cust_fx.draw_texture_rect(tex, Rect2(_m(Vector2(spot.x - w * 0.5, top_y)), Vector2(w, h) * s), false)
+
+
+func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
+	var ratio: float = clampf(float(cust["patience"]) / float(cust["max"]), 0.0, 1.0)
+	var top_y: float = _top_y(spot)
 	# gelembung pesanan vertikal di sebelah kanan pelanggan, hanya gambar menu (tanpa teks);
 	# pindah ke kiri bila mepet tepi layar. Bila DISHES[id] punya "icon", gambar itu yang dipakai.
 	var n: int = cust["items"].size()
