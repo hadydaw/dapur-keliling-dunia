@@ -64,3 +64,10 @@
 - Cakupan (18 cek, semua lulus): masak->matang, gosong, buang gosong, layani, bayar, tip 25%, pesanan ganda, sabar habis, ambang bintang 0/1/2/3, simpan progres, plus ketuk sungguhan di slot
 - Simulasi bot (pemain ideal, reaksi 0,6 dtk, 3 percobaan/level, 20 level): bot mencapai 184-241% target, jadi 3 bintang (butuh 180%) hampir selalu tercapai oleh pemain sempurna -> target kemungkinan terlalu mudah. Belum diubah; menunggu keputusan pemilik.
 - Belum diuji: rasa bermain manusia di HP
+
+## 2026-11-14 - Peta Dunia dengan latar peta baru
+- File: scripts/screens/world_map_screen.gd (ditulis ulang), scripts/ui/star_icon.gd (baru), assets/world_map_bg.jpg (latar dari pemilik), tests/world_map_test.gd + .tscn
+- Tampilan: latar peta penuh layar (cover, potong dari bawah lebih banyak agar menara Eiffel tetap terlihat), papan nama per pulau (nama, negara, bintang X/15), pulau terkunci diredupkan + papan abu "Terkunci / Butuh N bintang"; bar koin/bintang, tombol Resep, Toko, dan kembali di atas
+- Interaksi: ketuk pulau -> pilih level; ketuk pulau terkunci -> pesan "Kumpulkan N bintang lagi"; animasi ketuk sama seperti menu
+- Sementara kode: papan nama, ikon bintang, tombol kembali digambar kode (aset prompt peta belum dikirim); bisa diganti aset
+- Hasil tes: peta 16/16 lulus, menu 13/13 lulus; render asli 1280x720 dan 2400x1080. Belum diuji di HP.
