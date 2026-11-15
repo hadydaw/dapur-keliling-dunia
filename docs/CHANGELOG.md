@@ -328,3 +328,8 @@
 - File: scripts/game_data.gd (data `coals` untuk latar 16:9 dan lebar), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: tiap petak panggangan kini punya bara animasi. Petak kosong: pendar merah-oranye berdenyut, titik bara berkedip, dan sesekali percikan naik (kecil). Petak yang sedang dipakai (memasak/matang/gosong): bara menyala penuh; karena gambar sate menutupi arang, jalur bara di bawah masakan dikedipkan di atas gambar dan percikan lebih banyak naik di atasnya. Nyala naik/turun halus dan membeku saat jeda. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render 16:9 dan 20:9; gerak animasi belum dilihat di perangkat.
+
+## 2026-11-15 - Animasi letupan minyak di sate dan ikan bakar
+- File: scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: saat sate ayam atau ikan bakar dibakar di panggangan, permukaan masakan sesekali meletup (kilatan kecil lalu beberapa tetes minyak keemasan terlempar naik dan jatuh). Titik, waktu, dan arahnya acak per petak dan per letupan; ikan lebih berminyak (lebih banyak dan lebih besar). Hanya aktif selama fase memasak; berhenti saat matang/gosong dan saat jeda. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render beberapa frame; gerak animasi belum dilihat di perangkat.

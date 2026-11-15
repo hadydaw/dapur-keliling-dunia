@@ -792,6 +792,54 @@ func _draw_flame(c: Vector2, w: float, heat: float, ph: float) -> void:
 		_flame_tongue(base, hw * 0.30, hgt * 0.40, sway * 0.5, Color(1.0, 0.97, 0.75, 0.90 * heat))
 
 
+## Letupan minyak hanya untuk sate dan ikan yang sedang dibakar di panggangan.
+func _oil_enabled(slot: Dictionary) -> bool:
+	return slot["kind"] == "grill" and slot["state"] == "cooking" and (slot["dish"] == "sate_ayam" or slot["dish"] == "ikan_bakar")
+
+
+## Letupan minyak saat memasak: kilatan kecil di permukaan masakan lalu beberapa tetes minyak keemasan
+## terlempar naik dan jatuh (parabola). Ikan lebih berminyak: lebih banyak dan lebih besar.
+func _draw_oil_pops(s: float) -> void:
+	if not scene.has("coals"):
+		return
+	var cd: Dictionary = scene["coals"]
+	var sz: Vector2 = Vector2(cd["size"]) * s
+	for slot in appliances[cd["kind"]]:
+		if _oil_enabled(slot):
+			var fish: bool = slot["dish"] == "ikan_bakar"
+			_oil_pops(fx, _m(slot["pos"]), sz, float(slot["idx"]) * 2.9, 7 if fish else 5, 1.25 if fish else 1.0)
+
+
+static func _hash01(x: float) -> float:
+	return fposmod(sin(x) * 43758.5453, 1.0)
+
+
+func _oil_pops(node: Control, c: Vector2, sz: Vector2, ph: float, n: int, big: float) -> void:
+	for k in n:
+		var period: float = 0.75 + 0.21 * k
+		var local: float = pulse + ph * 0.37 + k * 0.61
+		var cyc: float = floor(local / period)
+		var tt: float = local - cyc * period
+		var r1: float = _hash01(cyc * 12.9898 + k * 78.233 + ph * 3.1)
+		var r2: float = _hash01(cyc * 39.346 + k * 11.135 + ph)
+		var origin: Vector2 = c + Vector2(lerpf(-0.34, 0.34, r1) * sz.x, lerpf(-0.30, 0.12, r2) * sz.y)
+		if tt < 0.14:
+			var f: float = tt / 0.14
+			node.draw_arc(origin, sz.x * (0.02 + 0.08 * f) * big, 0.0, TAU, 12, Color(1.0, 0.95, 0.65, (1.0 - f) * 0.9), maxf(1.2, sz.x * 0.016))
+			node.draw_circle(origin, sz.x * 0.03 * big * (1.0 - f), Color(1.0, 1.0, 0.85, 1.0 - f))
+		if tt < 0.7:
+			var life: float = tt / 0.7
+			for d in 3:
+				var ang: float = -PI * 0.5 + (r1 + d * 0.37 - 0.5) * 1.9
+				var v: float = sz.y * (1.7 + 0.8 * _hash01(r2 * 7.0 + d)) * big
+				var g: float = sz.y * 5.0
+				var pos: Vector2 = origin + Vector2(cos(ang) * v * tt * 0.6, sin(ang) * v * tt + 0.5 * g * tt * tt)
+				var vel: Vector2 = Vector2(cos(ang) * v * 0.6, sin(ang) * v + g * tt)
+				var a: float = 1.0 - life
+				node.draw_line(pos, pos - vel.normalized() * sz.x * 0.05, Color(1.0, 0.85, 0.35, a * 0.6), maxf(1.0, sz.x * 0.012))
+				node.draw_circle(pos, maxf(1.2, sz.x * 0.028 * big * (1.0 - 0.5 * life)), Color(1.0, 0.9, 0.5, a))
+
+
 func _cell_active(slot: Dictionary) -> bool:
 	var st: String = slot["state"]
 	return st == "cooking" or st == "ready" or st == "burnt"
@@ -894,6 +942,7 @@ func _on_fx_draw() -> void:
 		for slot in appliances[kind]:
 			_draw_slot(slot, s)
 	_draw_coals_over(s)
+	_draw_oil_pops(s)
 	_draw_timers(s)
 	for k in customer_panels.size():
 		for c in customers:
