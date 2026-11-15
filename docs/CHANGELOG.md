@@ -298,3 +298,8 @@
 - File: assets/audio/nasi_goreng_wajan.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: saat nasi goreng mulai dimasak terdengar desis minyak, letupan kecil, dan dentang spatula berirama pada wajan; panjangnya disesuaikan waktu masak, satu pemain suara per slot wajan. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.
+
+## 2026-11-15 - Suara ikan bakar di panggangan
+- File: assets/audio/ikan_bakar.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: saat ikan masuk panggangan terdengar desis lebih berat dengan letupan minyak dan derak kulit; panjangnya disesuaikan waktu masak, satu pemain suara per slot panggangan. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.
