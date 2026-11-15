@@ -36,7 +36,7 @@ const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
 const ALARM_H := 36.0        # tinggi ikon timer (piksel inti)
-const FIRE_H := 26.0         # tinggi maksimum api = tinggi gembok
+const FIRE_H := 18.0         # tinggi maksimum api (lebih kecil dari gembok)
 const ALARM_STEPS := 64
 const DING_SHAKE := 0.8      # lama goyang + memudar setelah "ting" (detik); ting.wav = 1.1 dtk
 const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya tergulir naik
