@@ -247,3 +247,9 @@
 - Dampak: pad bagian peralatan kini panel kayu polos (tanpa blur, tanpa duplikat alat); bagian atas tetap hasil cermin.
 - Platform yang diuji: render 20:9 (2400x1080)
 - Hasil tes: responsive_layout_test & gameplay_scene_test 0 gagal; belum diuji di HP asli.
+
+## 2026-11-15 - Gameplay full screen seperti menu (latar cover, tanpa pad)
+- File: scripts/screens/gameplay_scene_screen.gd, tests/responsive_layout_test.gd
+- Alasan: gameplay harus memenuhi layar landscape seperti menu utama, tanpa bar/panel pinggir.
+- Perubahan: latar diperbesar sampai menutupi lebar layar; potongan hanya di atap (maks 160 px inti) dan lantai (maks 30 px). Meja, alat, bahan, pelanggan utuh. HUD tetap ukuran semula, menempel ke tepi area aman; Misi/Toko dibuat berdampingan agar tidak menutupi dispenser.
+- Hasil tes: 6 suite 0 gagal; render 16:9, 18:9, 19.5:9, 20:9 diperiksa; belum diuji di HP asli.
