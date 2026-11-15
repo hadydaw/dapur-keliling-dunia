@@ -56,6 +56,8 @@ var force_wide := -1   # uji: 1 = paksa latar lebar, 0 = paksa latar 16:9, -1 = 
 const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel inti) bila layar lebih lebar dari gambar
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
+var ing_tap: Dictionary = {}        # id bahan -> detik sejak diketuk (efek ketuk 0..ING_TAP_LEN)
+const ING_TAP_LEN := 0.5
 var flame_fx: Control               # api kompor (di atas latar, di bawah wadah masakan)
 var coal_heat: Array = []           # kekuatan bara tiap petak panggangan 0..1
 var burner_heat: Array = []         # kekuatan api tiap tungku 0..1 (halus mengikuti keadaan)
@@ -452,6 +454,7 @@ func _on_ingredient(id: String) -> void:
 	if dish == "":
 		_toast("%s belum dipakai di level ini" % scene["ingredients"][id]["name"])
 		return
+	ing_tap[id] = 0.0
 	var kind: String = GameData.RECIPES[dish]["appliance"]
 	if GameData.RECIPES[dish].get("refill", false):
 		_refill_jar()
@@ -580,6 +583,10 @@ func _step_vis(c: Dictionary, delta: float) -> void:
 func _update_slots(delta: float) -> void:
 	pulse += delta
 	_step_burners(delta)
+	for id in ing_tap.keys():
+		ing_tap[id] = float(ing_tap[id]) + delta
+		if float(ing_tap[id]) > ING_TAP_LEN:
+			ing_tap.erase(id)
 	_anim_bubbles(delta)
 	if jar["state"] == "filling":
 		jar["t"] = float(jar["t"]) + delta
@@ -926,6 +933,97 @@ func _steam(node: Control, c: Vector2, u: float, ph: float, n: int, strength: fl
 		node.draw_circle(p + Vector2(u * 0.10, -u * 0.06), u * (0.08 + 0.18 * tt), Color(1.0, 1.0, 1.0, a * 0.8))
 
 
+## Animasi rak bahan (selalu hidup pelan) + efek saat bahan diketuk.
+func _draw_ingredient_fx(s: float) -> void:
+	if not scene.has("ingredients"):
+		return
+	var k := 0
+	for id in scene["ingredients"]:
+		var rc: Rect2 = scene["ingredients"][id]["rect"]
+		var r := Rect2(_m(rc.position), rc.size * s)
+		var ph: float = float(k) * 1.7
+		k += 1
+		match id:
+			"es":
+				_mist(fx, r, ph, 5, Color(0.75, 0.9, 1.0))
+				_glints(fx, r, ph, 5, Color(0.85, 0.95, 1.0))
+			"nasi":
+				_steam(fx, r.position + Vector2(r.size.x * 0.5, r.size.y * 0.30), r.size.y * 0.42, ph, 4, 0.85)
+			"tusuk_ayam":
+				_sweep(fx, r, ph, 3.2, Color(1.0, 1.0, 1.0))
+				_glints(fx, r, ph, 5, Color(1.0, 0.95, 0.9))
+			"ayam":
+				_sweep(fx, r, ph, 3.8, Color(1.0, 1.0, 0.95))
+				_glints(fx, r, ph, 3, Color(1.0, 0.97, 0.9))
+			"ikan":
+				_sweep(fx, r, ph, 3.0, Color(0.85, 0.95, 1.0))
+				_glints(fx, r, ph, 5, Color(0.9, 0.97, 1.0))
+				_mist(fx, r, ph, 3, Color(0.8, 0.92, 1.0))
+		if ing_tap.has(id):
+			_ing_tap_fx(fx, r, float(ing_tap[id]) / ING_TAP_LEN)
+
+
+## Kabut dingin tipis yang turun pelan dari bagian atas bahan.
+func _mist(node: Control, r: Rect2, ph: float, n: int, col: Color) -> void:
+	for k in n:
+		var tt: float = fmod(pulse * 0.28 + float(k) / float(n) + ph * 0.13, 1.0)
+		var x: float = r.position.x + r.size.x * (0.12 + 0.76 * _hash01(k * 5.3 + ph))
+		var y: float = r.position.y + r.size.y * (0.02 + 0.55 * tt)
+		var rad: float = r.size.y * (0.09 + 0.13 * tt)
+		node.draw_circle(Vector2(x + sin(tt * 4.0 + k) * r.size.x * 0.03, y), rad, Color(col.r, col.g, col.b, sin(PI * tt) * 0.13))
+
+
+## Kilau bintang empat sudut yang berkedip di titik acak pada bahan.
+func _glints(node: Control, r: Rect2, ph: float, n: int, col: Color) -> void:
+	for k in n:
+		var period: float = 1.3 + 0.37 * k
+		var local: float = pulse + ph * 0.43 + k * 0.71
+		var cyc: float = floor(local / period)
+		var tt: float = (local - cyc * period) / 0.55
+		if tt >= 1.0:
+			continue
+		var x: float = r.position.x + r.size.x * (0.12 + 0.76 * _hash01(cyc * 13.7 + k * 41.3 + ph))
+		var y: float = r.position.y + r.size.y * (0.20 + 0.60 * _hash01(cyc * 27.1 + k * 17.9 + ph * 2.0))
+		var sc: float = sin(PI * tt)
+		var l: float = r.size.y * 0.085 * sc
+		var w: float = l * 0.22
+		var c := Vector2(x, y)
+		var a: float = 0.95 * sc
+		node.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -l), c + Vector2(w, 0), c + Vector2(0, l), c + Vector2(-w, 0)]), Color(col.r, col.g, col.b, a))
+		node.draw_colored_polygon(PackedVector2Array([c + Vector2(-l, 0), c + Vector2(0, -w), c + Vector2(l, 0), c + Vector2(0, w)]), Color(col.r, col.g, col.b, a))
+
+
+## Pita cahaya miring yang menyapu bahan secara berkala (kesan segar dan mengilap).
+func _sweep(node: Control, r: Rect2, ph: float, period: float, col: Color) -> void:
+	var prog: float = fmod(pulse / period + ph * 0.19, 1.0) / 0.4
+	if prog >= 1.0:
+		return
+	var cx: float = lerpf(r.position.x - r.size.y * 0.3, r.end.x + r.size.y * 0.3, prog)
+	var lean: float = -r.size.y * 0.35
+	var rect_poly := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	var a: float = sin(PI * prog)
+	for band in [[r.size.x * 0.16, 0.07], [r.size.x * 0.06, 0.14]]:
+		var bw: float = band[0]
+		var y0: float = r.position.y
+		var y1: float = r.end.y
+		var poly := PackedVector2Array([Vector2(cx - bw, y0), Vector2(cx + bw, y0), Vector2(cx + bw + lean, y1), Vector2(cx - bw + lean, y1)])
+		for piece in Geometry2D.intersect_polygons(poly, rect_poly):
+			node.draw_colored_polygon(piece, Color(col.r, col.g, col.b, float(band[1]) * a * 1.4))
+
+
+## Efek ketuk bahan: kilat lembut di seluruh area, cincin melebar, dan percikan keluar.
+func _ing_tap_fx(node: Control, r: Rect2, f: float) -> void:
+	var c: Vector2 = r.get_center()
+	var a: float = 1.0 - f
+	var rect_poly := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	node.draw_colored_polygon(rect_poly, Color(1.0, 0.95, 0.7, 0.22 * a))
+	node.draw_arc(c, r.size.y * (0.15 + 0.45 * f), 0.0, TAU, 28, Color(1.0, 0.95, 0.7, 0.8 * a), maxf(2.0, r.size.y * 0.035 * a))
+	for k in 8:
+		var ang: float = float(k) / 8.0 * TAU + 0.4
+		var d: float = r.size.y * (0.18 + 0.42 * f)
+		node.draw_circle(c + Vector2(cos(ang), sin(ang)) * d, maxf(1.2, r.size.y * 0.035 * a), Color(1.0, 0.9, 0.5, a))
+
+
 func _cell_active(slot: Dictionary) -> bool:
 	var st: String = slot["state"]
 	return st == "cooking" or st == "ready" or st == "burnt"
@@ -1030,6 +1128,7 @@ func _on_fx_draw() -> void:
 	_draw_coals_over(s)
 	_draw_oil_pops(s)
 	_draw_cook_fx(s)
+	_draw_ingredient_fx(s)
 	_draw_timers(s)
 	for k in customer_panels.size():
 		for c in customers:

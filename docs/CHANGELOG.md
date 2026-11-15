@@ -343,3 +343,8 @@
 - File: scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: nasi goreng di wajan: butir nasi (krem, kecokelatan, irisan daun bawang) terlempar saat diaduk, percikan minyak kecil, uap tipis. Soto ayam di panci: gelembung kuah membesar lalu pecah di permukaan (cincin melebar + tetes kecil), uap lebih tebal. Hanya aktif selama fase memasak; berhenti saat matang/gosong dan saat jeda; titik dan waktu acak per slot. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render beberapa frame; gerak animasi belum dilihat di perangkat.
+
+## 2026-11-15 - Animasi rak bahan (es, nasi, sate, ayam, ikan) dan efek ketuk
+- File: scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: rak bahan kini hidup pelan. Termos es: kabut dingin tipis dan kilau es. Termos nasi: uap mengepul. Tusuk sate: kilau dan pita cahaya yang menyapu berkala. Ayam: pita cahaya (mengilap) dan kilau. Ikan: kilau sisik, pita cahaya kebiruan, kabut dingin tipis. Saat bahan diketuk muncul efek ketuk (kilat lembut, cincin melebar, percikan) selama 0,5 detik, hanya di bahan yang diketuk dan dipakai di level itu. Membeku saat jeda. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render; gerak animasi belum dilihat di perangkat.
