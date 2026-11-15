@@ -209,3 +209,8 @@
 - Alasan: di HP 20:9 latar dipotong atas-bawah sehingga HUD (panel menu, Misi, dll.) terpotong.
 - Isi: gambar dimuat utuh (skala minimum); sisi kiri-kanan diisi tepi gambar yang diregangkan. Pemusatan FOCUS_Y dihapus.
 - Hasil tes: 5 suite 0 gagal; render 2400x1080 dicek; belum diuji di HP.
+
+## 2026-11-15 - Sederhanakan: acuan 16:9, bar gelap di sisi
+- File: scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
+- Isi: pengisi tepi gambar dihapus; rasio non-16:9 cukup bar gelap polos.
+- Hasil tes: 5 suite 0 gagal.
