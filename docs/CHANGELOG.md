@@ -240,3 +240,10 @@
 - Tes baru: HUD tidak saling bertumpuk, tidak menabrak emblem, panel tidak menutupi gelembung pelanggan ke-4.
 - Platform yang diuji: render headless 1920/2160/2340/2400 x 1080; belum diuji di perangkat nyata.
 - Hasil tes: 6 suite 0 gagal.
+
+## 2026-11-15 - Pinggir latar (pad) tidak lagi buram
+- File: assets/scene_indonesia.jpg
+- Alasan: area pad kiri/kanan sebelumnya di-blur sehingga terlihat buram di layar lebar.
+- Dampak: pad bagian peralatan kini panel kayu polos (tanpa blur, tanpa duplikat alat); bagian atas tetap hasil cermin.
+- Platform yang diuji: render 20:9 (2400x1080)
+- Hasil tes: responsive_layout_test & gameplay_scene_test 0 gagal; belum diuji di HP asli.
