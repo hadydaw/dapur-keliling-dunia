@@ -268,3 +268,8 @@
 - File: assets/ui/alarm.png, assets/ui/alarm_ring.png (sprite sheet 64 langkah), scripts/screens/gameplay_scene_screen.gd (_draw_timers, DING_SHAKE)
 - Perubahan: jam alarm (aset dari user) di kanan-atas tiap alat masak (panggangan, wajan, panci) saat memasak; cincin terisi searah jarum jam, hijau -> kuning -> merah. Saat matang: "ting" + jam goyang cepat meredam (~0,8 dtk) lalu memudar. Mekanik masak tidak berubah.
 - Hasil tes: responsive_layout, gameplay_scene, gameplay 0 gagal; render diperiksa. Sinkron suara belum diuji di perangkat.
+
+## 2026-11-15 - Timer gosong (jam alarm fase kedua) + bunyi gosong beda
+- File: assets/audio/gosong.wav (baru, dibuat sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: setelah matang dan tidak diambil, jam alarm tetap tampil dengan cincin terisi lagi (jingga -> merah tua, berkedip mendekati gosong) selama BURN_WINDOW. Saat gosong: bunyi gosong (nada turun, beda dari "ting") + jam goyang lebih berat lalu memudar. Mekanik gosong tidak berubah.
+- Hasil tes: gameplay_scene, responsive_layout, gameplay 0 gagal; kualitas bunyi belum didengar di perangkat.

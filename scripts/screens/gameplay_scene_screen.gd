@@ -17,6 +17,8 @@ var fx: Control
 var bubble_tex: Texture2D            # bingkai gelembung pesanan (ada slot bar kesabaran vertikal di kanan)
 var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
 var ting_count: int = 0
+var burn_player: AudioStreamPlayer   # bunyi gosong (beda dari "ting")
+var burn_count: int = 0
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
 var icon_tex: Dictionary = {}        # id hidangan -> Texture2D ikon (di-cache, jangan load tiap frame)
 var cust_fx: Control                 # lapisan pelanggan (di belakang konter)
@@ -93,6 +95,10 @@ func _ready() -> void:
 	ting_player.stream = load("res://assets/audio/ting.wav")
 	ting_player.volume_db = -4.0
 	add_child(ting_player)
+	burn_player = AudioStreamPlayer.new()
+	burn_player.stream = load("res://assets/audio/gosong.wav")
+	burn_player.volume_db = -3.0
+	add_child(burn_player)
 	cust_fx = Control.new()
 	cust_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cust_fx.draw.connect(_on_cust_draw)
@@ -353,6 +359,8 @@ func _reset(slot: Dictionary) -> void:
 	slot["dish"] = ""
 	slot["t"] = 0.0
 	slot["dur"] = 0.0
+	slot.erase("ring")
+	slot.erase("bring")
 
 
 func _on_ingredient(id: String) -> void:
@@ -502,6 +510,19 @@ func _update_slots(delta: float) -> void:
 						slot["t"] = float(slot["t"]) + delta
 						if float(slot["t"]) >= BURN_WINDOW:
 							slot["state"] = "burnt"
+							slot.erase("ring")
+							slot["bring"] = 0.0
+							_burn_sound()
+				"burnt":
+					if slot.has("bring"):
+						slot["bring"] = float(slot["bring"]) + delta
+						if float(slot["bring"]) > DING_SHAKE:
+							slot.erase("bring")
+
+
+func _burn_sound() -> void:
+	burn_count += 1
+	burn_player.play()
 
 
 func _ding() -> void:
@@ -595,13 +616,23 @@ func _draw_timers(s: float) -> void:
 			var p := 0.0
 			var rot := 0.0
 			var alpha := 1.0
+			var burn_phase := false
 			if st == "cooking":
 				p = clampf(float(slot["t"]) / maxf(float(slot["dur"]), 0.01), 0.0, 1.0)
 			elif st == "ready" and slot.has("ring"):
 				var t: float = float(slot["ring"])
 				p = 1.0
 				rot = sin(t * TAU * 7.0) * deg_to_rad(20.0) * exp(-t * 4.5)   # goyang cepat, meredam bersama ting
-				alpha = clampf((DING_SHAKE - t) / 0.25, 0.0, 1.0)
+			elif st == "ready" and GameData.RECIPES[slot["dish"]].get("burns", true):
+				# fase gosong: cincin terisi lagi (kuning-jingga -> merah tua) sampai gosong
+				burn_phase = true
+				p = clampf(float(slot["t"]) / BURN_WINDOW, 0.0, 1.0)
+			elif st == "burnt" and slot.has("bring"):
+				var t2: float = float(slot["bring"])
+				burn_phase = true
+				p = 1.0
+				rot = sin(t2 * TAU * 5.0) * deg_to_rad(24.0) * exp(-t2 * 3.5)    # goyang lebih berat dari "ting"
+				alpha = clampf((DING_SHAKE - t2) / 0.25, 0.0, 1.0)
 			else:
 				continue
 			var base: Vector2 = slot["pos"]
@@ -614,6 +645,10 @@ func _draw_timers(s: float) -> void:
 			var src := Rect2(Vector2(step % 8, step / 8) * asz, asz)
 			var col: Color = Color(0.35, 0.85, 0.3).lerp(Color(1.0, 0.85, 0.2), smoothstep(0.0, 0.6, p))
 			col = col.lerp(Color(1.0, 0.3, 0.2), smoothstep(0.6, 1.0, p))
+			if burn_phase:
+				col = Color(1.0, 0.62, 0.1).lerp(Color(0.5, 0.04, 0.04), smoothstep(0.0, 1.0, p))
+				if p > 0.75 and p < 1.0:
+					col = col.lerp(Color(1, 0.2, 0.1), 0.5 + 0.5 * sin(pulse * 16.0))   # berkedip cepat mendekati gosong
 			col.a = alpha
 			if p > 0.0:
 				fx.draw_texture_rect_region(alarm_ring_tex, rect, src, col)

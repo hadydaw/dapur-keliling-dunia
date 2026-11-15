@@ -140,8 +140,13 @@ func _ready() -> void:
 	# --- gosong dan dibuang ---
 	await _tap_ingredient(g, "nasi")
 	g._update_slots(7.0)
+	_check(g.appliances["wok"][0].has("ring"), "matang: jam alarm goyang (ring aktif)")
+	var burn_before: int = g.burn_count
+	var ting_mid: int = g.ting_count
 	g._update_slots(g.BURN_WINDOW + 0.5)
 	_check(g.appliances["wok"][0]["state"] == "burnt", "terlambat diambil: gosong")
+	_check(g.burn_count == burn_before + 1 and g.ting_count == ting_mid, "bunyi gosong berbeda dari ting, berbunyi sekali")
+	_check(g.appliances["wok"][0].has("bring"), "gosong: jam alarm goyang (bring aktif)")
 	await _tap_slot(g, "wok", 0)
 	_check(g.appliances["wok"][0]["state"] == "empty", "ketuk gosong: dibuang")
 
