@@ -214,3 +214,9 @@
 - File: scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
 - Isi: pengisi tepi gambar dihapus; rasio non-16:9 cukup bar gelap polos.
 - Hasil tes: 5 suite 0 gagal.
+
+## 2026-11-15 - Gameplay tanpa bar hitam
+- File: scripts/screens/gameplay_scene_screen.gd, assets/scene_side_fill.png (baru, 69x39), docs/CHANGELOG.md
+- Akar masalah: gambar latar gameplay 16:9 dimuat utuh (supaya HUD yang menyatu dengan gambar tidak terpotong), sehingga di layar 20:9 sisi kiri-kanan kosong/hitam. Menu utama memakai skala "penuhi layar", jadi tampak berbeda.
+- Isi: sisi layar diisi wash warna blur dari latar yang sama (bukan stretch gambar); area main, aset, HUD, dan area ketuk tidak berubah.
+- Hasil tes: 5 suite 0 gagal; render 2400x1080 dan 1920x1080 dicek; belum diuji di HP.

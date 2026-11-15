@@ -6,6 +6,7 @@ extends "res://scripts/screens/gameplay_screen.gd"
 
 var scene: Dictionary = {}
 var bg: TextureRect
+var bg_fill: TextureRect
 var fx: Control
 var bubble_tex: Texture2D            # bingkai gelembung pesanan (ada slot bar kesabaran vertikal di kanan)
 var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
@@ -43,6 +44,13 @@ func _ready() -> void:
 	font = load("res://assets/fonts/game_font.tres")
 	UI.fill(self)
 	UI.background(self, Color(0.1, 0.04, 0.03))
+	# sisi layar yang lebih lebar dari 16:9: wash warna blur dari latar (bukan bar hitam)
+	bg_fill = TextureRect.new()
+	bg_fill.texture = load("res://assets/scene_side_fill.png")
+	bg_fill.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg_fill.stretch_mode = TextureRect.STRETCH_SCALE
+	bg_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg_fill)
 	bg = TextureRect.new()
 	bg.texture = load(scene["image"])
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -187,6 +195,8 @@ func _layout() -> void:
 	# Acuan 16:9; rasio lain hanya mendapat bar hitam di sisi.
 	scale_f = minf(size.x / img.x, size.y / img.y)
 	offset = (size - img * scale_f) * 0.5
+	bg_fill.position = Vector2.ZERO
+	bg_fill.size = size
 	bg.position = offset
 	bg.size = img * scale_f
 	cust_fx.position = Vector2.ZERO
