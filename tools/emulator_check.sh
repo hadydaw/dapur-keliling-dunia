@@ -18,6 +18,17 @@ adb shell pm list packages | grep -q "$PKG" || { echo "paket tidak terdaftar"; e
 COMP=$(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER "$PKG" | tail -1 | tr -d '\r')
 echo "aktivitas peluncur: $COMP"
 
+thumb() { # file nama: cetak miniatur JPEG base64 ke log (artifact tidak bisa diunduh agen)
+  python3 - "$1" "$2" "$LABEL" <<'PY'
+import sys, base64, io
+from PIL import Image
+im = Image.open(sys.argv[1]).convert("RGB"); w, h = im.size
+im = im.resize((640, max(1, int(h * 640 / w))))
+b = io.BytesIO(); im.save(b, "JPEG", quality=55)
+print("THUMB|%s|%s|%s" % (sys.argv[3], sys.argv[2], base64.b64encode(b.getvalue()).decode()))
+PY
+}
+
 shot_check() { # file
   python3 - "$1" "$W" "$H" <<'PY'
 import sys
@@ -51,16 +62,20 @@ run_case() { # nama  param
   else
     adb shell am start -W -n "$COMP" | tail -3
   fi
-  sleep 28
+  sleep 25
   if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
     echo "   PROSES MATI (crash) pada $NAME"; adb logcat -d -b crash | tail -30; adb logcat -d | grep -iE "godot|AndroidRuntime|FATAL|signal|vulkan|GLES" | tail -30; FAIL=1; return
   fi
+  adb exec-out screencap -p > "shots/${LABEL}_${NAME}_t25.png"
+  sleep 30
   adb exec-out screencap -p > "shots/${LABEL}_${NAME}.png"
+  thumb "shots/${LABEL}_${NAME}_t25.png" "${NAME}_t25"
+  thumb "shots/${LABEL}_${NAME}.png" "${NAME}_t55"
   echo "== $NAME: proses hidup, ukuran jendela: $(adb shell dumpsys window displays | grep -m1 -oE 'cur=[0-9]+x[0-9]+')"
   shot_check "shots/${LABEL}_${NAME}.png" || FAIL=1
   CR=$(adb logcat -d | grep -cE "FATAL EXCEPTION|SIGSEGV|Fatal signal")
   [ "$CR" -gt 0 ] && { echo "   ada $CR baris crash di logcat"; FAIL=1; }
-  adb logcat -d | grep -iE "Godot Engine|OpenGL|GLES|Vulkan|SCRIPT ERROR|USER ERROR" | head -6
+  adb logcat -d -s godot:V Godot:V | cut -c1-220 | head -25
 }
 
 run_case menu ""

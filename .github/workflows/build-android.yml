@@ -73,8 +73,8 @@ jobs:
       - name: Import proyek
         run: godot --headless --import || true
 
-      - name: Nomor versi naik otomatis (versionCode = nomor run)
-        run: sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" export_presets.cfg
+      - name: Nomor versi naik otomatis (versionCode = 100 + nomor run)
+        run: sed -i "s/^version\/code=.*/version\/code=$((100 + ${{ github.run_number }}))/" export_presets.cfg
 
       - name: Keystore
         env:
@@ -98,6 +98,16 @@ jobs:
             echo "AAB_PASS=android" >> "$GITHUB_ENV"
           fi
 
+      - name: Pasang template Gradle Android (APK + AAB)
+        run: |
+          set -e
+          T=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p android/build
+          unzip -q -o "$T/android_source.zip" -d android/build
+          printf '%s' "${GODOT_VERSION}.stable" > android/.build_version
+          touch android/build/.gdignore
+          grep -nE "minSdk|targetSdk|compileSdk|buildTools|ndkVersion" android/build/config.gradle || true
+
       - name: Export APK universal (armeabi-v7a + arm64-v8a + x86_64)
         env:
           GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /tmp/debug.keystore
@@ -110,16 +120,6 @@ jobs:
           godot --headless --verbose --export-release "Android APK" build/android/dapur-keliling-dunia.apk 2>&1 | tee export_apk.log | grep -E "ERROR|error|configuration|Error" | head -30
           if [ ! -f build/android/dapur-keliling-dunia.apk ]; then echo "APK GAGAL dibuat"; tail -60 export_apk.log; exit 1; fi
           ls -la build/android
-
-      - name: Pasang template Gradle Android (untuk AAB)
-        run: |
-          set -e
-          T=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-          mkdir -p android/build
-          unzip -q -o "$T/android_source.zip" -d android/build
-          printf '%s' "${GODOT_VERSION}.stable" > android/.build_version
-          touch android/build/.gdignore
-          grep -nE "minSdk|targetSdk|compileSdk|buildTools|ndkVersion" android/build/config.gradle || true
 
       - name: Export AAB (Google Play)
         env:
@@ -145,6 +145,7 @@ jobs:
           echo "=== APK: integritas ZIP ==="; unzip -tq "$APK" || FAIL=1
           echo "=== APK: manifest (badging) ==="
           "$BT/aapt2" dump badging "$APK" | grep -E "^package:|sdkVersion|targetSdkVersion|native-code|launchable-activity|application-label:|supports-screens|uses-feature" || FAIL=1
+          "$BT/aapt2" dump badging "$APK" 2>/dev/null | grep -q "^sdkVersion:'24'" || { echo "minSdk 24 TIDAK tercatat di manifest APK"; FAIL=1; }
           echo "=== APK: ABI di dalam ==="
           unzip -l "$APK" | grep -E "lib/.*libgodot_android.so"
           for a in armeabi-v7a arm64-v8a x86_64; do unzip -l "$APK" | grep -q "lib/$a/libgodot_android.so" || { echo "ABI HILANG: $a"; FAIL=1; }; done
@@ -195,10 +196,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {api: 24, target: default, w: 1920, h: 1080, label: "16x9"}
-          - {api: 29, target: default, w: 2400, h: 1080, label: "20x9"}
-          - {api: 34, target: google_apis, w: 2520, h: 1080, label: "21x9"}
-          - {api: 36, target: google_apis, w: 2400, h: 1080, label: "20x9"}
+          - {api: 24, target: default, profile: pixel_2, w: 1920, h: 1080, label: "16x9"}
+          - {api: 29, target: default, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
+          - {api: 34, target: google_apis, profile: pixel_6, w: 2520, h: 1080, label: "21x9"}
+          - {api: 36, target: google_apis, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -218,6 +219,7 @@ jobs:
           api-level: ${{ matrix.api }}
           target: ${{ matrix.target }}
           arch: x86_64
+          profile: ${{ matrix.profile }}
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
