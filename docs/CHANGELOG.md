@@ -385,3 +385,8 @@
 - Alasan: di emulator 3 pemeriksaan sentuh gagal karena ketukan buatan memakai koordinat kanvas, padahal jendela di-skala (0.765); kini diubah ke piksel jendela + gerak mouse sebelum klik. Skrip emulator kini mencetak jejak (lmkd/ANR/sinyal) bila proses mati.
 - Dampak: hanya jalur uji.
 - Hasil tes: headless 4.7.2 lulus (gagal=0); hasil emulator lihat CI berikutnya.
+
+## 2026-11-15 - Self-test: log memori, ulang sekali bila emulator kehabisan RAM
+- File: scripts/selftest.gd, tools/emulator_check.sh
+- Hasil CI sebelumnya: API 31/34/36 lulus penuh self-test (menu, ketuk Lanjutkan, level, 40 ketukan, Jeda, Pengaturan, simpan, audio; ~7-9 FPS di emulator GL perangkat lunak). API 24 dan 29: aplikasi dibunuh lowmemorykiller di emulator (RAM emulator kecil + GL perangkat lunak). Memori mesin game sendiri ~74 MB (headless), jadi dicatat per tahap untuk dibandingkan.
+- Dampak: hanya jalur uji.

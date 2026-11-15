@@ -30,6 +30,10 @@ func _secs(s: float) -> void:
 	await get_tree().create_timer(s).timeout
 
 
+func _mem(tag: String) -> void:
+	_log("MEMORI", "%s: statis=%d MB, puncak=%d MB, tekstur+buffer video=%d MB, node=%d" % [tag, int(OS.get_static_memory_usage() / 1048576), int(OS.get_static_memory_peak_usage() / 1048576), int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576), int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))])
+
+
 func _tap(pos: Vector2) -> void:
 	# Posisi kanvas diubah ke piksel jendela (skala tampilan di perangkat nyata tidak 1:1).
 	var wp: Vector2 = get_viewport().get_final_transform() * pos
@@ -82,6 +86,7 @@ func _run() -> void:
 	main._go("level_select", {"area": 0})
 	await _frames(5)
 	_check(_screen_name() == "level_select_screen.gd", "PILIH_LEVEL", "layar pilih level 50 medali")
+	_mem("menu/peta")
 	# Gameplay
 	main._go("gameplay", {"area": 0, "level": 0})
 	await _frames(8)
@@ -100,6 +105,7 @@ func _run() -> void:
 	var el := float(Time.get_ticks_msec() - t0) / 1000.0
 	var fps := float(Engine.get_frames_drawn() - f0) / maxf(el, 0.01)
 	_check(g.running and not g.paused, "MAIN", "%d ketukan nyata pada tombol, game masih berjalan, rata-rata %.1f FPS selama %.1f dtk" % [taps, fps, el])
+	_mem("setelah bermain")
 	await _tap_ctl(g.pause_btn)
 	await _frames(4)
 	_check(g.paused, "JEDA", "ketuk gear: menu Jeda terbuka")

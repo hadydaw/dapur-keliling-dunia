@@ -88,22 +88,32 @@ run_case() { # nama  param
 run_case menu ""
 
 echo "== SELF-TEST di dalam game (sentuhan nyata, menu, level, main, Jeda, simpan, audio)"
-adb logcat -c
-adb shell am force-stop "$PKG"
-adb shell "mkdir -p /sdcard/Android/data/$PKG/files && echo 1 > /sdcard/Android/data/$PKG/files/selftest"
-adb shell ls -l /sdcard/Android/data/$PKG/files/ || true
-adb shell am start -W -n "$COMP" --esa command_line_params "--,--selftest" | tail -2
+selftest_attempt() {
+  adb logcat -c
+  adb shell am force-stop "$PKG"
+  adb shell "mkdir -p /sdcard/Android/data/$PKG/files && echo 1 > /sdcard/Android/data/$PKG/files/selftest"
+  adb shell ls -l /sdcard/Android/data/$PKG/files/ || true
+  adb shell am start -W -n "$COMP" --esa command_line_params "--,--selftest" | tail -2
+  DONE=0
+  for i in $(seq 1 60); do
+    sleep 5
+    [ $((i % 6)) -eq 0 ] && { echo "   [mem t=$((i*5))s]"; adb shell dumpsys meminfo "$PKG" | grep -E "Native Heap|Graphics|TOTAL:|Java Heap|Private Other" | head -5; }
+    if adb logcat -d -s godot:V | grep -q "SELFTEST|SELESAI"; then DONE=1; break; fi
+    if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
+      echo "   PROSES MATI saat self-test; jejak:"
+      adb logcat -d -b all | grep -iE "am_proc_died|am_kill|lowmemorykiller|lmkd|Out of memory|Fatal signal|SIGSEGV|SIGABRT|F libc|ANR in|Killing|has died|DEBUG   :" | tail -25 | cut -c1-230
+      adb logcat -d -s godot:V | tail -15 | cut -c1-200
+      break
+    fi
+  done
+}
 DONE=0
-for i in $(seq 1 60); do
-  sleep 5
-  if adb logcat -d -s godot:V | grep -q "SELFTEST|SELESAI"; then DONE=1; break; fi
-  if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
-    echo "   PROSES MATI saat self-test; jejak:"
-    adb logcat -d -b all | grep -iE "am_proc_died|am_kill|lowmemorykiller|lmkd|Out of memory|Fatal signal|SIGSEGV|SIGABRT|F libc|ANR in|Killing|has died|DEBUG   :" | tail -25 | cut -c1-230
-    adb logcat -d -s godot:V | tail -15 | cut -c1-200
-    break
-  fi
-done
+selftest_attempt
+if [ "$DONE" != "1" ] && adb logcat -d -b all | grep -q "lowmemorykiller.*Kill '$PKG'"; then
+  echo "   (INFO: emulator kehabisan RAM dan sistem membunuh aplikasi; ulangi sekali)"
+  adb shell am force-stop "$PKG"; sleep 5
+  selftest_attempt
+fi
 adb logcat -d -s godot:V | grep -E "SELFTEST\|" | sed -E 's/^.*(SELFTEST\|)/\1/' | cut -c1-260
 adb exec-out screencap -p > "shots/${LABEL}_selftest_akhir.png"
 if [ "$DONE" != "1" ]; then echo "   SELF-TEST TIDAK SELESAI dalam 300 dtk"; FAIL=1; fi
