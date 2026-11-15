@@ -125,6 +125,7 @@ func _ready() -> void:
 	_order(g, ["nasi_goreng"])
 	await _tap_ingredient(g, "nasi")
 	_check(g.appliances["wok"][0]["state"] == "cooking", "ketuk penanak nasi: wajan mulai memasak")
+	_check(g.stirfry_count == 1 and g.stirfry_players[0].playing, "suara nasi goreng di wajan berbunyi sekali saat mulai memasak")
 	var ting_before: int = g.ting_count
 	g._update_slots(7.0)
 	_check(g.ting_count == ting_before + 1, "bel ting berbunyi sekali saat nasi goreng matang")

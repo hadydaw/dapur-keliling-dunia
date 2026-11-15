@@ -26,6 +26,9 @@ var fill_count: int = 0
 var sizzle_players: Array = []       # desis sate di panggangan (satu pemain per slot)
 var sizzle_count: int = 0
 const SIZZLE_LENGTH := 6.0    # panjang sate_desis.wav (detik)
+var stirfry_players: Array = []      # suara nasi goreng di wajan (satu pemain per slot)
+var stirfry_count: int = 0
+const STIRFRY_LENGTH := 5.0   # panjang nasi_goreng_wajan.wav (detik)
 const FILL_LENGTH := 3.0      # panjang isi_dispenser.wav (detik)
 const POUR_LENGTH := 2.6      # panjang tuang_es.wav (detik)
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
@@ -119,6 +122,12 @@ func _ready() -> void:
 		sp.volume_db = -6.0
 		add_child(sp)
 		sizzle_players.append(sp)
+	for i in 4:
+		var wp := AudioStreamPlayer.new()
+		wp.stream = load("res://assets/audio/nasi_goreng_wajan.wav")
+		wp.volume_db = -6.0
+		add_child(wp)
+		stirfry_players.append(wp)
 	fill_player = AudioStreamPlayer.new()
 	fill_player.stream = load("res://assets/audio/isi_dispenser.wav")
 	fill_player.volume_db = -4.0
@@ -415,6 +424,8 @@ func _on_ingredient(id: String) -> void:
 	slot["dur"] = float(GameData.DISHES[dish]["cook"]) * GameState.cook_mult()
 	if dish == "sate_ayam":
 		_sizzle_sound(int(slot["idx"]), float(slot["dur"]))
+	elif dish == "nasi_goreng":
+		_stirfry_sound(int(slot["idx"]), float(slot["dur"]))
 
 
 func _refill_jar() -> void:
@@ -568,6 +579,14 @@ func _sizzle_sound(idx: int, dur: float) -> void:
 	var sp: AudioStreamPlayer = sizzle_players[clampi(idx, 0, sizzle_players.size() - 1)]
 	sp.pitch_scale = clampf(SIZZLE_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
 	sp.play()
+
+
+## Suara nasi goreng ditumis di wajan; panjangnya disesuaikan dengan waktu masak.
+func _stirfry_sound(idx: int, dur: float) -> void:
+	stirfry_count += 1
+	var wp: AudioStreamPlayer = stirfry_players[clampi(idx, 0, stirfry_players.size() - 1)]
+	wp.pitch_scale = clampf(STIRFRY_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
+	wp.play()
 
 
 func _burn_sound() -> void:
