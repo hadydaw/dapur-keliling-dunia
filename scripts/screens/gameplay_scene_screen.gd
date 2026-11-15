@@ -23,6 +23,9 @@ var pour_players: Array = []         # suara menuang es teh ke gelas (satu pemai
 var pour_count: int = 0
 var fill_player: AudioStreamPlayer   # suara es + air mengisi dispenser
 var fill_count: int = 0
+var sizzle_players: Array = []       # desis sate di panggangan (satu pemain per slot)
+var sizzle_count: int = 0
+const SIZZLE_LENGTH := 6.0    # panjang sate_desis.wav (detik)
 const FILL_LENGTH := 3.0      # panjang isi_dispenser.wav (detik)
 const POUR_LENGTH := 2.6      # panjang tuang_es.wav (detik)
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
@@ -110,6 +113,12 @@ func _ready() -> void:
 		pp.volume_db = -5.0
 		add_child(pp)
 		pour_players.append(pp)
+	for i in 6:
+		var sp := AudioStreamPlayer.new()
+		sp.stream = load("res://assets/audio/sate_desis.wav")
+		sp.volume_db = -6.0
+		add_child(sp)
+		sizzle_players.append(sp)
 	fill_player = AudioStreamPlayer.new()
 	fill_player.stream = load("res://assets/audio/isi_dispenser.wav")
 	fill_player.volume_db = -4.0
@@ -404,6 +413,8 @@ func _on_ingredient(id: String) -> void:
 	slot["dish"] = dish
 	slot["t"] = 0.0
 	slot["dur"] = float(GameData.DISHES[dish]["cook"]) * GameState.cook_mult()
+	if dish == "sate_ayam":
+		_sizzle_sound(int(slot["idx"]), float(slot["dur"]))
 
 
 func _refill_jar() -> void:
@@ -549,6 +560,14 @@ func _pour_sound(idx: int, dur: float) -> void:
 	var pp: AudioStreamPlayer = pour_players[clampi(idx, 0, pour_players.size() - 1)]
 	pp.pitch_scale = clampf(POUR_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
 	pp.play()
+
+
+## Desis sate di panggangan; panjangnya disesuaikan dengan waktu masak.
+func _sizzle_sound(idx: int, dur: float) -> void:
+	sizzle_count += 1
+	var sp: AudioStreamPlayer = sizzle_players[clampi(idx, 0, sizzle_players.size() - 1)]
+	sp.pitch_scale = clampf(SIZZLE_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
+	sp.play()
 
 
 func _burn_sound() -> void:

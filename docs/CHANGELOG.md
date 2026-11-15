@@ -288,3 +288,8 @@
 - File: assets/audio/isi_dispenser.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: saat ketuk es dan dispenser mulai terisi terdengar es batu berjatuhan lalu air mengalir (nada naik), kecepatan disesuaikan dengan waktu isi (3 dtk). Mekanik tidak berubah.
 - Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.
+
+## 2026-11-15 - Suara sate di panggangan
+- File: assets/audio/sate_desis.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: saat sate ayam masuk panggangan terdengar desis daging dan letupan lemak; panjangnya disesuaikan dengan waktu masak, satu pemain suara per slot panggangan agar bisa tumpang tindih. Ikan bakar belum memakai suara ini. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.

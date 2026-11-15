@@ -175,6 +175,9 @@ func _ready() -> void:
 	_check(g.dishes.has("ikan_bakar") and g.dishes.size() == 5, "level 5 membuka 5 menu termasuk ikan bakar")
 	await _tap_ingredient(g, "ikan")
 	_check(g.appliances["grill"][0]["state"] == "cooking" and g.appliances["grill"][0]["dish"] == "ikan_bakar", "ikan masuk panggangan")
+	_check(g.sizzle_count == 0, "ikan bakar tidak memakai suara desis sate")
+	await _tap_ingredient(g, "tusuk_ayam")
+	_check(g.sizzle_count == 1 and g.sizzle_players[1].playing, "suara desis sate berbunyi sekali saat sate masuk panggangan")
 
 	# --- ekspresi pelanggan mengikuti kesabaran ---
 	g.customers.clear()
