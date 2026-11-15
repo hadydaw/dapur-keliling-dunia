@@ -353,3 +353,9 @@
 - File: scripts/ui/settings_panel.gd (baru), scripts/music.gd (bus "Musik" dan "Efek", `apply_volumes`), scripts/game_state.gd (`music_vol`, `sfx_vol` di save.json, kunci opsional jadi save lama tetap terbaca), scripts/screens/menu_screen.gd (tombol Setelan membuka panel), scripts/screens/gameplay_screen.gd (tombol "Pengaturan" di menu Jeda; tombol Kembali menutup panel dulu), scripts/screens/gameplay_scene_screen.gd (semua efek ke bus Efek), tests/settings_test.gd/.tscn (baru)
 - Isi: dua slider 0-100% (0 = bisu), gagang besar, tinggi sentuh 56 px; tersimpan otomatis; "Mulai Baru" tidak menghapus pengaturan suara; geser Efek memutar bunyi "ting" untuk contoh.
 - Hasil uji: settings_test 19/19 lulus; music, menu, world_map, level_select, responsive_layout, gameplay_scene, gameplay: 0 gagal. Render panel 1280x720 diperiksa. BELUM diuji di HP (rasa geser slider dengan jari dan loudness nyata).
+
+## 2026-11-15 - APK juga untuk HP 32-bit (armeabi-v7a)
+- File: export_presets.cfg
+- Alasan: user melapor "Ada masalah saat mengurai paket" di HP lain; APK sebelumnya hanya arm64-v8a, sehingga HP 32-bit tidak bisa memasangnya (dugaan penyebab, belum terbukti).
+- Dampak: ukuran APK bertambah. Tidak ada perubahan gameplay.
+- Hasil uji: menunggu hasil build GitHub Actions dan pemasangan di HP user.
