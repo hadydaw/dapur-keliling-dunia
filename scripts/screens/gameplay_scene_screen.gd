@@ -56,6 +56,10 @@ var force_wide := -1   # uji: 1 = paksa latar lebar, 0 = paksa latar 16:9, -1 = 
 const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel inti) bila layar lebih lebar dari gambar
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
+var flame_fx: Control               # api kompor (di atas latar, di bawah wadah masakan)
+var burner_heat: Array = []         # kekuatan api tiap tungku 0..1 (halus mengikuti keadaan)
+const HEAT_IDLE := 0.28             # api kecil saat kompor menganggur
+const HEAT_RISE := 5.0              # kecepatan api membesar/mengecil
 const ALARM_H := 36.0        # tinggi ikon timer (piksel inti)
 const FIRE_H := 18.0         # tinggi maksimum api (lebih kecil dari gembok)
 const ALARM_STEPS := 64
@@ -176,6 +180,12 @@ func _ready() -> void:
 		uv.append(pt + Vector2(pad_x, 0.0))
 	counter.uv = uv
 	add_child(counter)
+	flame_fx = Control.new()
+	flame_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flame_fx.draw.connect(_on_flame_draw)
+	add_child(flame_fx)
+	for b in scene.get("burners", []):
+		burner_heat.append(HEAT_IDLE)
 	fx = Control.new()
 	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fx.draw.connect(_on_fx_draw)
@@ -407,6 +417,7 @@ func _layout() -> void:
 	toast_label.position = Vector2(0, _m(Vector2(0, float(scene.get("toast_y", TOAST_Y)))).y - toast_label.size.y * 0.5)
 	toast_label.add_theme_font_size_override("font_size", int(30.0 * u))
 	fx.queue_redraw()
+	flame_fx.queue_redraw()
 	cust_fx.queue_redraw()
 
 
@@ -564,6 +575,7 @@ func _step_vis(c: Dictionary, delta: float) -> void:
 
 func _update_slots(delta: float) -> void:
 	pulse += delta
+	_step_burners(delta)
 	_anim_bubbles(delta)
 	if jar["state"] == "filling":
 		jar["t"] = float(jar["t"]) + delta
@@ -663,6 +675,7 @@ func _refresh_ui() -> void:
 	var t: int = int(ceil(time_left))
 	time_label.text = "%d:%02d" % [t / 60, t % 60]
 	fx.queue_redraw()
+	flame_fx.queue_redraw()
 	cust_fx.queue_redraw()
 
 
@@ -704,6 +717,83 @@ func _draw_dispenser(s: float) -> void:
 			_draw_tex_clipped(glass_tex[i], gp, f, s)
 		elif slot["state"] == "ready":
 			fx.draw_texture_rect(glass_tex[i], Rect2(_m(gp), glass_tex[i].get_size() * s), false)
+
+
+## Target api sebuah tungku: 1 bila ada masakan di slot yang terhubung (memasak/matang/gosong), selain itu api kecil.
+func _burner_target(b: Dictionary) -> float:
+	for lk in b["links"]:
+		var slot: Dictionary = appliances[lk[0]][int(lk[1])]
+		var st: String = slot["state"]
+		if st == "cooking" or st == "ready" or st == "burnt":
+			return 1.0
+	return HEAT_IDLE
+
+
+func _step_burners(delta: float) -> void:
+	var bl: Array = scene.get("burners", [])
+	for i in bl.size():
+		burner_heat[i] = move_toward(float(burner_heat[i]), _burner_target(bl[i]), delta * HEAT_RISE)
+
+
+func _on_flame_draw() -> void:
+	if scale_f <= 0.0 or not scene.has("burners"):
+		return
+	var bl: Array = scene["burners"]
+	for i in bl.size():
+		var b: Dictionary = bl[i]
+		_draw_flame(_m(b["pos"]), float(b["w"]) * scale_f, float(burner_heat[i]), float(i) * 1.7)
+
+
+## Api kompor prosedural: cincin biru di dasar + lidah api oranye/kuning/putih yang meliuk.
+## heat 0..1 mengatur tinggi dan terang; ph = fase agar tiap tungku bergoyang berbeda.
+func _draw_flame(c: Vector2, w: float, heat: float, ph: float) -> void:
+	var t: float = pulse
+	# pendar hangat di sekitar tungku
+	var glow_a: float = (0.10 + 0.14 * heat) * (0.85 + 0.15 * sin(t * 9.0 + ph))
+	fx_ellipse(flame_fx, c + Vector2(0, -w * 0.12), Vector2(w * 0.62, w * 0.34), Color(1.0, 0.55, 0.15, glow_a))
+	# cincin biru
+	var ring_a: float = 0.55 + 0.35 * heat
+	var pts := PackedVector2Array()
+	for k in 25:
+		var a: float = float(k) / 24.0 * TAU
+		pts.append(c + Vector2(cos(a) * w * 0.40, sin(a) * w * 0.11) * (1.0 + 0.04 * sin(t * 14.0 + k * 1.3 + ph)))
+	flame_fx.draw_polyline(pts, Color(0.35, 0.65, 1.0, ring_a), maxf(2.0, w * 0.045))
+	# lidah api (belakang dulu, depan terakhir)
+	var n := 7
+	for k in n:
+		var u: float = float(k) / float(n - 1)
+		var xo: float = lerpf(-0.36, 0.36, u) * w
+		var depth: float = absf(u - 0.5) * 2.0          # tepi lebih pendek dari tengah
+		var fl: float = 0.80 + 0.20 * sin(t * (8.0 + k * 1.9) + ph + k * 2.1) + 0.10 * sin(t * 19.0 + k * 3.7 + ph)
+		var hgt: float = w * (0.10 + 0.40 * heat) * (1.0 - 0.35 * depth) * fl
+		var sway: float = sin(t * (5.0 + k * 0.8) + ph + k) * w * 0.045
+		var base := c + Vector2(xo, w * 0.05 * (1.0 - depth) - w * 0.02)
+		var hw: float = w * (0.080 + 0.040 * heat)
+		_flame_tongue(base, hw, hgt, sway, Color(1.0, 0.42, 0.08, 0.80 * (0.55 + 0.45 * heat)))
+		_flame_tongue(base, hw * 0.62, hgt * 0.72, sway * 0.8, Color(1.0, 0.80, 0.25, 0.90 * (0.55 + 0.45 * heat)))
+		_flame_tongue(base, hw * 0.30, hgt * 0.40, sway * 0.5, Color(1.0, 0.97, 0.75, 0.90 * heat))
+
+
+func _flame_tongue(base: Vector2, hw: float, h: float, sway: float, col: Color) -> void:
+	if h < 1.0:
+		return
+	var pts := PackedVector2Array()
+	var steps := 8
+	for k in range(steps + 1):
+		var u: float = float(k) / float(steps)
+		pts.append(base + Vector2(-hw * sin(PI * pow(u, 0.7)) * (1.0 - 0.55 * u) + sway * u * u, -h * u))
+	for k in range(steps - 1, 0, -1):
+		var u: float = float(k) / float(steps)
+		pts.append(base + Vector2(hw * sin(PI * pow(u, 0.7)) * (1.0 - 0.55 * u) + sway * u * u, -h * u))
+	flame_fx.draw_colored_polygon(pts, col)
+
+
+func fx_ellipse(node: Control, c: Vector2, r: Vector2, col: Color) -> void:
+	var pts := PackedVector2Array()
+	for k in 24:
+		var a: float = float(k) / 24.0 * TAU
+		pts.append(c + Vector2(cos(a) * r.x, sin(a) * r.y))
+	node.draw_colored_polygon(pts, col)
 
 
 func _on_fx_draw() -> void:

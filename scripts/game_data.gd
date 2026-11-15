@@ -156,6 +156,14 @@ const SCENES := {
 			"wok": {"r": 52.0, "points": [Vector2(1170, 442), Vector2(1305, 445), Vector2(1185, 523), Vector2(1325, 525)]},
 			"pot": {"r": 48.0, "points": [Vector2(1445, 440), Vector2(1555, 438), Vector2(1470, 515), Vector2(1580, 518)]},
 		},
+		"burners": [   # tungku kompor (koordinat gambar latar): api animasi; links = slot yang memanaskannya
+			{"pos": Vector2(1167, 477), "w": 84.0, "links": [["wok", 0]]},
+			{"pos": Vector2(1306, 477), "w": 84.0, "links": [["wok", 1]]},
+			{"pos": Vector2(1186, 571), "w": 92.0, "links": [["wok", 2]]},
+			{"pos": Vector2(1326, 571), "w": 92.0, "links": [["wok", 3]]},
+			{"pos": Vector2(1470, 570), "w": 88.0, "links": [["pot", 2], ["pot", 0]]},   # tungku panci belakang tertutup panci depan
+			{"pos": Vector2(1587, 570), "w": 88.0, "links": [["pot", 3], ["pot", 1]]},
+		],
 		"dispenser": {
 			"hot": Rect2(62, 372, 148, 152),      # area ketuk dispenser
 			"timer": Vector2(130, 452),            # pusat timer jam pasir di dispenser
@@ -199,6 +207,12 @@ const SCENES_WIDE := {
 			Vector2(1120, 320), Vector2(1135, 332), Vector2(1160, 342), Vector2(1178, 340), Vector2(1186, 330), Vector2(1194, 320), Vector2(1202, 312),
 			Vector2(1210, 320), Vector2(1220, 330), Vector2(1226, 372), Vector2(1230, 372), Vector2(1525, 370), Vector2(1775, 372),
 			Vector2(1830, 500), Vector2(1870, 841), Vector2(250, 841)],
+		"burners": [   # latar lebar: hanya tungku baris depan yang terlihat; baris belakang ikut memanaskan kolomnya
+			{"pos": Vector2(1320, 480), "w": 74.0, "links": [["wok", 2], ["wok", 0]]},
+			{"pos": Vector2(1468, 481), "w": 74.0, "links": [["wok", 3], ["wok", 1]]},
+			{"pos": Vector2(1624, 481), "w": 70.0, "links": [["pot", 2], ["pot", 0]]},
+			{"pos": Vector2(1745, 481), "w": 70.0, "links": [["pot", 3], ["pot", 1]]},
+		],
 		"rect_k": {"grill": 0.95, "plate": 0.9, "wok": 1.12, "pot": 1.0, "bowl": 0.95},
 		"hud": {
 			"banner": Vector2(757, 1112),

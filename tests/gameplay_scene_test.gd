@@ -126,6 +126,11 @@ func _ready() -> void:
 	await _tap_ingredient(g, "nasi")
 	_check(g.appliances["wok"][0]["state"] == "cooking", "ketuk penanak nasi: wajan mulai memasak")
 	_check(g.stirfry_count == 1 and g.stirfry_players[0].playing, "suara nasi goreng di wajan berbunyi sekali saat mulai memasak")
+	_check(g.burner_heat.size() == 6, "latar 16:9: 6 tungku wajan/panci punya api (%d)" % g.burner_heat.size())
+	_check(is_equal_approx(float(g.burner_heat[0]), g.HEAT_IDLE), "tungku wajan 1 menganggur: api kecil")
+	g._update_slots(0.5)
+	_check(float(g.burner_heat[0]) > 0.99, "wajan 1 memasak: api tungku membesar penuh")
+	_check(is_equal_approx(float(g.burner_heat[3]), g.HEAT_IDLE), "tungku wajan lain yang kosong tetap kecil")
 	var ting_before: int = g.ting_count
 	g._update_slots(7.0)
 	_check(g.ting_count == ting_before + 1, "bel ting berbunyi sekali saat nasi goreng matang")
