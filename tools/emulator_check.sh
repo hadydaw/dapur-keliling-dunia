@@ -67,7 +67,7 @@ run_case() { # nama  param
   fi
   sleep 25
   if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
-    echo "   (percobaan 1: proses mati; log:)"; adb logcat -d -b crash | tail -15; adb logcat -d | grep -iE "am_proc_died|am_kill|lowmemorykiller|Process $PKG.*died|ANR in" | tail -8
+    echo "   (percobaan 1: proses mati; log:)"; adb logcat -d -b all | grep -iE "am_proc_died|am_kill|lowmemorykiller|lmkd|Out of memory|Fatal signal|SIGSEGV|SIGABRT|F libc|ANR in|Killing|has died|DEBUG   :" | tail -25 | cut -c1-230; adb logcat -d -s godot:V | tail -12 | cut -c1-200
     adb logcat -c; adb shell am start -W -n "$COMP" | tail -2; sleep 25
   fi
   if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
@@ -97,7 +97,12 @@ DONE=0
 for i in $(seq 1 60); do
   sleep 5
   if adb logcat -d -s godot:V | grep -q "SELFTEST|SELESAI"; then DONE=1; break; fi
-  [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ] && { echo "   PROSES MATI saat self-test"; break; }
+  if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
+    echo "   PROSES MATI saat self-test; jejak:"
+    adb logcat -d -b all | grep -iE "am_proc_died|am_kill|lowmemorykiller|lmkd|Out of memory|Fatal signal|SIGSEGV|SIGABRT|F libc|ANR in|Killing|has died|DEBUG   :" | tail -25 | cut -c1-230
+    adb logcat -d -s godot:V | tail -15 | cut -c1-200
+    break
+  fi
 done
 adb logcat -d -s godot:V | grep -E "SELFTEST\|" | sed -E 's/^.*(SELFTEST\|)/\1/' | cut -c1-260
 adb exec-out screencap -p > "shots/${LABEL}_selftest_akhir.png"

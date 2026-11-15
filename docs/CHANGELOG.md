@@ -379,3 +379,9 @@
 - Alasan: argumen `--selftest` lewat intent tidak sampai ke game di emulator (InitEngine tidak memuatnya); ditambah berkas penanda di folder data aplikasi sebagai pemicu cadangan, plus satu percobaan ulang bila proses mati saat menu (API 36 sempat mati sekali).
 - Dampak: hanya jalur uji; gameplay tidak berubah.
 - Hasil tes: lihat hasil CI berikutnya.
+
+## 2026-11-15 - Self-test: ketukan memakai koordinat jendela, jejak kematian proses
+- File: scripts/selftest.gd, tools/emulator_check.sh
+- Alasan: di emulator 3 pemeriksaan sentuh gagal karena ketukan buatan memakai koordinat kanvas, padahal jendela di-skala (0.765); kini diubah ke piksel jendela + gerak mouse sebelum klik. Skrip emulator kini mencetak jejak (lmkd/ANR/sinyal) bila proses mati.
+- Dampak: hanya jalur uji.
+- Hasil tes: headless 4.7.2 lulus (gagal=0); hasil emulator lihat CI berikutnya.

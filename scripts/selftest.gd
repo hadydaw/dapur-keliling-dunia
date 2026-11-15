@@ -31,12 +31,20 @@ func _secs(s: float) -> void:
 
 
 func _tap(pos: Vector2) -> void:
+	# Posisi kanvas diubah ke piksel jendela (skala tampilan di perangkat nyata tidak 1:1).
+	var wp: Vector2 = get_viewport().get_final_transform() * pos
+	var mv := InputEventMouseMotion.new()
+	mv.position = wp
+	mv.global_position = wp
+	Input.parse_input_event(mv)
+	await _frames(2)
 	for down in [true, false]:
 		var e := InputEventMouseButton.new()
 		e.button_index = MOUSE_BUTTON_LEFT
-		e.position = pos
-		e.global_position = pos
+		e.position = wp
+		e.global_position = wp
 		e.pressed = down
+		e.button_mask = MOUSE_BUTTON_MASK_LEFT if down else 0
 		Input.parse_input_event(e)
 		await _frames(2)
 
