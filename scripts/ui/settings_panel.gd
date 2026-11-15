@@ -30,6 +30,9 @@ func _ready() -> void:
 	v.add_child(UI.label("Pengaturan Suara", 40, Color(1, 0.82, 0.4), HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(_row("music", "Musik", GameState.music_vol))
 	v.add_child(_row("sfx", "Efek Suara", GameState.sfx_vol))
+	var info := UI.label("Versi %s | layar %dx%d | %s" % [ProjectSettings.get_setting("application/config/version", "?"), get_window().size.x, get_window().size.y, RenderingServer.get_video_adapter_name()], 18, Color(0.7, 0.68, 0.78), HORIZONTAL_ALIGNMENT_CENTER)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(info)
 	var btn := UI.button("Tutup", Vector2(360, 68), Color(0.42, 0.36, 0.9), 28)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn.name = "BtnTutup"

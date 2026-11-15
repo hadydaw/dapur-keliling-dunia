@@ -18,14 +18,22 @@ func _ready() -> void:
 	# Opsi uji (hanya dipakai saat dijalankan dari terminal): -- --screen=NAMA --area=N --level=N
 	var screen := "menu"
 	var p := {}
+	var selftest := false
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--screen="):
+		if a == "--selftest":
+			selftest = true
+		elif a.begins_with("--screen="):
 			screen = a.substr(9)
 		elif a.begins_with("--area="):
 			p["area"] = int(a.substr(7))
 		elif a.begins_with("--level="):
 			p["level"] = int(a.substr(8))
 	_go(screen, p)
+	if selftest:
+		var st := Node.new()
+		st.set_script(load("res://scripts/selftest.gd"))
+		add_child(st)
+		st.run(self)
 
 
 func _go(screen: String, params: Dictionary) -> void:

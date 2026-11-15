@@ -82,7 +82,24 @@ run_case() { # nama  param
 }
 
 run_case menu ""
-run_case level "--,--screen=gameplay,--area=0,--level=36"
+
+echo "== SELF-TEST di dalam game (sentuhan nyata, menu, level, main, Jeda, simpan, audio)"
+adb logcat -c
+adb shell am force-stop "$PKG"
+adb shell am start -W -n "$COMP" --esa command_line_params "--,--selftest" | tail -2
+DONE=0
+for i in $(seq 1 60); do
+  sleep 5
+  if adb logcat -d -s godot:V | grep -q "SELFTEST|SELESAI"; then DONE=1; break; fi
+  [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ] && { echo "   PROSES MATI saat self-test"; break; }
+done
+adb logcat -d -s godot:V | grep -E "SELFTEST\|" | sed -E 's/^.*(SELFTEST\|)/\1/' | cut -c1-260
+adb exec-out screencap -p > "shots/${LABEL}_selftest_akhir.png"
+if [ "$DONE" != "1" ]; then echo "   SELF-TEST TIDAK SELESAI dalam 300 dtk"; FAIL=1; fi
+if adb logcat -d -s godot:V | grep -E "SELFTEST\|[A-Z_]+_GAGAL"; then echo "   ADA PEMERIKSAAN GAGAL"; FAIL=1; fi
+SE=$(adb logcat -d -s godot:V | grep -c "SCRIPT ERROR")
+echo "   SCRIPT ERROR di logcat: $SE"; [ "$SE" -gt 0 ] && { adb logcat -d -s godot:V | grep -A3 "SCRIPT ERROR" | head -20; FAIL=1; }
+[ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ] && { echo "   proses mati setelah self-test"; FAIL=1; }
 adb shell dumpsys meminfo "$PKG" | grep -E "TOTAL PSS|TOTAL:" | head -2
 [ "$FAIL" = "0" ] && echo "SEMUA OK ($LABEL)" || echo "ADA KEGAGALAN ($LABEL)"
 exit $FAIL

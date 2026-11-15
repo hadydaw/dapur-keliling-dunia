@@ -172,6 +172,7 @@ jobs:
         run: |
           mkdir -p dist
           cp build/android/dapur-keliling-dunia.apk dist/dapur-keliling-dunia-universal.apk
+          (cd dist && sha256sum dapur-keliling-dunia-universal.apk > dapur-keliling-dunia-universal.apk.sha256 && cat dapur-keliling-dunia-universal.apk.sha256)
           if [ "$AAB_SIGN" = "upload" ]; then N=dapur-keliling-dunia-play.aab; else N=dapur-keliling-dunia-UJI-kunci-debug.aab; fi
           cp build/android/dapur-keliling-dunia.aab "dist/$N"
           ls -la dist
@@ -180,7 +181,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apk-universal
-          path: dist/dapur-keliling-dunia-universal.apk
+          path: |
+            dist/dapur-keliling-dunia-universal.apk
+            dist/dapur-keliling-dunia-universal.apk.sha256
 
       - name: Unggah AAB
         uses: actions/upload-artifact@v4
@@ -200,6 +203,7 @@ jobs:
           - {api: 24, target: default, profile: "", ram: "", w: 1280, h: 720, label: "16x9"}
           - {api: 29, ram: 4096M, target: default, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
           - {api: 34, ram: 4096M, target: google_apis, profile: pixel_6, w: 2520, h: 1080, label: "21x9"}
+          - {api: 31, ram: 4096M, target: google_apis, profile: pixel_6, w: 2160, h: 1080, label: "18x9"}
           - {api: 36, ram: 4096M, target: google_apis, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
     steps:
       - uses: actions/checkout@v4
@@ -234,3 +238,29 @@ jobs:
           name: layar-api${{ matrix.api }}-${{ matrix.label }}
           path: shots/
           if-no-files-found: ignore
+
+  release:
+    name: Publikasi APK langsung (tanpa ZIP)
+    needs: [build, emulator]
+    if: ${{ always() && needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk-universal
+          path: dist
+      - name: Rilis pra-rilis dev-latest dengan APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          cd dist
+          SHA=$(cut -d' ' -f1 dapur-keliling-dunia-universal.apk.sha256)
+          SIZE=$(stat -c%s dapur-keliling-dunia-universal.apk)
+          gh release delete dev-latest --repo "$REPO" --cleanup-tag -y || true
+          gh release create dev-latest --repo "$REPO" --prerelease --target "${{ github.sha }}" \
+            --title "APK uji terbaru (dev)" \
+            --notes "Universal APK (arm64-v8a, armeabi-v7a, x86_64), Android 7.0+. Build #${{ github.run_number }}, uji emulator: ${{ needs.emulator.result }}, commit ${GITHUB_SHA::7}. Ukuran ${SIZE} byte. SHA-256: ${SHA}. Pasang langsung (izinkan sumber tidak dikenal). Jika file hasil kirim ukurannya beda, jangan dipasang: unduh ulang." \
+            dapur-keliling-dunia-universal.apk dapur-keliling-dunia-universal.apk.sha256
