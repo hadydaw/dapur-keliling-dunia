@@ -192,14 +192,15 @@ jobs:
     name: Uji pasang dan buka (Android ${{ matrix.api }}, ${{ matrix.label }})
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {api: 24, target: default, profile: pixel_2, w: 1920, h: 1080, label: "16x9"}
-          - {api: 29, target: default, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
-          - {api: 34, target: google_apis, profile: pixel_6, w: 2520, h: 1080, label: "21x9"}
-          - {api: 36, target: google_apis, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
+          - {api: 24, target: default, profile: "", ram: "", w: 1280, h: 720, label: "16x9"}
+          - {api: 29, ram: 4096M, target: default, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
+          - {api: 34, ram: 4096M, target: google_apis, profile: pixel_6, w: 2520, h: 1080, label: "21x9"}
+          - {api: 36, ram: 4096M, target: google_apis, profile: pixel_6, w: 2400, h: 1080, label: "20x9"}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -220,7 +221,7 @@ jobs:
           target: ${{ matrix.target }}
           arch: x86_64
           profile: ${{ matrix.profile }}
-          ram-size: 4096M
+          ram-size: ${{ matrix.ram }}
           heap-size: 576M
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
