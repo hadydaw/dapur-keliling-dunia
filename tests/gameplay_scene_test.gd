@@ -178,6 +178,9 @@ func _ready() -> void:
 	_check(g.appliances["grill"][0]["state"] == "cooking" and g.appliances["grill"][0]["dish"] == "ikan_bakar", "ikan masuk panggangan")
 	_check(g.sizzle_count == 0, "ikan bakar tidak memakai suara desis sate")
 	_check(g.fish_count == 1 and g.fish_players[0].playing, "suara ikan bakar berbunyi sekali saat ikan masuk panggangan")
+	_check(g.soup_count == 0, "soto belum dimasak: suara kuah belum berbunyi")
+	await _tap_ingredient(g, "ayam")
+	_check(g.soup_count == 1 and g.soup_players[0].playing, "suara soto mendidih berbunyi sekali saat ayam masuk panci")
 	await _tap_ingredient(g, "tusuk_ayam")
 	_check(g.sizzle_count == 1 and g.sizzle_players[1].playing, "suara desis sate berbunyi sekali saat sate masuk panggangan")
 

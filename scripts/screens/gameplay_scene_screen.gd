@@ -32,6 +32,9 @@ const STIRFRY_LENGTH := 5.0   # panjang nasi_goreng_wajan.wav (detik)
 var fish_players: Array = []         # desis ikan bakar di panggangan (satu pemain per slot)
 var fish_count: int = 0
 const FISH_LENGTH := 7.0      # panjang ikan_bakar.wav (detik)
+var soup_players: Array = []         # kuah soto mendidih di panci (satu pemain per slot)
+var soup_count: int = 0
+const SOUP_LENGTH := 8.0      # panjang soto_mendidih.wav (detik)
 const FILL_LENGTH := 3.0      # panjang isi_dispenser.wav (detik)
 const POUR_LENGTH := 2.6      # panjang tuang_es.wav (detik)
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
@@ -137,6 +140,12 @@ func _ready() -> void:
 		fp.volume_db = -6.0
 		add_child(fp)
 		fish_players.append(fp)
+	for i in 4:
+		var cp := AudioStreamPlayer.new()
+		cp.stream = load("res://assets/audio/soto_mendidih.wav")
+		cp.volume_db = -6.0
+		add_child(cp)
+		soup_players.append(cp)
 	fill_player = AudioStreamPlayer.new()
 	fill_player.stream = load("res://assets/audio/isi_dispenser.wav")
 	fill_player.volume_db = -4.0
@@ -437,6 +446,8 @@ func _on_ingredient(id: String) -> void:
 		_stirfry_sound(int(slot["idx"]), float(slot["dur"]))
 	elif dish == "ikan_bakar":
 		_fish_sound(int(slot["idx"]), float(slot["dur"]))
+	elif dish == "soto_ayam":
+		_soup_sound(int(slot["idx"]), float(slot["dur"]))
 
 
 func _refill_jar() -> void:
@@ -606,6 +617,14 @@ func _fish_sound(idx: int, dur: float) -> void:
 	var fp: AudioStreamPlayer = fish_players[clampi(idx, 0, fish_players.size() - 1)]
 	fp.pitch_scale = clampf(FISH_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
 	fp.play()
+
+
+## Suara kuah soto mendidih di panci; panjangnya disesuaikan dengan waktu masak.
+func _soup_sound(idx: int, dur: float) -> void:
+	soup_count += 1
+	var cp: AudioStreamPlayer = soup_players[clampi(idx, 0, soup_players.size() - 1)]
+	cp.pitch_scale = clampf(SOUP_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
+	cp.play()
 
 
 func _burn_sound() -> void:

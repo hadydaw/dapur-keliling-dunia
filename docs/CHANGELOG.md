@@ -303,3 +303,8 @@
 - File: assets/audio/ikan_bakar.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: saat ikan masuk panggangan terdengar desis lebih berat dengan letupan minyak dan derak kulit; panjangnya disesuaikan waktu masak, satu pemain suara per slot panggangan. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.
+
+## 2026-11-15 - Suara soto ayam di panci
+- File: assets/audio/soto_mendidih.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: saat soto ayam mulai dimasak di panci terdengar kuah mendidih (gelembung makin ramai, gemuruh rendah, dentang sendok); panjangnya disesuaikan waktu masak, satu pemain suara per slot panci. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.
