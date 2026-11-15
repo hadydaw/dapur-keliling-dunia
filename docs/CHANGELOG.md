@@ -203,3 +203,9 @@
 - File: scripts/screens/gameplay_screen.gd, scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
 - Isi: item yang sudah diberikan memudar dan mengecil (tanpa cincin/centang), item sisa bergulir naik; gelembung menampilkan 2 ikon sekaligus dan penanda "+N" untuk sisanya. Layar scene memberi pesanan acak 1-5 item (layar klasik tetap maks 2 lewat max_order_items).
 - Hasil tes: 5 suite 0 gagal; render urutan animasi dicek; belum diuji di HP.
+
+## 2026-11-15 - Layar tidak lagi terpotong
+- File: scripts/screens/gameplay_scene_screen.gd, docs/CHANGELOG.md
+- Alasan: di HP 20:9 latar dipotong atas-bawah sehingga HUD (panel menu, Misi, dll.) terpotong.
+- Isi: gambar dimuat utuh (skala minimum); sisi kiri-kanan diisi tepi gambar yang diregangkan. Pemusatan FOCUS_Y dihapus.
+- Hasil tes: 5 suite 0 gagal; render 2400x1080 dicek; belum diuji di HP.

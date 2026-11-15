@@ -6,6 +6,7 @@ extends "res://scripts/screens/gameplay_screen.gd"
 
 var scene: Dictionary = {}
 var bg: TextureRect
+var side_strips: Array = []   # tepi gambar diregangkan untuk sisi layar yang lebih lebar dari 16:9
 var fx: Control
 var bubble_tex: Texture2D            # bingkai gelembung pesanan (ada slot bar kesabaran vertikal di kanan)
 var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
@@ -29,7 +30,6 @@ var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
 var glass_tex: Array = []
 var customer_tex: Dictionary = {}
-const FOCUS_Y := 540.0   # titik gambar yang dijaga di tengah layar
 const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan
 
 
@@ -44,6 +44,20 @@ func _ready() -> void:
 	font = load("res://assets/fonts/game_font.tres")
 	UI.fill(self)
 	UI.background(self, Color(0.1, 0.04, 0.03))
+	var src_tex: Texture2D = load(scene["image"])
+	var isz: Vector2 = scene["size"]
+	for side in 2:
+		var strip := TextureRect.new()
+		var at := AtlasTexture.new()
+		at.atlas = src_tex
+		at.region = Rect2(0 if side == 0 else isz.x - 4.0, 0, 4.0, isz.y)
+		strip.texture = at
+		strip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		strip.stretch_mode = TextureRect.STRETCH_SCALE
+		strip.modulate = Color(0.55, 0.5, 0.45)
+		strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(strip)
+		side_strips.append(strip)
 	bg = TextureRect.new()
 	bg.texture = load(scene["image"])
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -184,11 +198,15 @@ func _layout() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 	var img: Vector2 = scene["size"]
-	scale_f = maxf(size.x / img.x, size.y / img.y)
+	# Seluruh gambar harus terlihat (HUD ada di tepi atas/bawah): muat ke layar, tanpa dipotong.
+	# Layar yang lebih lebar dari 16:9 mendapat sisi kiri-kanan yang diisi gambar latar buram.
+	scale_f = minf(size.x / img.x, size.y / img.y)
 	offset = (size - img * scale_f) * 0.5
-	# Layar lebih lebar dari 16:9 memotong atas/bawah: pusatkan pada area main
-	# (pelanggan sampai rak bahan), bukan pada tengah gambar.
-	offset.y = clampf(size.y * 0.5 - FOCUS_Y * scale_f, size.y - img.y * scale_f, 0.0)
+	var side_w: float = maxf(offset.x, 0.0)
+	side_strips[0].position = Vector2.ZERO
+	side_strips[0].size = Vector2(side_w + 1.0, size.y)
+	side_strips[1].position = Vector2(size.x - side_w - 1.0, 0)
+	side_strips[1].size = Vector2(side_w + 1.0, size.y)
 	bg.position = offset
 	bg.size = img * scale_f
 	cust_fx.position = Vector2.ZERO
