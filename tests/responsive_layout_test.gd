@@ -19,14 +19,6 @@ func _frames(n: int = 2) -> void:
 		await get_tree().process_frame
 
 
-func _hud_rects(g: Node) -> Array:
-	var hud: Dictionary = g.scene["hud"]
-	var out: Array = [hud["avatar"], hud["strip1"], hud["strip2"], hud["gear"], hud["panel_head"], hud["panel_body"]]
-	out.append_array(hud["pills"])
-	out.append_array(hud["squares"])
-	return out
-
-
 func _ready() -> void:
 	get_window().size = Vector2i(1280, 720)
 	await _frames()
@@ -55,8 +47,8 @@ func _ready() -> void:
 		_check(g.bg.position.x <= 0.5 and g.bg.position.x + g.bg.size.x >= sz.x - 0.5, "%s: latar menutupi lebar layar (tanpa bar)" % name)
 		_check(g.bg.position.y <= 0.5 and g.bg.position.y + g.bg.size.y >= sz.y - 0.5, "%s: latar menutupi tinggi layar" % name)
 		var bad := 0
-		for r in _hud_rects(g):
-			var rr := Rect2(g._m(r.position), r.size * g.scale_f)
+		for it in g.hud_items():
+			var rr := Rect2(g._hm(it["rect"].position, it["side"]), it["rect"].size * g.scale_f)
 			if not view.grow(-4.0).encloses(rr):
 				bad += 1
 		_check(bad == 0, "%s: semua elemen HUD di dalam layar (%d keluar)" % [name, bad])
@@ -89,8 +81,8 @@ func _ready() -> void:
 	var safe := Rect2(Vector2(90, 0), Vector2(sz2.x - 180.0, sz2.y))
 	_check(safe.encloses(Rect2(g.offset, img * g.scale_f)), "20:9 + notch 90 px: area inti di dalam area aman")
 	var bad2 := 0
-	for r in _hud_rects(g):
-		if not safe.encloses(Rect2(g._m(r.position), r.size * g.scale_f)):
+	for it in g.hud_items():
+		if not safe.encloses(Rect2(g._hm(it["rect"].position, it["side"]), it["rect"].size * g.scale_f)):
 			bad2 += 1
 	_check(bad2 == 0, "20:9 + notch: HUD di dalam area aman")
 	g.safe_insets_override = Vector4(-1, 0, 0, 0)

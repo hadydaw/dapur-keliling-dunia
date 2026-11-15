@@ -109,17 +109,19 @@ const SCENES := {
 				"full": ["res://assets/scene/sate/full_0.png", "res://assets/scene/sate/full_1.png", "res://assets/scene/sate/full_2.png", "res://assets/scene/sate/full_3.png", "res://assets/scene/sate/full_4.png", "res://assets/scene/sate/full_5.png"],
 			},
 		},
-		# Bingkai HUD ikut tergambar di latar (kosong); teks/angka digambar game di atasnya.
-		# Semua dalam piksel gambar latar.
+		# HUD digambar game (bingkai = aset di assets/hud/, atau gambar prosedural sementara),
+		# dalam piksel area inti. Sisi "L"/"R" menentukan penempelan ke tepi layar kiri/kanan.
 		"hud": {
-			"avatar": Rect2(24, 20, 84, 84),
-			"strip1": Rect2(124, 24, 114, 26),
-			"strip2": Rect2(124, 68, 114, 26),
-			"pills": [Rect2(268, 20, 182, 40), Rect2(470, 20, 170, 40), Rect2(1142, 20, 200, 40), Rect2(1376, 20, 190, 40)],
-			"gear": Rect2(1588, 12, 68, 68),
-			"squares": [Rect2(20, 134, 83, 86), Rect2(20, 234, 83, 82)],
-			"panel_head": Rect2(1408, 110, 236, 36),
-			"panel_body": Rect2(1408, 158, 236, 142),
+			"avatar": Rect2(16, 10, 100, 100),
+			"strip1": Rect2(122, 24, 126, 28),
+			"strip2": Rect2(122, 62, 126, 30),
+			"pills": [Rect2(256, 10, 196, 54), Rect2(462, 10, 196, 54), Rect2(1130, 10, 196, 54), Rect2(1344, 10, 196, 54)],
+			"gear": Rect2(1590, 10, 68, 68),
+			"squares": [Rect2(16, 134, 92, 92), Rect2(16, 236, 92, 92)],
+			"panel_head": Rect2(1400, 100, 256, 40),
+			"panel_body": Rect2(1400, 146, 256, 170),
+			"pill_image": "res://assets/hud/pill.png",
+			"sides": {"avatar": "L", "strip1": "L", "strip2": "L", "pills": ["L", "L", "R", "R"], "gear": "R", "squares": "L", "panel_head": "R", "panel_body": "R"},
 		},
 		"customer_art": {
 			"senang": "res://assets/customers/pria_batik_senang.png",

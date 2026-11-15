@@ -227,3 +227,9 @@
 - Catatan: bingkai HUD menyatu dengan gambar latar, jadi HUD ikut skala area inti (bukan menempel ke tepi layar). Penempelan ke tepi memerlukan bingkai HUD sebagai PNG terpisah.
 - Platform yang diuji: render headless 1920x1080, 2160x1080, 2340x1080, 2400x1080 (gameplay + menu); belum diuji di perangkat nyata.
 - Hasil tes: 6 suite, 0 gagal (responsive_layout_test baru: 31 pemeriksaan).
+
+## 2026-11-15 - Latar bersih tanpa HUD + HUD digambar game, menempel ke tepi layar
+- File: assets/scene_indonesia.jpg (latar bersih dari user, diperlebar 2132 px), assets/hud/pill.png (baru), scripts/game_data.gd, scripts/screens/gameplay_scene_screen.gd, tests/responsive_layout_test.gd, docs/CHANGELOG.md
+- Isi: bingkai HUD tidak lagi menyatu dengan latar. Pil memakai aset assets/hud/pill.png; avatar, strip, tombol jeda, kotak Misi/Toko, dan panel menu masih gambar prosedural sementara sampai asetnya tersedia. Elemen HUD bersisi L/R menempel ke tepi area aman layar (bergeser keluar di layar lebih lebar dari 16:9); area ketuk ikut bergeser.
+- Platform yang diuji: render headless 1920/2160/2340/2400 x 1080; belum diuji di perangkat nyata.
+- Hasil tes: 6 suite 0 gagal.
