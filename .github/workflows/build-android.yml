@@ -1,0 +1,231 @@
+name: Build Android (APK universal + AAB)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+
+env:
+  GODOT_VERSION: "4.7.2"
+  PKG: com.hadydaw.dapurkelilingdunia
+
+jobs:
+  build:
+    name: Build APK universal + AAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Godot + export template Android
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot-bin
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-android-v1
+
+      - name: Pasang Godot dan export template Android
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          B=https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable
+          mkdir -p ~/godot-bin /tmp/tpl
+          curl -fsSL -o /tmp/godot.zip $B/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip -q -o /tmp/godot.zip -d ~/godot-bin
+          curl -fsSL -o /tmp/tpl.tpz $B/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          unzip -q -o /tmp/tpl.tpz 'templates/android*' 'templates/version.txt' -d /tmp/tpl
+          D=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$D"
+          cp -r /tmp/tpl/templates/. "$D/"
+          ls -la "$D"
+
+      - name: Godot ke PATH
+        run: |
+          ln -sf ~/godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot-bin/godot
+          chmod +x ~/godot-bin/godot
+          echo "$HOME/godot-bin" >> "$GITHUB_PATH"
+
+      - name: Pasang Android SDK (platform 36, build-tools, NDK)
+        shell: bash
+        run: |
+          SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "SDK_DIR=$SDK_DIR" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find "$SDK_DIR/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          yes | "$SDKMANAGER" --sdk_root="$SDK_DIR" --licenses > /dev/null || true
+          "$SDKMANAGER" --sdk_root="$SDK_DIR" "platform-tools" "build-tools;36.0.0" "build-tools;35.0.1" "platforms;android-36" "cmake;3.10.2.4988404" "ndk;28.1.13356709"
+          ls "$SDK_DIR/build-tools" "$SDK_DIR/platforms"
+
+      - name: Atur path Java dan Android SDK untuk Godot
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          for f in editor_settings-4.7.tres editor_settings-4.tres; do
+            printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/java_sdk_path = "%s"\nexport/android/android_sdk_path = "%s"\n' "$JAVA_HOME" "$SDK_DIR" > "$HOME/.config/godot/$f"
+          done
+
+      - name: Import proyek
+        run: godot --headless --import || true
+
+      - name: Nomor versi naik otomatis (versionCode = nomor run)
+        run: sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" export_presets.cfg
+
+      - name: Keystore
+        env:
+          UP_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_B64 }}
+          UP_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          UP_PASS: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+        run: |
+          # Kunci TETAP (keystore/debug.keystore di repo): APK baru menimpa versi lama di HP.
+          cp keystore/debug.keystore /tmp/debug.keystore
+          if [ -n "$UP_B64" ]; then
+            echo "$UP_B64" | base64 -d > /tmp/upload.keystore
+            echo "AAB_SIGN=upload" >> "$GITHUB_ENV"
+            echo "AAB_KS=/tmp/upload.keystore" >> "$GITHUB_ENV"
+            echo "AAB_USER=$UP_ALIAS" >> "$GITHUB_ENV"
+            echo "AAB_PASS=$UP_PASS" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Secret ANDROID_UPLOAD_KEYSTORE_B64 belum ada: AAB ditandatangani kunci DEBUG (cukup untuk uji, DITOLAK Google Play)."
+            echo "AAB_SIGN=debug" >> "$GITHUB_ENV"
+            echo "AAB_KS=/tmp/debug.keystore" >> "$GITHUB_ENV"
+            echo "AAB_USER=androiddebugkey" >> "$GITHUB_ENV"
+            echo "AAB_PASS=android" >> "$GITHUB_ENV"
+          fi
+
+      - name: Export APK universal (armeabi-v7a + arm64-v8a + x86_64)
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /tmp/debug.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: android
+        shell: bash
+        run: |
+          mkdir -p build/android
+          set +e
+          godot --headless --verbose --export-release "Android APK" build/android/dapur-keliling-dunia.apk 2>&1 | tee export_apk.log | grep -E "ERROR|error|configuration|Error" | head -30
+          if [ ! -f build/android/dapur-keliling-dunia.apk ]; then echo "APK GAGAL dibuat"; tail -60 export_apk.log; exit 1; fi
+          ls -la build/android
+
+      - name: Pasang template Gradle Android (untuk AAB)
+        run: |
+          set -e
+          T=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p android/build
+          unzip -q -o "$T/android_source.zip" -d android/build
+          printf '%s' "${GODOT_VERSION}.stable" > android/.build_version
+          touch android/build/.gdignore
+          grep -nE "minSdk|targetSdk|compileSdk|buildTools|ndkVersion" android/build/config.gradle || true
+
+      - name: Export AAB (Google Play)
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ env.AAB_KS }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ env.AAB_USER }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ env.AAB_PASS }}
+        shell: bash
+        run: |
+          set +e
+          godot --headless --verbose --export-release "Android AAB" build/android/dapur-keliling-dunia.aab 2>&1 | tee export_aab.log | grep -E "ERROR|FAILED|error:|BUILD" | head -40
+          if [ ! -f build/android/dapur-keliling-dunia.aab ]; then echo "AAB GAGAL dibuat"; tail -120 export_aab.log; exit 1; fi
+          ls -la build/android
+
+      - name: AUDIT APK dan AAB
+        shell: bash
+        run: |
+          BT="$(ls -d "$SDK_DIR"/build-tools/* | sort -V | tail -1)"
+          echo "build-tools: $BT"
+          APK=build/android/dapur-keliling-dunia.apk
+          AAB=build/android/dapur-keliling-dunia.aab
+          FAIL=0
+          echo "=== UKURAN ==="; ls -la "$APK" "$AAB"
+          echo "=== APK: integritas ZIP ==="; unzip -tq "$APK" || FAIL=1
+          echo "=== APK: manifest (badging) ==="
+          "$BT/aapt2" dump badging "$APK" | grep -E "^package:|sdkVersion|targetSdkVersion|native-code|launchable-activity|application-label:|supports-screens|uses-feature" || FAIL=1
+          echo "=== APK: ABI di dalam ==="
+          unzip -l "$APK" | grep -E "lib/.*libgodot_android.so"
+          for a in armeabi-v7a arm64-v8a x86_64; do unzip -l "$APK" | grep -q "lib/$a/libgodot_android.so" || { echo "ABI HILANG: $a"; FAIL=1; }; done
+          echo "=== APK: tanda tangan ==="
+          "$BT/apksigner" verify --verbose --print-certs "$APK" 2>&1 | head -12 || FAIL=1
+          echo "=== APK: zipalign 4 byte + .so selaras 16 KB ==="
+          "$BT/zipalign" -c -P 16 -v 4 "$APK" 2>&1 | tail -4 || { echo "zipalign/16KB GAGAL"; FAIL=1; }
+          echo "=== AAB: bundletool ==="
+          curl -fsSL -o /tmp/bundletool.jar https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar
+          java -jar /tmp/bundletool.jar validate --bundle="$AAB" || FAIL=1
+          java -jar /tmp/bundletool.jar dump manifest --bundle="$AAB" | grep -E "versionCode|versionName|minSdkVersion|targetSdkVersion|package="
+          echo "--- ABI di AAB ---"
+          unzip -l "$AAB" | grep -E "libgodot_android.so"
+          echo "=== AAB: ubah ke APK universal lalu cek 16 KB ==="
+          java -jar /tmp/bundletool.jar build-apks --bundle="$AAB" --mode=universal --output=/tmp/u.apks --ks="$AAB_KS" --ks-key-alias="$AAB_USER" --ks-pass=pass:"$AAB_PASS" || FAIL=1
+          mkdir -p /tmp/uni && unzip -q -o /tmp/u.apks -d /tmp/uni
+          "$BT/zipalign" -c -P 16 -v 4 /tmp/uni/universal.apk 2>&1 | tail -3 || { echo "AAB: .so TIDAK selaras 16 KB"; FAIL=1; }
+          "$BT/aapt2" dump badging /tmp/uni/universal.apk | grep -E "sdkVersion|targetSdkVersion|native-code"
+          echo "=== Penandatangan AAB: $AAB_SIGN ==="
+          if [ "$AAB_SIGN" != "upload" ]; then echo "PERHATIAN: AAB ini ditandatangani kunci debug. Google Play MENOLAK. Isi secret ANDROID_UPLOAD_KEYSTORE_*"; fi
+          exit $FAIL
+
+      - name: Siapkan nama berkas unduhan
+        run: |
+          mkdir -p dist
+          cp build/android/dapur-keliling-dunia.apk dist/dapur-keliling-dunia-universal.apk
+          if [ "$AAB_SIGN" = "upload" ]; then N=dapur-keliling-dunia-play.aab; else N=dapur-keliling-dunia-UJI-kunci-debug.aab; fi
+          cp build/android/dapur-keliling-dunia.aab "dist/$N"
+          ls -la dist
+
+      - name: Unggah APK universal
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-universal
+          path: dist/dapur-keliling-dunia-universal.apk
+
+      - name: Unggah AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: aab-play
+          path: dist/*.aab
+
+  emulator:
+    name: Uji pasang dan buka (Android ${{ matrix.api }}, ${{ matrix.label }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {api: 24, target: default, w: 1920, h: 1080, label: "16x9"}
+          - {api: 29, target: default, w: 2400, h: 1080, label: "20x9"}
+          - {api: 34, target: google_apis, w: 2520, h: 1080, label: "21x9"}
+          - {api: 36, target: google_apis, w: 2400, h: 1080, label: "20x9"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk-universal
+          path: dist
+      - name: Aktifkan KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Pillow untuk analisis tangkapan layar
+        run: pip install pillow -q
+      - name: Emulator, pasang, buka menu dan level
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash tools/emulator_check.sh dist/dapur-keliling-dunia-universal.apk ${{ matrix.w }} ${{ matrix.h }} api${{ matrix.api }}-${{ matrix.label }}
+      - name: Unggah tangkapan layar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layar-api${{ matrix.api }}-${{ matrix.label }}
+          path: shots/
+          if-no-files-found: ignore

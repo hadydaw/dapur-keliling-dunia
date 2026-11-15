@@ -421,6 +421,14 @@ func _layout() -> void:
 		elif hk == "":
 			b.position = _m(r.position)
 			b.size = r.size * scale_f
+	# Area ketuk minimal 44 px: tombol kecil (mis. gear Jeda di layar rasio rendah) diperbesar di sekitar pusatnya.
+	for h in hotspots:
+		var tb: Button = h["btn"]
+		if tb.size.x < 44.0 or tb.size.y < 44.0:
+			var c: Vector2 = tb.position + tb.size * 0.5
+			var ns := Vector2(maxf(tb.size.x, 44.0), maxf(tb.size.y, 44.0))
+			tb.position = (c - ns * 0.5).clamp(Vector2.ZERO, (size - ns).max(Vector2.ZERO))
+			tb.size = ns
 	var u: float = size.y / 720.0
 	toast_label.size = Vector2(size.x, 40.0 * u)
 	toast_label.position = Vector2(0, _m(Vector2(0, float(scene.get("toast_y", TOAST_Y)))).y - toast_label.size.y * 0.5)
@@ -990,6 +998,8 @@ func _glints(node: Control, r: Rect2, ph: float, n: int, col: Color) -> void:
 		var sc: float = sin(PI * tt)
 		var l: float = r.size.y * 0.085 * sc
 		var w: float = l * 0.22
+		if w < 0.3:
+			continue   # kilau terlalu kecil = poligon degenerat
 		var c := Vector2(x, y)
 		var a: float = 0.95 * sc
 		node.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -l), c + Vector2(w, 0), c + Vector2(0, l), c + Vector2(-w, 0)]), Color(col.r, col.g, col.b, a))
@@ -1011,6 +1021,8 @@ func _sweep(node: Control, r: Rect2, ph: float, period: float, col: Color) -> vo
 		var y1: float = r.end.y
 		var poly := PackedVector2Array([Vector2(cx - bw, y0), Vector2(cx + bw, y0), Vector2(cx + bw + lean, y1), Vector2(cx - bw + lean, y1)])
 		for piece in Geometry2D.intersect_polygons(poly, rect_poly):
+			if piece.size() < 3 or absf(Geometry2D.get_closest_point_to_segment(piece[0], piece[1], piece[2]).distance_to(piece[0])) < 0.01 and piece.size() == 3:
+				continue
 			node.draw_colored_polygon(piece, Color(col.r, col.g, col.b, float(band[1]) * a * 1.4))
 
 
@@ -1092,7 +1104,7 @@ func _draw_sparks(node: Control, c: Vector2, sz: Vector2, heat: float, ph: float
 
 
 func _flame_tongue(base: Vector2, hw: float, h: float, sway: float, col: Color) -> void:
-	if h < 1.0:
+	if h < 1.0 or hw < 0.6:   # lidah api terlalu tipis = poligon degenerat (Godot 4.7 gagal triangulasi)
 		return
 	var pts := PackedVector2Array()
 	var steps := 8

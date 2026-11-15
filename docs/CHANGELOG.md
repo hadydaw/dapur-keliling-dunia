@@ -359,3 +359,9 @@
 - Alasan: user melapor "Ada masalah saat mengurai paket" di HP lain; APK sebelumnya hanya arm64-v8a, sehingga HP 32-bit tidak bisa memasangnya (dugaan penyebab, belum terbukti).
 - Dampak: ukuran APK bertambah. Tidak ada perubahan gameplay.
 - Hasil uji: menunggu hasil build GitHub Actions dan pemasangan di HP user.
+
+## 2026-11-15 - kompatibilitas Android global (APK universal + AAB, Godot 4.7.2, renderer Compatibility)
+- File: project.godot (renderer gl_compatibility, fitur 4.7), export_presets.cfg (preset "Android APK" universal arm32+arm64+x86_64 dan "Android AAB" gradle), .github/workflows/build-android.yml (menggantikan build-apk.yml), tools/emulator_check.sh (baru), scripts/screens/gameplay_scene_screen.gd (guard poligon degenerat; area ketuk min 44 px), tests/responsive_layout_test.gd (rasio 16:9-21:9 wajib; 16:10 dan 22:9 INFO), AGENTS.md
+- Alasan: (1) renderer Mobile = Vulkan saja; HP tanpa/dengan driver Vulkan buruk (terutama Android 7-9) bisa gagal jalan. Compatibility (OpenGL ES 3.0) berjalan di jangkauan HP terluas; render 1280x720 dibandingkan dengan Mobile: selisih <0,5% piksel (hanya fase animasi). (2) Google Play wajib target API 36 sejak 31 Agu 2026 dan lib 16 KB; Godot 4.3 hanya target API 34, jadi pindah ke 4.7.2 (target 36). Konsekuensi: minSdk engine 4.7 = 24 (Android 7.0); Android 5-6 tidak lagi didukung (batas teknis engine, bukan pilihan).
+- Temuan 4.7: peringatan "triangulation failed" intermiten dari lidah api/kilau berukuran ~0 -> ditambal (guard). Sebelumnya sunyi di 4.3.
+- Hasil uji lokal: semua suite lulus di Godot 4.3 dan 4.7.2 (headless). Build + uji emulator: menunggu hasil GitHub Actions.

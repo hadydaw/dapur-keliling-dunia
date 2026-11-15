@@ -1,18 +1,22 @@
 extends Control
-## Uji layout responsif landscape: 16:9, 18:9, 19.5:9, 20:9 (+ area aman / notch).
+## Uji layout responsif landscape. Wajib lulus: 16:9, 18:9, 19.5:9, 20:9, 21:9. Rasio di luar rentang (16:10, 22:9)
+## hanya dilaporkan sebagai INFO. Juga area aman / notch.
 ## Jalankan: godot --headless --path . res://tests/responsive_layout_test.tscn
 
 const GameData = preload("res://scripts/game_data.gd")
 var fails := 0
 var main: Node
 
-const RATIOS := {"16:9": 16.0 / 9.0, "18:9": 2.0, "19.5:9": 19.5 / 9.0, "20:9": 20.0 / 9.0}
+const RATIOS := {"16:10": 1.6, "16:9": 16.0 / 9.0, "18:9": 2.0, "19.5:9": 19.5 / 9.0, "20:9": 20.0 / 9.0, "21:9": 21.0 / 9.0, "22:9": 22.0 / 9.0}
+
+
+var soft := false   # rasio di luar rentang wajib (16:9-21:9): kegagalan hanya dicatat INFO
 
 
 func _check(cond: bool, label: String) -> void:
-	if not cond:
+	if not cond and not soft:
 		fails += 1
-	print("%s %s" % ["OK  " if cond else "GAGAL", label])
+	print("%s %s" % ["OK  " if cond else ("INFO" if soft else "GAGAL"), label])
 
 
 func _frames(n: int = 2) -> void:
@@ -42,6 +46,7 @@ func _ready() -> void:
 	var k_ref := -1.0
 
 	for name in RATIOS:
+		soft = not (name in ["16:9", "18:9", "19.5:9", "20:9", "21:9"])
 		var sz := Vector2(roundf(720.0 * RATIOS[name]), 720.0)
 		g = _make_screen(RATIOS[name] >= GameData.WIDE_MIN_ASPECT)
 		var img: Vector2 = g.scene["size"]
