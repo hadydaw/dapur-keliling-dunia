@@ -4,6 +4,7 @@ extends Control
 
 const UI = preload("res://scripts/ui_kit.gd")
 const AnimatedBg = preload("res://scripts/ui/animated_bg.gd")
+const SettingsPanel = preload("res://scripts/ui/settings_panel.gd")
 
 signal navigate(screen: String, params: Dictionary)
 
@@ -179,7 +180,9 @@ func _on_hotspot(id: String) -> void:
 		"surat":
 			_toast("Kotak surat segera hadir")
 		"setelan":
-			_toast("Pengaturan segera hadir")
+			overlay = SettingsPanel.new()
+			overlay.closed.connect(func(): overlay = null)
+			add_child(overlay)
 
 
 func _confirm_reset() -> void:
@@ -191,6 +194,9 @@ func _confirm_reset() -> void:
 
 func _close_overlay() -> void:
 	if overlay != null:
+		if overlay.has_method("close"):
+			overlay.close()
+			return
 		overlay.queue_free()
 		overlay = null
 

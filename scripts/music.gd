@@ -18,12 +18,36 @@ var _tween: Tween
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	setup_buses()
+	apply_volumes()
 	_active = _make_player()
 	_old = _make_player()
 
 
+## Buat bus "Musik" dan "Efek" (sekali saja) agar volume keduanya bisa diatur terpisah.
+static func setup_buses() -> void:
+	for nm in ["Musik", "Efek"]:
+		if AudioServer.get_bus_index(nm) == -1:
+			AudioServer.add_bus()
+			var i := AudioServer.get_bus_count() - 1
+			AudioServer.set_bus_name(i, nm)
+			AudioServer.set_bus_send(i, "Master")
+
+
+## Terapkan volume tersimpan (0..1) ke bus; 0 = bisu penuh.
+static func apply_volumes() -> void:
+	for pair in [["Musik", GameState.music_vol], ["Efek", GameState.sfx_vol]]:
+		var i := AudioServer.get_bus_index(pair[0])
+		if i == -1:
+			continue
+		var v: float = pair[1]
+		AudioServer.set_bus_mute(i, v <= 0.001)
+		AudioServer.set_bus_volume_db(i, linear_to_db(maxf(v, 0.001)))
+
+
 func _make_player() -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
+	p.bus = "Musik"
 	p.volume_db = -80.0
 	add_child(p)
 	return p

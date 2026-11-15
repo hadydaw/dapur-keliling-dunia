@@ -66,6 +66,9 @@ func _ready() -> void:
 
 
 func on_back() -> void:
+	for n in get_tree().get_nodes_in_group("settings_panel"):
+		n.close()   # tombol kembali menutup Pengaturan dulu (kembali ke Jeda)
+		return
 	_toggle_pause()
 
 
@@ -353,8 +356,14 @@ func _toggle_pause() -> void:
 	overlay = UI.overlay(self, "Jeda", [], [
 		{"text": "Lanjut", "color": Color(0.15, 0.65, 0.3), "fn": _toggle_pause},
 		{"text": "Ulangi", "color": Color(0.9, 0.5, 0.13), "fn": _restart},
+		{"text": "Pengaturan", "color": Color(0.42, 0.36, 0.9), "fn": _open_settings},
 		{"text": "Keluar ke Peta", "color": Color(0.75, 0.22, 0.17), "fn": _exit_level},
 	])
+
+
+func _open_settings() -> void:
+	var sp: Control = preload("res://scripts/ui/settings_panel.gd").new()
+	add_child(sp)   # menumpuk di atas menu Jeda; menutupnya kembali ke Jeda
 
 
 func _close_overlay() -> void:

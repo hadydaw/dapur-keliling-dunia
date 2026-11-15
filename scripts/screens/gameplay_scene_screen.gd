@@ -170,6 +170,9 @@ func _ready() -> void:
 	burn_player.stream = load("res://assets/audio/gosong.wav")
 	burn_player.volume_db = -3.0
 	add_child(burn_player)
+	for c in get_children():
+		if c is AudioStreamPlayer:
+			c.bus = "Efek"
 	cust_fx = Control.new()
 	cust_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cust_fx.draw.connect(_on_cust_draw)

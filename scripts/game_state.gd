@@ -15,6 +15,8 @@ var coins: int = 0
 var stars: Dictionary = {}
 var upgrades: Dictionary = {"slots": 0, "speed": 0, "patience": 0, "price": 0}
 var served_count: Dictionary = {}
+var music_vol: float = 1.0   # 0..1 (0 = bisu)
+var sfx_vol: float = 1.0
 
 
 func _ready() -> void:
@@ -120,7 +122,7 @@ func reset_all() -> void:
 
 
 func save_game() -> void:
-	var data := {"v": 1, "coins": coins, "stars": stars, "upgrades": upgrades, "served": served_count}
+	var data := {"v": 1, "coins": coins, "stars": stars, "upgrades": upgrades, "served": served_count, "music_vol": music_vol, "sfx_vol": sfx_vol}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		push_warning("Gagal menyimpan: %s" % FileAccess.get_open_error())
@@ -149,3 +151,5 @@ func load_game() -> void:
 	var sc: Dictionary = parsed.get("served", {})
 	for k in sc:
 		served_count[k] = int(sc[k])
+	music_vol = clampf(float(parsed.get("music_vol", 1.0)), 0.0, 1.0)
+	sfx_vol = clampf(float(parsed.get("sfx_vol", 1.0)), 0.0, 1.0)
