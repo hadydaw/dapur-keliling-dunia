@@ -130,6 +130,8 @@ func _ready() -> void:
 	_check(is_equal_approx(float(g.burner_heat[0]), g.HEAT_IDLE), "tungku wajan 1 menganggur: api kecil")
 	g._update_slots(0.5)
 	_check(float(g.burner_heat[0]) > 0.99, "wajan 1 memasak: api tungku membesar penuh")
+	_check(g.coal_heat.size() == 6, "6 petak panggangan punya bara (%d)" % g.coal_heat.size())
+	_check(is_equal_approx(float(g.coal_heat[0]), g.HEAT_IDLE), "petak panggangan kosong: bara kecil")
 	_check(is_equal_approx(float(g.burner_heat[3]), g.HEAT_IDLE), "tungku wajan lain yang kosong tetap kecil")
 	var ting_before: int = g.ting_count
 	g._update_slots(7.0)
@@ -185,6 +187,8 @@ func _ready() -> void:
 	_check(g.dishes.has("ikan_bakar") and g.dishes.size() == 5, "level 37 membuka 5 menu termasuk ikan bakar")
 	await _tap_ingredient(g, "ikan")
 	_check(g.appliances["grill"][0]["state"] == "cooking" and g.appliances["grill"][0]["dish"] == "ikan_bakar", "ikan masuk panggangan")
+	g._update_slots(0.5)
+	_check(float(g.coal_heat[0]) > 0.99 and is_equal_approx(float(g.coal_heat[3]), g.HEAT_IDLE), "petak yang memasak: bara menyala penuh, petak lain tetap kecil")
 	_check(g.sizzle_count == 0, "ikan bakar tidak memakai suara desis sate")
 	_check(g.fish_count == 1 and g.fish_players[0].playing, "suara ikan bakar berbunyi sekali saat ikan masuk panggangan")
 	_check(g.soup_count == 0, "soto belum dimasak: suara kuah belum berbunyi")

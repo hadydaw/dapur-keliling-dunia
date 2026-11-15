@@ -323,3 +323,8 @@
 - File: scripts/game_data.gd (data `burners` untuk latar 16:9 dan lebar), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: tungku wajan dan panci kini punya api animasi (cincin biru + lidah api oranye/kuning/putih yang meliuk dan pendar hangat), digambar prosedural di lapisan sendiri di atas latar dan di bawah wadah masakan. Api kecil saat tungku menganggur, membesar halus saat ada masakan (memasak/matang/gosong) di slot yang terhubung, dan membeku saat jeda. Di latar lebar hanya tungku baris depan yang terlihat, jadi masakan di baris belakang ikut menyalakan api kolomnya. Panggangan (arang) belum diberi api. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render di 16:9 dan 20:9; gerak dan rasa animasi belum dilihat di perangkat.
+
+## 2026-11-15 - Animasi arang di pemanggangan
+- File: scripts/game_data.gd (data `coals` untuk latar 16:9 dan lebar), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: tiap petak panggangan kini punya bara animasi. Petak kosong: pendar merah-oranye berdenyut, titik bara berkedip, dan sesekali percikan naik (kecil). Petak yang sedang dipakai (memasak/matang/gosong): bara menyala penuh; karena gambar sate menutupi arang, jalur bara di bawah masakan dikedipkan di atas gambar dan percikan lebih banyak naik di atasnya. Nyala naik/turun halus dan membeku saat jeda. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render 16:9 dan 20:9; gerak animasi belum dilihat di perangkat.

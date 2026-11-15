@@ -57,6 +57,7 @@ const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
 var flame_fx: Control               # api kompor (di atas latar, di bawah wadah masakan)
+var coal_heat: Array = []           # kekuatan bara tiap petak panggangan 0..1
 var burner_heat: Array = []         # kekuatan api tiap tungku 0..1 (halus mengikuti keadaan)
 const HEAT_IDLE := 0.28             # api kecil saat kompor menganggur
 const HEAT_RISE := 5.0              # kecepatan api membesar/mengecil
@@ -186,6 +187,9 @@ func _ready() -> void:
 	add_child(flame_fx)
 	for b in scene.get("burners", []):
 		burner_heat.append(HEAT_IDLE)
+	if scene.has("coals"):
+		for i in scene["appliances"][scene["coals"]["kind"]]["points"].size():
+			coal_heat.append(HEAT_IDLE)
 	fx = Control.new()
 	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fx.draw.connect(_on_fx_draw)
@@ -730,13 +734,27 @@ func _burner_target(b: Dictionary) -> float:
 
 
 func _step_burners(delta: float) -> void:
+	if scene.has("coals"):
+		var slots: Array = appliances[scene["coals"]["kind"]]
+		for i in coal_heat.size():
+			var st: String = slots[i]["state"]
+			var tgt: float = 1.0 if (st == "cooking" or st == "ready" or st == "burnt") else HEAT_IDLE
+			coal_heat[i] = move_toward(float(coal_heat[i]), tgt, delta * HEAT_RISE)
 	var bl: Array = scene.get("burners", [])
 	for i in bl.size():
 		burner_heat[i] = move_toward(float(burner_heat[i]), _burner_target(bl[i]), delta * HEAT_RISE)
 
 
 func _on_flame_draw() -> void:
-	if scale_f <= 0.0 or not scene.has("burners"):
+	if scale_f <= 0.0:
+		return
+	if scene.has("coals"):
+		var cd: Dictionary = scene["coals"]
+		var slots: Array = appliances[cd["kind"]]
+		for i in coal_heat.size():
+			if not _cell_active(slots[i]):
+				_draw_coals(flame_fx, _m(slots[i]["pos"]), Vector2(cd["size"]) * scale_f, float(coal_heat[i]), float(i) * 2.3, false)
+	if not scene.has("burners"):
 		return
 	var bl: Array = scene["burners"]
 	for i in bl.size():
@@ -772,6 +790,70 @@ func _draw_flame(c: Vector2, w: float, heat: float, ph: float) -> void:
 		_flame_tongue(base, hw, hgt, sway, Color(1.0, 0.42, 0.08, 0.80 * (0.55 + 0.45 * heat)))
 		_flame_tongue(base, hw * 0.62, hgt * 0.72, sway * 0.8, Color(1.0, 0.80, 0.25, 0.90 * (0.55 + 0.45 * heat)))
 		_flame_tongue(base, hw * 0.30, hgt * 0.40, sway * 0.5, Color(1.0, 0.97, 0.75, 0.90 * heat))
+
+
+func _cell_active(slot: Dictionary) -> bool:
+	var st: String = slot["state"]
+	return st == "cooking" or st == "ready" or st == "burnt"
+
+
+## Bara petak yang sedang dipakai digambar DI ATAS gambar masakan (pendar lembut + percikan), supaya tetap terlihat.
+func _draw_coals_over(s: float) -> void:
+	if not scene.has("coals"):
+		return
+	var cd: Dictionary = scene["coals"]
+	var slots: Array = appliances[cd["kind"]]
+	for i in coal_heat.size():
+		if _cell_active(slots[i]):
+			_draw_coals(fx, _m(slots[i]["pos"]), Vector2(cd["size"]) * s, float(coal_heat[i]), float(i) * 2.3, true)
+
+
+## Bara arang di satu petak panggangan: pendar merah-oranye yang berdenyut, titik bara berkedip, dan percikan naik.
+## heat 0..1: kecil saat kosong, menyala penuh saat ada masakan. over = digambar di atas masakan (lebih lembut).
+func _draw_coals(node: Control, c: Vector2, sz: Vector2, heat: float, ph: float, over: bool) -> void:
+	var t: float = pulse
+	if over:
+		_draw_coals_strip(node, c, sz, heat, ph)
+		return
+	var glow: float = (0.07 + 0.17 * heat) * (0.8 + 0.2 * sin(t * 3.1 + ph) + 0.08 * sin(t * 7.3 + ph * 2.0))
+	fx_ellipse(node, c, sz * Vector2(0.46, 0.40), Color(1.0, 0.30, 0.05, glow))
+	# titik bara: posisi tetap per petak, berkedip sendiri-sendiri
+	for k in 6:
+		var rx: float = sin(ph * 1.7 + k * 2.399) * 0.36
+		var ry: float = sin(ph * 2.3 + k * 1.618 + 1.0) * 0.28
+		var pls: float = 0.5 + 0.5 * sin(t * (1.6 + k * 0.7) + ph + k * 2.0)
+		pls *= pls
+		var a: float = pls * (0.22 + 0.48 * heat)
+		var col: Color = Color(1.0, 0.25, 0.05, a).lerp(Color(1.0, 0.75, 0.2, a), pls * heat)
+		fx_ellipse(node, c + Vector2(rx * sz.x, ry * sz.y), Vector2(sz.x * 0.085, sz.y * 0.10) * (0.8 + 0.4 * pls), col)
+	_draw_sparks(node, c, sz, heat, ph, -0.10, 0.55)
+
+
+## Petak yang sedang memasak: gambar masakan menutupi arang, jadi hanya jalur bara di bawah masakan yang
+## dikedipkan (titik-titik oranye/kuning) ditambah percikan yang naik di atas masakan.
+func _draw_coals_strip(node: Control, c: Vector2, sz: Vector2, heat: float, ph: float) -> void:
+	var t: float = pulse
+	var n := 9
+	for k in n:
+		var u: float = float(k) / float(n - 1)
+		var x: float = lerpf(-0.40, 0.40, u) + 0.03 * sin(ph + k * 1.9)
+		var y: float = 0.48 + 0.05 * sin(ph * 2.0 + k * 1.3)
+		var pls: float = 0.5 + 0.5 * sin(t * (2.2 + k * 0.9) + ph + k * 2.4)
+		pls *= pls
+		var a: float = pls * (0.55 + 0.40 * heat)
+		var col: Color = Color(1.0, 0.35, 0.05, a).lerp(Color(1.0, 0.95, 0.55, a), pls)
+		fx_ellipse(node, c + Vector2(x * sz.x, y * sz.y), Vector2(sz.x * 0.040, sz.y * 0.045) * (0.7 + 0.6 * pls), col)
+	_draw_sparks(node, c, sz, heat, ph, 0.46, -0.05)
+
+
+## Percikan bara naik dari y0 ke y1 (pecahan tinggi petak dari pusat); makin banyak saat panas.
+func _draw_sparks(node: Control, c: Vector2, sz: Vector2, heat: float, ph: float, y0: float, y1: float) -> void:
+	var n: int = 1 + int(round(3.0 * heat))
+	for k in n:
+		var tt: float = fmod(pulse * 0.7 + k * 0.37 + ph * 0.11, 1.4) / 1.4
+		var sx: float = sin(ph * 3.1 + k * 4.2) * 0.30 * sz.x + sin(tt * 7.0 + k) * sz.x * 0.04
+		var p := c + Vector2(sx, lerpf(y0, y1, tt) * sz.y)
+		node.draw_circle(p, maxf(0.8, sz.x * 0.022 * (1.0 - 0.6 * tt)), Color(1.0, 0.72, 0.22, (1.0 - tt) * (0.45 + 0.45 * heat)))
 
 
 func _flame_tongue(base: Vector2, hw: float, h: float, sway: float, col: Color) -> void:
@@ -811,6 +893,7 @@ func _on_fx_draw() -> void:
 			continue
 		for slot in appliances[kind]:
 			_draw_slot(slot, s)
+	_draw_coals_over(s)
 	_draw_timers(s)
 	for k in customer_panels.size():
 		for c in customers:

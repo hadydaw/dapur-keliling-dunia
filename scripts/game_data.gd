@@ -156,6 +156,7 @@ const SCENES := {
 			"wok": {"r": 52.0, "points": [Vector2(1170, 442), Vector2(1305, 445), Vector2(1185, 523), Vector2(1325, 525)]},
 			"pot": {"r": 48.0, "points": [Vector2(1445, 440), Vector2(1555, 438), Vector2(1470, 515), Vector2(1580, 518)]},
 		},
+		"coals": {"kind": "grill", "size": Vector2(76, 50)},   # arang di tiap petak panggangan (pusat = titik slot)
 		"burners": [   # tungku kompor (koordinat gambar latar): api animasi; links = slot yang memanaskannya
 			{"pos": Vector2(1167, 477), "w": 84.0, "links": [["wok", 0]]},
 			{"pos": Vector2(1306, 477), "w": 84.0, "links": [["wok", 1]]},
@@ -207,6 +208,7 @@ const SCENES_WIDE := {
 			Vector2(1120, 320), Vector2(1135, 332), Vector2(1160, 342), Vector2(1178, 340), Vector2(1186, 330), Vector2(1194, 320), Vector2(1202, 312),
 			Vector2(1210, 320), Vector2(1220, 330), Vector2(1226, 372), Vector2(1230, 372), Vector2(1525, 370), Vector2(1775, 372),
 			Vector2(1830, 500), Vector2(1870, 841), Vector2(250, 841)],
+		"coals": {"kind": "grill", "size": Vector2(82, 54)},
 		"burners": [   # latar lebar: hanya tungku baris depan yang terlihat; baris belakang ikut memanaskan kolomnya
 			{"pos": Vector2(1320, 480), "w": 74.0, "links": [["wok", 2], ["wok", 0]]},
 			{"pos": Vector2(1468, 481), "w": 74.0, "links": [["wok", 3], ["wok", 1]]},
