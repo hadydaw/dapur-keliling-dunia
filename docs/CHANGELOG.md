@@ -283,3 +283,8 @@
 - File: assets/audio/tuang_es.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: saat gelas mulai terisi dari dispenser terdengar suara air dituang (nada naik, gemericik + denting es). Kecepatan diatur agar panjangnya sama dengan waktu isi gelas; satu pemain suara per gelas supaya bisa tumpang tindih. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene 0 gagal; kualitas suara belum didengar di perangkat.
+
+## 2026-11-15 - Suara mengisi dispenser
+- File: assets/audio/isi_dispenser.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: saat ketuk es dan dispenser mulai terisi terdengar es batu berjatuhan lalu air mengalir (nada naik), kecepatan disesuaikan dengan waktu isi (3 dtk). Mekanik tidak berubah.
+- Hasil tes: gameplay_scene & gameplay 0 gagal; kualitas suara belum didengar di perangkat.

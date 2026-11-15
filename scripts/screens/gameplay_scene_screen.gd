@@ -21,6 +21,9 @@ var burn_player: AudioStreamPlayer   # bunyi gosong (beda dari "ting")
 var burn_count: int = 0
 var pour_players: Array = []         # suara menuang es teh ke gelas (satu pemain per gelas)
 var pour_count: int = 0
+var fill_player: AudioStreamPlayer   # suara es + air mengisi dispenser
+var fill_count: int = 0
+const FILL_LENGTH := 3.0      # panjang isi_dispenser.wav (detik)
 const POUR_LENGTH := 2.6      # panjang tuang_es.wav (detik)
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
 var icon_tex: Dictionary = {}        # id hidangan -> Texture2D ikon (di-cache, jangan load tiap frame)
@@ -107,6 +110,10 @@ func _ready() -> void:
 		pp.volume_db = -5.0
 		add_child(pp)
 		pour_players.append(pp)
+	fill_player = AudioStreamPlayer.new()
+	fill_player.stream = load("res://assets/audio/isi_dispenser.wav")
+	fill_player.volume_db = -4.0
+	add_child(fill_player)
 	burn_player = AudioStreamPlayer.new()
 	burn_player.stream = load("res://assets/audio/gosong.wav")
 	burn_player.volume_db = -3.0
@@ -409,6 +416,9 @@ func _refill_jar() -> void:
 			jar["state"] = "filling"
 			jar["t"] = 0.0
 			jar["dur"] = GameData.JAR_FILL_TIME * GameState.cook_mult()
+			fill_count += 1
+			fill_player.pitch_scale = clampf(FILL_LENGTH / maxf(float(jar["dur"]), 0.1), 0.7, 1.6)
+			fill_player.play()
 
 
 func _on_dispenser() -> void:

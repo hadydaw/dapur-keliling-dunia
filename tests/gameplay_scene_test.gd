@@ -89,6 +89,7 @@ func _ready() -> void:
 	_check(g.jar["state"] == "empty" and g.appliances["dispenser"][0]["state"] == "empty", "dispenser kosong: ketuk dispenser tidak mengisi gelas")
 	await _tap_ingredient(g, "es")
 	_check(g.jar["state"] == "filling", "ketuk termos es: dispenser mulai terisi (timer)")
+	_check(g.fill_count == 1 and g.fill_player.playing, "suara isi dispenser berbunyi sekali saat mulai terisi")
 	_check(g.appliances["dispenser"][0]["state"] == "empty", "gelas tetap kosong saat dispenser diisi")
 	await _tap_dispenser(g)
 	_check(g.appliances["dispenser"][0]["state"] == "empty", "dispenser belum penuh: gelas tidak terisi")
