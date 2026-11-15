@@ -126,6 +126,8 @@ func _ready() -> void:
 	await _tap_ingredient(g, "nasi")
 	_check(g.appliances["wok"][0]["state"] == "cooking", "ketuk penanak nasi: wajan mulai memasak")
 	_check(g.stirfry_count == 1 and g.stirfry_players[0].playing, "suara nasi goreng di wajan berbunyi sekali saat mulai memasak")
+	_check(g._cook_fx_enabled(g.appliances["wok"][0]), "nasi goreng memasak: animasi aduk/uap aktif")
+	_check(not g._cook_fx_enabled(g.appliances["grill"][0]), "slot panggangan tidak memakai animasi wajan/panci")
 	_check(g.burner_heat.size() == 6, "latar 16:9: 6 tungku wajan/panci punya api (%d)" % g.burner_heat.size())
 	_check(is_equal_approx(float(g.burner_heat[0]), g.HEAT_IDLE), "tungku wajan 1 menganggur: api kecil")
 	g._update_slots(0.5)
@@ -136,6 +138,7 @@ func _ready() -> void:
 	var ting_before: int = g.ting_count
 	g._update_slots(7.0)
 	_check(g.ting_count == ting_before + 1, "bel ting berbunyi sekali saat nasi goreng matang")
+	_check(not g._cook_fx_enabled(g.appliances["wok"][0]), "nasi goreng matang: animasi memasak berhenti")
 	await _tap_slot(g, "wok", 0)
 	_check(g.appliances["plate"][0]["state"] == "full" and g.appliances["wok"][0]["state"] == "empty", "ketuk wajan matang: pindah ke piring")
 	var serve_before: int = g.serve_count
@@ -198,6 +201,7 @@ func _ready() -> void:
 	_check(g.soup_count == 0, "soto belum dimasak: suara kuah belum berbunyi")
 	await _tap_ingredient(g, "ayam")
 	_check(g.soup_count == 1 and g.soup_players[0].playing, "suara soto mendidih berbunyi sekali saat ayam masuk panci")
+	_check(g._cook_fx_enabled(g.appliances["pot"][0]), "soto memasak: animasi gelembung/uap aktif")
 	await _tap_ingredient(g, "tusuk_ayam")
 	_check(g.sizzle_count == 1 and g.sizzle_players[1].playing, "suara desis sate berbunyi sekali saat sate masuk panggangan")
 

@@ -840,6 +840,92 @@ func _oil_pops(node: Control, c: Vector2, sz: Vector2, ph: float, n: int, big: f
 				node.draw_circle(pos, maxf(1.2, sz.x * 0.028 * big * (1.0 - 0.5 * life)), Color(1.0, 0.9, 0.5, a))
 
 
+## Animasi memasak di wajan (nasi goreng) dan panci (soto ayam); hanya selama fase memasak.
+func _cook_fx_enabled(slot: Dictionary) -> bool:
+	if slot["state"] != "cooking":
+		return false
+	return (slot["kind"] == "wok" and slot["dish"] == "nasi_goreng") or (slot["kind"] == "pot" and slot["dish"] == "soto_ayam")
+
+
+func _draw_cook_fx(s: float) -> void:
+	for kind in ["wok", "pot"]:
+		if not appliances.has(kind):
+			continue
+		for slot in appliances[kind]:
+			if not _cook_fx_enabled(slot):
+				continue
+			var u: float = float(slot["r"]) * s
+			var c: Vector2 = _m(slot["pos"])
+			var ph: float = float(slot["idx"]) * 3.7 + (0.0 if kind == "wok" else 1.9)
+			if kind == "wok":
+				_wok_fx(fx, c + Vector2(0, -0.12 * u), u, ph)
+			else:
+				_pot_fx(fx, c + Vector2(0, -0.22 * u), u, ph)
+
+
+## Nasi goreng: butir nasi terlempar saat diaduk, percikan minyak kecil, uap tipis.
+func _wok_fx(node: Control, c: Vector2, u: float, ph: float) -> void:
+	for k in 9:
+		var period: float = 0.62 + 0.13 * k
+		var local: float = pulse + ph * 0.41 + k * 0.53
+		var cyc: float = floor(local / period)
+		var tt: float = local - cyc * period
+		var r1: float = _hash01(cyc * 17.13 + k * 61.7 + ph * 2.3)
+		var r2: float = _hash01(cyc * 29.77 + k * 9.31 + ph)
+		var x0: float = lerpf(-0.55, 0.55, r1) * u
+		var vy: float = u * (2.4 + 0.8 * r2)
+		var g: float = u * 7.0
+		var life: float = 2.0 * vy / g
+		if tt < life:
+			var pos: Vector2 = c + Vector2(x0 + (r2 - 0.5) * u * 0.5 * tt, -(vy * tt - 0.5 * g * tt * tt))
+			var col: Color = Color(1.0, 0.93, 0.68)
+			if k % 3 == 1:
+				col = Color(0.92, 0.62, 0.30)   # nasi yang sudah kecokelatan
+			elif k % 4 == 2:
+				col = Color(0.45, 0.78, 0.30)   # irisan daun bawang
+			node.draw_circle(pos, maxf(1.1, u * 0.055), col)
+			node.draw_circle(pos + Vector2(u * 0.02, u * 0.012), maxf(0.8, u * 0.035), Color(col.r * 0.8, col.g * 0.8, col.b * 0.8, 0.9))
+	_oil_pops(node, c + Vector2(0, -0.05 * u), Vector2(u * 1.5, u * 0.9), ph, 4, 0.7)
+	_steam(node, c + Vector2(0, -0.35 * u), u, ph, 3, 0.55)
+
+
+## Soto ayam: gelembung kuah muncul lalu pecah di permukaan, percikan kuah, uap lebih tebal.
+func _pot_fx(node: Control, c: Vector2, u: float, ph: float) -> void:
+	for k in 7:
+		var period: float = 0.55 + 0.16 * k
+		var local: float = pulse + ph * 0.37 + k * 0.47
+		var cyc: float = floor(local / period)
+		var tt: float = local - cyc * period
+		var r1: float = _hash01(cyc * 23.17 + k * 51.3 + ph * 1.7)
+		var r2: float = _hash01(cyc * 37.71 + k * 13.9 + ph)
+		var o: Vector2 = c + Vector2(lerpf(-0.55, 0.55, r1) * u, lerpf(-0.16, 0.16, r2) * u * 0.8)
+		if tt < 0.5:
+			var f: float = tt / 0.5
+			if f < 0.55:   # gelembung membesar
+				var gr: float = f / 0.55
+				node.draw_circle(o, maxf(1.2, u * 0.10 * gr), Color(1.0, 0.96, 0.8, 0.55))
+				node.draw_arc(o, maxf(1.5, u * 0.10 * gr), 0.0, TAU, 12, Color(1.0, 1.0, 0.92, 0.9), maxf(1.0, u * 0.025))
+			else:          # pecah: cincin melebar dan memudar + tetes kecil
+				var pf: float = (f - 0.55) / 0.45
+				node.draw_arc(o, u * (0.10 + 0.14 * pf), 0.0, TAU, 14, Color(1.0, 0.98, 0.85, 0.8 * (1.0 - pf)), maxf(1.0, u * 0.022))
+				if k % 2 == 0:
+					for d in 2:
+						var dx: float = (float(d) - 0.5) * u * 0.28 * pf
+						node.draw_circle(o + Vector2(dx, -u * 0.30 * sin(PI * pf)), maxf(0.9, u * 0.03), Color(1.0, 0.88, 0.5, 1.0 - pf))
+	_steam(node, c + Vector2(0, -0.3 * u), u, ph, 5, 1.0)
+
+
+## Uap: lingkaran putih transparan yang naik, melebar, bergoyang, lalu memudar.
+func _steam(node: Control, c: Vector2, u: float, ph: float, n: int, strength: float) -> void:
+	for k in n:
+		var tt: float = fmod(pulse * 0.42 + float(k) / float(n) + ph * 0.17, 1.0)
+		var bx: float = lerpf(-0.45, 0.45, _hash01(k * 7.7 + ph)) * u
+		var p: Vector2 = c + Vector2(bx + sin(tt * 5.0 + k * 1.9 + ph) * 0.16 * u, -tt * 1.5 * u)
+		var a: float = sin(PI * tt) * 0.15 * strength
+		node.draw_circle(p, u * (0.12 + 0.26 * tt), Color(1.0, 1.0, 1.0, a))
+		node.draw_circle(p + Vector2(u * 0.10, -u * 0.06), u * (0.08 + 0.18 * tt), Color(1.0, 1.0, 1.0, a * 0.8))
+
+
 func _cell_active(slot: Dictionary) -> bool:
 	var st: String = slot["state"]
 	return st == "cooking" or st == "ready" or st == "burnt"
@@ -943,6 +1029,7 @@ func _on_fx_draw() -> void:
 			_draw_slot(slot, s)
 	_draw_coals_over(s)
 	_draw_oil_pops(s)
+	_draw_cook_fx(s)
 	_draw_timers(s)
 	for k in customer_panels.size():
 		for c in customers:
