@@ -29,6 +29,8 @@ var body_style: StyleBoxFlat
 var title_label: Label               # penampung nilai HUD (tidak masuk pohon; digambar di fx)
 var pause_btn: Control
 var scale_f: float = 1.0
+var force_wide := -1   # uji: 1 = paksa latar lebar, 0 = paksa latar 16:9, -1 = menurut rasio layar
+const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel inti) bila layar lebih lebar dari gambar
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
 const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya tergulir naik
@@ -36,7 +38,7 @@ var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
 var glass_tex: Array = []
 var customer_tex: Dictionary = {}
-const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan
+const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan (bisa ditimpa scene["toast_y"])
 
 
 func _ready() -> void:
@@ -46,7 +48,12 @@ func _ready() -> void:
 	params = GameData.level_params(area_idx, level)
 	dishes = params["dishes"]
 	time_left = float(params["duration"])
-	scene = GameData.SCENES[area["id"]]
+	var aspect: float = get_viewport_rect().size.x / maxf(get_viewport_rect().size.y, 1.0)
+	if force_wide == 1:
+		aspect = 9.0
+	elif force_wide == 0:
+		aspect = 1.0
+	scene = GameData.scene_for(area["id"], aspect)
 	font = load("res://assets/fonts/game_font.tres")
 	UI.fill(self)
 	UI.background(self, Color(0.1, 0.04, 0.03))
@@ -214,22 +221,22 @@ func _compute_hud() -> void:
 	var banner: Vector2 = hud["banner"]
 	var m: float = float(hud["margin"])
 	var gap: float = float(hud["gap"])
-	var ext_l: float = -hud_shift.x / k
-	var ext_r: float = hud_shift.y / k
 	var cl: Vector2 = _sprite_size("cluster")
 	var pl: Vector2 = _sprite_size("pill")
 	var pg: Vector2 = _sprite_size("pillgear")
 	var tl: Vector2 = _sprite_size("tile")
 	var pn: Vector2 = _sprite_size("panel")
-	var l_ext: float = m + cl.x + gap + pl.x + gap + pl.x
-	var r_ext: float = m + pg.x + gap + pl.x
-	var f: float = minf(1.0, minf((banner.x - 8.0 + ext_l) / l_ext, (img.x - banner.y - 8.0 + ext_r) / r_ext))
+	var l_ext: float = m + _sprite_size("cluster").x + gap + _sprite_size("pill").x + gap + _sprite_size("pill").x
+	var r_ext: float = m + _sprite_size("pillgear").x + gap + _sprite_size("pill").x
+	var lo: float = maxf(offset.x + hud_shift.x, hud_safe.position.x)                       # tepi kiri HUD (layar)
+	var ro: float = minf(offset.x + img.x * k + hud_shift.y, hud_safe.end.x)                # tepi kanan HUD (layar)
+	var bl: float = offset.x + banner.x * k
+	var br: float = offset.x + banner.y * k
+	var f: float = minf(1.0, minf((bl - lo - 8.0) / (l_ext * k), (ro - br - 8.0) / (r_ext * k)))
 	f = maxf(f, 0.6)
 	var u: float = k * f
 	hud_u = u
-	var lo: float = offset.x + hud_shift.x                       # tepi kiri HUD (layar)
-	var ro: float = offset.x + img.x * k + hud_shift.y           # tepi kanan HUD (layar)
-	var y0: float = offset.y
+	var y0: float = maxf(offset.y, hud_safe.position.y)
 	hud_r.clear()
 	hud_r["cluster"] = Rect2(Vector2(lo + m * u, y0 + 8.0 * u), cl * u)
 	var pill_y: float = y0 + (8.0 + cl.y * 0.5 - pl.y * 0.5 - 16.0) * u
@@ -283,9 +290,18 @@ func _layout() -> void:
 	var pad_x: float = float(scene.get("pad", 0.0))
 	var ins: Vector4 = safe_insets_override if safe_insets_override.x >= 0.0 else _safe_insets()
 	var safe := Rect2(Vector2(ins.x, ins.y), size - Vector2(ins.x + ins.z, ins.y + ins.w))
-	scale_f = minf(safe.size.x / img.x, safe.size.y / img.y)
-	offset = safe.position + (safe.size - img * scale_f) * 0.5
-	hud_shift = Vector2(-maxf(0.0, offset.x - safe.position.x), maxf(0.0, safe.end.x - (offset.x + img.x * scale_f)))
+	if bool(scene.get("cover", false)):
+		# latar lebar: memenuhi layar; hanya potongan kecil di tepi (kiri-kanan) atau atap/lantai
+		var s_cover: float = maxf(size.x / img.x, size.y / img.y)
+		var s_max: float = size.y / (img.y - CROP_TOP_MAX)
+		scale_f = minf(s_cover, maxf(s_max, size.y / img.y))
+		offset.x = (size.x - img.x * scale_f) * 0.5
+		offset.y = (size.y - img.y * scale_f) * 0.5
+		hud_shift = Vector2.ZERO
+	else:
+		scale_f = minf(safe.size.x / img.x, safe.size.y / img.y)
+		offset = safe.position + (safe.size - img * scale_f) * 0.5
+		hud_shift = Vector2(-maxf(0.0, offset.x - safe.position.x), maxf(0.0, safe.end.x - (offset.x + img.x * scale_f)))
 	bg.position = offset - Vector2(pad_x, 0.0) * scale_f
 	hud_safe = safe
 	if not hud_tex.is_empty():
@@ -309,7 +325,7 @@ func _layout() -> void:
 			b.size = r.size * scale_f
 	var u: float = size.y / 720.0
 	toast_label.size = Vector2(size.x, 40.0 * u)
-	toast_label.position = Vector2(0, _m(Vector2(0, TOAST_Y)).y - toast_label.size.y * 0.5)
+	toast_label.position = Vector2(0, _m(Vector2(0, float(scene.get("toast_y", TOAST_Y)))).y - toast_label.size.y * 0.5)
 	toast_label.add_theme_font_size_override("font_size", int(30.0 * u))
 	fx.queue_redraw()
 	cust_fx.queue_redraw()
@@ -679,6 +695,9 @@ func _draw_stage_art(slot: Dictionary, st: String, _c: Vector2, _r: float, s: fl
 	if idx >= texs.size():
 		return false
 	var rc: Rect2 = rects[slot["kind"]]
+	var rk: float = float(scene.get("rect_k", {}).get(slot["kind"], 1.0))
+	if rk != 1.0:
+		rc = Rect2(rc.position * rk, rc.size * rk)
 	fx.draw_texture_rect(texs[idx], Rect2(_m(slot["pos"] + rc.position), rc.size * s), false)
 	return true
 
@@ -721,13 +740,14 @@ func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
 	# gelembung pesanan vertikal di sebelah kanan pelanggan, hanya gambar menu (tanpa teks);
 	# pindah ke kiri bila mepet tepi layar. Bila DISHES[id] punya "icon", gambar itu yang dipakai.
 	var n: int = cust["items"].size()
-	var bw: float = 96.0
+	var uk: float = float(scene.get("ui_k", 1.0))
+	var bw: float = 96.0 * uk
 	var bh: float = bw * 480.0 / 296.0   # rasio gambar bingkai
 	var img_w: float = scene["size"].x
-	var bx: float = spot.x + 92.0
+	var bx: float = spot.x + 92.0 * uk
 	if bx + bw > img_w - 2.0:
-		bx = spot.x - 92.0 - bw
-	var btop: Vector2 = Vector2(bx, spot.y - 184.0)  # di bawah panel waktu
+		bx = spot.x - 92.0 * uk - bw
+	var btop: Vector2 = Vector2(bx, spot.y - 184.0 * uk)  # di bawah panel waktu
 	fx.draw_texture_rect(bubble_tex, Rect2(_m(btop), Vector2(bw, bh) * s), false)
 	# bar kesabaran: terisi dari bawah (penuh = senang di atas, kosong = marah di bawah)
 	var bar_x: float = btop.x + bw * 0.818
@@ -739,7 +759,7 @@ func _draw_bubble(cust: Dictionary, spot: Vector2, s: float) -> void:
 	# ikon pesanan di area kertas (kiri bar), dipusatkan secara vertikal
 	var area_top: float = btop.y + bh * 0.21
 	var area_h: float = bh * 0.66
-	var icon: float = 52.0
+	var icon: float = 52.0 * uk
 	var cx: float = btop.x + bw * 0.43
 	var slot_h: float = area_h / float(BUBBLE_WINDOW)
 	if not cust.has("vis") or cust["vis"].size() < n:

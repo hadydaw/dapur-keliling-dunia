@@ -172,6 +172,90 @@ const SCENES := {
 }
 
 
+# Latar versi lebar (20:9, gambar 1870x841) untuk layar >= WIDE_MIN_ASPECT. Bagian yang tidak
+# disebut di sini diwarisi dari SCENES[id]. Koordinat = piksel gambar lebar.
+const WIDE_MIN_ASPECT := 2.14
+const SCENES_WIDE := {
+	"indonesia": {
+		"image": "res://assets/scene_indonesia_wide.jpg",
+		"size": Vector2(1870, 841),
+		"pad": 0.0,
+		"cover": true,          # latar memenuhi layar (potongan sangat kecil bila rasio sedikit berbeda)
+		"ui_k": 0.894,           # skala elemen UI (gelembung, HUD) agar ukuran di layar sama dengan versi 16:9
+		"toast_y": 618.0,
+		"customer_spots": [Vector2(340, 372), Vector2(650, 372), Vector2(960, 372), Vector2(1270, 372)],
+		"customer_height": 205.0,
+		"counter_mask": [
+			Vector2(250, 322), Vector2(268, 340), Vector2(287, 366), Vector2(298, 376), Vector2(305, 368), Vector2(585, 367),
+			Vector2(588, 384), Vector2(590, 335), Vector2(600, 324), Vector2(606, 312), Vector2(612, 324), Vector2(624, 335), Vector2(627, 362),
+			Vector2(645, 350), Vector2(675, 330), Vector2(691, 310), Vector2(710, 300), Vector2(730, 297), Vector2(760, 300), Vector2(785, 320),
+			Vector2(795, 330), Vector2(810, 337), Vector2(832, 347), Vector2(847, 362),
+			Vector2(853, 378), Vector2(857, 335), Vector2(866, 324), Vector2(872, 312), Vector2(879, 324), Vector2(890, 335), Vector2(894, 380),
+			Vector2(900, 384), Vector2(903, 380), Vector2(906, 336), Vector2(916, 325), Vector2(922, 314), Vector2(929, 325), Vector2(940, 336), Vector2(944, 370),
+			Vector2(947, 367), Vector2(975, 350), Vector2(1000, 330), Vector2(1020, 310), Vector2(1045, 300), Vector2(1070, 297), Vector2(1100, 305),
+			Vector2(1120, 320), Vector2(1135, 332), Vector2(1160, 342), Vector2(1178, 340), Vector2(1186, 330), Vector2(1194, 320), Vector2(1202, 312),
+			Vector2(1210, 320), Vector2(1220, 330), Vector2(1226, 372), Vector2(1230, 372), Vector2(1525, 370), Vector2(1775, 372),
+			Vector2(1830, 500), Vector2(1870, 841), Vector2(250, 841)],
+		"rect_k": {"grill": 0.95, "plate": 0.9, "wok": 1.12, "pot": 1.0, "bowl": 0.95},
+		"hud": {
+			"banner": Vector2(757, 1112),
+			"margin": 9.0,
+			"gap": 9.0,
+			"sprite_w": {"cluster": 268.0, "pill": 197.0, "pillgear": 268.0, "tile": 82.0, "panel": 277.0},
+		},
+		"appliances": {
+			"dispenser": {"r": 30.0, "points": [Vector2(133, 468), Vector2(188, 468), Vector2(245, 468)]},
+			"grill": {"r": 38.0, "points": [Vector2(352, 402), Vector2(447, 402), Vector2(533, 402),
+				Vector2(345, 467), Vector2(440, 467), Vector2(530, 467)]},
+			"plate": {"r": 38.0, "points": [Vector2(657, 411), Vector2(744, 411), Vector2(830, 411),
+				Vector2(654, 473), Vector2(745, 473), Vector2(836, 473)]},
+			"bowl": {"r": 38.0, "points": [Vector2(967, 407), Vector2(1060, 407), Vector2(1147, 407),
+				Vector2(970, 470), Vector2(1069, 470), Vector2(1157, 470)]},
+			"wok": {"r": 58.0, "points": [Vector2(1307, 388), Vector2(1450, 388), Vector2(1320, 443), Vector2(1468, 445)]},
+			"pot": {"r": 52.0, "points": [Vector2(1595, 372), Vector2(1712, 370), Vector2(1625, 440), Vector2(1745, 442)]},
+		},
+		"dispenser": {
+			"hot": Rect2(120, 325, 150, 112),
+			"timer": Vector2(198, 390),
+			"full_image": "res://assets/scene/indo_dispenser_penuh.png",
+			"full_pos": Vector2(102, 272),
+			"glass_images": ["res://assets/scene/indo_gelas_0.png", "res://assets/scene/indo_gelas_1.png", "res://assets/scene/indo_gelas_2.png"],
+			"glass_pos": [Vector2(93, 420), Vector2(148, 420), Vector2(205, 420)],
+		},
+		"ingredients": {
+			"es": {"name": "Es Batu", "rect": Rect2(155, 625, 235, 140)},
+			"nasi": {"name": "Nasi", "rect": Rect2(420, 625, 200, 135)},
+			"tusuk_ayam": {"name": "Tusuk Sate Ayam", "rect": Rect2(905, 630, 155, 140)},
+			"ayam": {"name": "Ayam", "rect": Rect2(1090, 630, 305, 140)},
+			"ikan": {"name": "Ikan", "rect": Rect2(1420, 630, 320, 140)},
+		},
+	},
+}
+
+
+## Pilih definisi scene menurut rasio layar (lebar/tinggi). Layar >= WIDE_MIN_ASPECT memakai
+## latar lebar bila tersedia; selain itu latar 16:9 (diperlebar `pad`).
+static func scene_for(area_id: String, aspect: float) -> Dictionary:
+	var base: Dictionary = SCENES[area_id]
+	if aspect < WIDE_MIN_ASPECT or not SCENES_WIDE.has(area_id):
+		return base
+	var s: Dictionary = base.duplicate(true)
+	var w: Dictionary = SCENES_WIDE[area_id]
+	for k in w:
+		if k == "hud" or k == "customer_height":
+			continue
+		s[k] = w[k]
+	s["customer_art"]["height"] = float(w["customer_height"])
+	for k in w["hud"]:
+		if k == "sprite_w":
+			for nm in w["hud"]["sprite_w"]:
+				s["hud"]["sprites"][nm]["w"] = w["hud"]["sprite_w"][nm]
+		else:
+			s["hud"][k] = w["hud"][k]
+	s["wide"] = true
+	return s
+
+
 static func level_params(area_idx: int, level: int) -> Dictionary:
 	var area: Dictionary = AREAS[area_idx]
 	var g: int = area_idx * LEVELS_PER_AREA + level
