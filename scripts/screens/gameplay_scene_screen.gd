@@ -659,7 +659,7 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 	var r: float = float(slot["r"]) * s
 	var st: String = slot["state"]
 	if st == "locked":
-		var lh: float = 58.0 * s   # ukuran seragam di semua alat
+		var lh: float = 38.0 * s   # ukuran seragam di semua alat
 		var lw: float = lh * lock_tex.get_size().x / lock_tex.get_size().y
 		fx.draw_texture_rect(lock_tex, Rect2(c - Vector2(lw, lh) * 0.5, Vector2(lw, lh)), false)
 		return
