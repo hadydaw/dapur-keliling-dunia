@@ -36,6 +36,7 @@ const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
 const ALARM_H := 36.0        # tinggi ikon timer (piksel inti)
+const FIRE_H := 26.0         # tinggi maksimum api = tinggi gembok
 const ALARM_STEPS := 64
 const DING_SHAKE := 0.8      # lama goyang + memudar setelah "ting" (detik); ting.wav = 1.1 dtk
 const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya tergulir naik
@@ -665,9 +666,9 @@ func _draw_fire(slot: Dictionary, c: Vector2, s: float) -> void:
 	var sy: float = 1.0 + 0.10 * sin(tm * 13.0) + 0.05 * sin(tm * 21.0)
 	var sx: float = 1.0 - 0.06 * sin(tm * 11.0)
 	var rot: float = deg_to_rad(5.0) * sin(tm * 7.0)
-	var fh: float = ALARM_H * s * scl          # tinggi maksimum = tinggi ikon alarm
+	var fh: float = FIRE_H * s * scl
 	var fw: float = fh * fsz.x / fsz.y
-	var anchor: Vector2 = c + Vector2(0.0, ALARM_H * 0.5 * s)   # pangkal api di bawah titik timer
+	var anchor: Vector2 = c + Vector2(0.0, FIRE_H * 0.5 * s)   # pangkal api; pusat kotak api = titik timer
 	fx.draw_set_transform(anchor, rot, Vector2(sx, sy))
 	fx.draw_texture_rect(fire_tex, Rect2(Vector2(-fw * 0.5, -fh), Vector2(fw, fh)), false, Color(1, 1, 1, alpha))
 	fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
