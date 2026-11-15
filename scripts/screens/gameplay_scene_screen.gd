@@ -33,9 +33,14 @@ var force_wide := -1   # uji: 1 = paksa latar lebar, 0 = paksa latar 16:9, -1 = 
 const CROP_TOP_MAX := 60.0   # latar cover: potongan atas/bawah maksimum (piksel inti) bila layar lebih lebar dari gambar
 var offset: Vector2 = Vector2.ZERO
 var pulse: float = 0.0
+const ALARM_H := 36.0        # tinggi ikon timer (piksel inti)
+const ALARM_STEPS := 64
+const DING_SHAKE := 0.8      # lama goyang + memudar setelah "ting" (detik); ting.wav = 1.1 dtk
 const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya tergulir naik
 var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
+var alarm_tex: Texture2D             # ikon jam alarm timer memasak
+var alarm_ring_tex: Texture2D        # sprite sheet 8x8: cincin progres (64 langkah, putih, diwarnai saat digambar)
 var lock_tex: Texture2D              # ikon gembok slot terkunci (di-cache)
 var glass_tex: Array = []
 var customer_tex: Dictionary = {}
@@ -82,6 +87,8 @@ func _ready() -> void:
 				art_tex[dish][st] = arr
 	bubble_tex = load("res://assets/ui/bubble_pesanan.png")
 	lock_tex = load("res://assets/ui/gembok.png")
+	alarm_tex = load("res://assets/ui/alarm.png")
+	alarm_ring_tex = load("res://assets/ui/alarm_ring.png")
 	ting_player = AudioStreamPlayer.new()
 	ting_player.stream = load("res://assets/audio/ting.wav")
 	ting_player.volume_db = -4.0
@@ -484,8 +491,13 @@ func _update_slots(delta: float) -> void:
 					if float(slot["t"]) >= float(slot["dur"]):
 						slot["state"] = "ready"
 						slot["t"] = 0.0
+						slot["ring"] = 0.0
 						_ding()
 				"ready":
+					if slot.has("ring"):
+						slot["ring"] = float(slot["ring"]) + delta
+						if float(slot["ring"]) > DING_SHAKE:
+							slot.erase("ring")
 					if GameData.RECIPES[slot["dish"]].get("burns", true):
 						slot["t"] = float(slot["t"]) + delta
 						if float(slot["t"]) >= BURN_WINDOW:
@@ -561,11 +573,51 @@ func _on_fx_draw() -> void:
 			continue
 		for slot in appliances[kind]:
 			_draw_slot(slot, s)
+	_draw_timers(s)
 	for k in customer_panels.size():
 		for c in customers:
 			if c["slot"] == k:
 				_draw_bubble(c, customer_panels[k]["spot"], s)
 	_draw_hud(s)
+
+
+## Timer memasak: jam alarm di kanan-atas alat. Cincin terisi searah jarum jam (hijau -> kuning -> merah).
+## Saat matang jam goyang sekali searah irama "ting" (amplitudo meredam), lalu memudar.
+func _draw_timers(s: float) -> void:
+	var asz: Vector2 = alarm_tex.get_size()
+	var h: float = ALARM_H * s
+	var w: float = h * asz.x / asz.y
+	for kind in appliances:
+		if kind == "dispenser":
+			continue
+		for slot in appliances[kind]:
+			var st: String = slot["state"]
+			var p := 0.0
+			var rot := 0.0
+			var alpha := 1.0
+			if st == "cooking":
+				p = clampf(float(slot["t"]) / maxf(float(slot["dur"]), 0.01), 0.0, 1.0)
+			elif st == "ready" and slot.has("ring"):
+				var t: float = float(slot["ring"])
+				p = 1.0
+				rot = sin(t * TAU * 7.0) * deg_to_rad(20.0) * exp(-t * 4.5)   # goyang cepat, meredam bersama ting
+				alpha = clampf((DING_SHAKE - t) / 0.25, 0.0, 1.0)
+			else:
+				continue
+			var base: Vector2 = slot["pos"]
+			var r: float = float(slot["r"])
+			var c: Vector2 = _m(base + Vector2(r * 0.85, -r * 0.5))
+			fx.draw_set_transform(c, rot, Vector2.ONE)
+			var rect := Rect2(Vector2(-w, -h) * 0.5, Vector2(w, h))
+			fx.draw_texture_rect(alarm_tex, rect, false, Color(1, 1, 1, alpha))
+			var step: int = clampi(int(ceil(p * ALARM_STEPS)) - 1, 0, ALARM_STEPS - 1)
+			var src := Rect2(Vector2(step % 8, step / 8) * asz, asz)
+			var col: Color = Color(0.35, 0.85, 0.3).lerp(Color(1.0, 0.85, 0.2), smoothstep(0.0, 0.6, p))
+			col = col.lerp(Color(1.0, 0.3, 0.2), smoothstep(0.6, 1.0, p))
+			col.a = alpha
+			if p > 0.0:
+				fx.draw_texture_rect_region(alarm_ring_tex, rect, src, col)
+			fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 # Teks HUD di atas bingkai kosong pada latar. Hanya data yang benar-benar ada di game.

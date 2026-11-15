@@ -263,3 +263,8 @@
 - File: scripts/game_data.gd (titik slot SCENES_WIDE), scripts/screens/gameplay_scene_screen.gd (ukuran gembok)
 - Alasan: gembok tidak tepat di tengah panggangan/mangkuk/wajan/panci; titik slot diukur ulang dari gambar.
 - Hasil tes: responsive_layout, gameplay_scene, gameplay 0 gagal; render 20:9 diperiksa.
+
+## 2026-11-15 - Timer memasak berupa jam alarm dengan cincin progres
+- File: assets/ui/alarm.png, assets/ui/alarm_ring.png (sprite sheet 64 langkah), scripts/screens/gameplay_scene_screen.gd (_draw_timers, DING_SHAKE)
+- Perubahan: jam alarm (aset dari user) di kanan-atas tiap alat masak (panggangan, wajan, panci) saat memasak; cincin terisi searah jarum jam, hijau -> kuning -> merah. Saat matang: "ting" + jam goyang cepat meredam (~0,8 dtk) lalu memudar. Mekanik masak tidak berubah.
+- Hasil tes: responsive_layout, gameplay_scene, gameplay 0 gagal; render diperiksa. Sinkron suara belum diuji di perangkat.
