@@ -41,10 +41,9 @@ func _ready() -> void:
 		var view := Rect2(Vector2.ZERO, sz)
 		if k_ref < 0.0:
 			k_ref = g.scale_f
-		_check(absf(g.hud_k - 720.0 / img.y) < 0.001 and g.scale_f >= g.hud_k - 0.001, "%s: skala seragam (tanpa regang), latar k=%.3f HUD k=%.3f" % [name, g.scale_f, g.hud_k])
-		var ess := Rect2(g._m(Vector2(200, 330)), Vector2(1280, 581) * g.scale_f)   # meja, alat, bahan, pelanggan
-		_check(view.encloses(ess), "%s: meja + alat + bahan utuh di dalam layar" % name)
-		_check(g.offset.y >= -(160.0 * g.scale_f) - 1.0 and g.offset.y + img.y * g.scale_f >= sz.y + 0.0 - 1.0, "%s: potongan hanya atap/lantai (atas %.0f px, bawah %.0f px)" % [name, -minf(g.offset.y, 0.0), maxf(0.0, g.offset.y + img.y * g.scale_f - sz.y)])
+		_check(absf(g.scale_f - 720.0 / img.y) < 0.001, "%s: skala aset sama (tidak diregangkan), k=%.3f" % [name, g.scale_f])
+		var core := Rect2(g.offset, img * g.scale_f)
+		_check(view.encloses(core), "%s: area inti (HUD + permainan) utuh di dalam layar" % name)
 		_check(g.bg.position.x <= 0.5 and g.bg.position.x + g.bg.size.x >= sz.x - 0.5, "%s: latar menutupi lebar layar (tanpa bar)" % name)
 		_check(g.bg.position.y <= 0.5 and g.bg.position.y + g.bg.size.y >= sz.y - 0.5, "%s: latar menutupi tinggi layar" % name)
 		var bad := 0
@@ -61,8 +60,7 @@ func _ready() -> void:
 		_check(overlap == 0, "%s: elemen HUD tidak saling bertumpuk (%d)" % [name, overlap])
 		var bl: float = g._m(Vector2(g.scene["hud"]["banner"].x, 0)).x
 		var bnr: float = g._m(Vector2(g.scene["hud"]["banner"].y, 0)).x
-		var emblem_visible: bool = g.offset.y + 160.0 * g.scale_f > g.hud_r["cluster"].position.y + 20.0
-		_check((not emblem_visible) or (g.hud_r["pill1"].end.x <= bl and g.hud_r["pill2"].position.x >= bnr), "%s: HUD tidak menabrak emblem (terlihat=%s, f=%.2f)" % [name, str(emblem_visible), g.hud_u / g.hud_k])
+		_check(g.hud_r["pill1"].end.x <= bl and g.hud_r["pill2"].position.x >= bnr, "%s: HUD tidak menabrak emblem tengah (f=%.2f)" % [name, g.hud_u / g.scale_f])
 		var bub := Rect2(g._m(Vector2(g.scene["customer_spots"][3].x + 92.0, g.scene["customer_spots"][3].y - 184.0)), Vector2(96.0, 96.0 * 480.0 / 296.0) * g.scale_f)
 		_check(not g.hud_r["panel"].intersects(bub), "%s: panel menu tidak menutupi gelembung pelanggan ke-4" % name)
 		var small := 0
@@ -92,7 +90,7 @@ func _ready() -> void:
 	g.size = sz2
 	g._layout()
 	var safe := Rect2(Vector2(90, 0), Vector2(sz2.x - 180.0, sz2.y))
-	_check(safe.encloses(Rect2(g._m(Vector2(200, 330)), Vector2(1280, 581) * g.scale_f)), "20:9 + notch 90 px: meja + alat di dalam area aman")
+	_check(safe.encloses(Rect2(g.offset, img * g.scale_f)), "20:9 + notch 90 px: area inti di dalam area aman")
 	var bad2 := 0
 	for key in g.hud_r:
 		if not safe.encloses(g.hud_r[key]):

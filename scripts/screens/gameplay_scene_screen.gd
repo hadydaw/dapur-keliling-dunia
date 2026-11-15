@@ -6,9 +6,6 @@ extends "res://scripts/screens/gameplay_screen.gd"
 
 var scene: Dictionary = {}
 var bg: TextureRect
-const CROP_TOP := 160.0
-const CROP_BOT := 30.0
-var hud_k := 1.0
 var hud_shift := Vector2.ZERO   # geser HUD kiri (<=0) dan kanan (>=0) ke tepi area aman
 var hud_tex: Dictionary = {}     # nama sprite HUD -> Texture2D (di-cache di _ready)
 var hud_r: Dictionary = {}       # nama elemen HUD -> Rect2 layar (dihitung di _layout)
@@ -212,11 +209,13 @@ func _inr(sprite_rect: Rect2, key: String) -> Rect2:
 ## emblem tengah-atas; makin lebar layar, HUD makin menjauh ke tepi dan kembali ke ukuran penuh.
 func _compute_hud() -> void:
 	var hud: Dictionary = scene["hud"]
-	var k: float = hud_k
+	var k: float = scale_f
 	var img: Vector2 = scene["size"]
 	var banner: Vector2 = hud["banner"]
 	var m: float = float(hud["margin"])
 	var gap: float = float(hud["gap"])
+	var ext_l: float = -hud_shift.x / k
+	var ext_r: float = hud_shift.y / k
 	var cl: Vector2 = _sprite_size("cluster")
 	var pl: Vector2 = _sprite_size("pill")
 	var pg: Vector2 = _sprite_size("pillgear")
@@ -224,17 +223,13 @@ func _compute_hud() -> void:
 	var pn: Vector2 = _sprite_size("panel")
 	var l_ext: float = m + cl.x + gap + pl.x + gap + pl.x
 	var r_ext: float = m + pg.x + gap + pl.x
-	var lo: float = hud_safe.position.x                          # tepi kiri HUD (layar)
-	var ro: float = hud_safe.end.x                               # tepi kanan HUD (layar)
-	var y0: float = maxf(offset.y, hud_safe.position.y)
-	var f := 1.0
-	if offset.y + 160.0 * scale_f > y0 + 20.0:                   # emblem masih terlihat
-		var bl: float = offset.x + banner.x * scale_f
-		var br: float = offset.x + banner.y * scale_f
-		f = minf(1.0, minf((bl - lo - 8.0) / (l_ext * k), (ro - br - 8.0) / (r_ext * k)))
+	var f: float = minf(1.0, minf((banner.x - 8.0 + ext_l) / l_ext, (img.x - banner.y - 8.0 + ext_r) / r_ext))
 	f = maxf(f, 0.6)
 	var u: float = k * f
 	hud_u = u
+	var lo: float = offset.x + hud_shift.x                       # tepi kiri HUD (layar)
+	var ro: float = offset.x + img.x * k + hud_shift.y           # tepi kanan HUD (layar)
+	var y0: float = offset.y
 	hud_r.clear()
 	hud_r["cluster"] = Rect2(Vector2(lo + m * u, y0 + 8.0 * u), cl * u)
 	var pill_y: float = y0 + (8.0 + cl.y * 0.5 - pl.y * 0.5 - 16.0) * u
@@ -242,7 +237,7 @@ func _compute_hud() -> void:
 	hud_r["pill1"] = Rect2(Vector2(lo + (m + cl.x + gap + pl.x + gap) * u, pill_y), pl * u)
 	var tx: float = m + cl.x * 0.169 - tl.x * 0.5 + 4.0
 	hud_r["tile0"] = Rect2(Vector2(lo + tx * u, y0 + (8.0 + cl.y + 14.0) * u), tl * u)
-	hud_r["tile1"] = Rect2(Vector2(lo + (tx + tl.x + 10.0) * u, y0 + (8.0 + cl.y + 14.0) * u), tl * u)
+	hud_r["tile1"] = Rect2(Vector2(lo + tx * u, y0 + (8.0 + cl.y + 14.0 + tl.y + 10.0) * u), tl * u)
 	hud_r["pillgear"] = Rect2(Vector2(ro - (m + pg.x) * u, y0 + 8.0 * u), pg * u)
 	hud_r["pill2"] = Rect2(Vector2(ro - (m + pg.x + gap + pl.x) * u, y0 + (8.0 + pg.y * 0.5 - pl.y * 0.5) * u), pl * u)
 	hud_r["panel"] = Rect2(Vector2(ro - (m + pn.x) * u, y0 + (8.0 + pg.y + 12.0) * u), pn * u)
@@ -288,20 +283,9 @@ func _layout() -> void:
 	var pad_x: float = float(scene.get("pad", 0.0))
 	var ins: Vector4 = safe_insets_override if safe_insets_override.x >= 0.0 else _safe_insets()
 	var safe := Rect2(Vector2(ins.x, ins.y), size - Vector2(ins.x + ins.z, ins.y + ins.w))
-	# skala "fit" (seluruh area inti terlihat) dan skala "cover" (latar memenuhi lebar layar).
-	# Layar lebih lebar dari 16:9: latar diperbesar agar penuh layar, dengan potongan HANYA di
-	# bagian atap (atas, maks CROP_TOP) dan lantai (bawah, maks CROP_BOT); meja dan alat utuh.
-	hud_k = minf(safe.size.x / img.x, safe.size.y / img.y)
-	var s_cover: float = size.x / img.x
-	var s_max: float = size.y / (img.y - CROP_TOP - CROP_BOT)
-	scale_f = maxf(hud_k, minf(s_cover, s_max))
-	offset.x = (size.x - img.x * scale_f) * 0.5
-	if scale_f <= hud_k + 0.0001:
-		offset.y = safe.position.y + (safe.size.y - img.y * scale_f) * 0.5
-	else:
-		offset.y = minf(size.y - (img.y - CROP_BOT) * scale_f, 0.0)
-		offset.y = maxf(offset.y, size.y - img.y * scale_f)
-	hud_shift = Vector2.ZERO
+	scale_f = minf(safe.size.x / img.x, safe.size.y / img.y)
+	offset = safe.position + (safe.size - img * scale_f) * 0.5
+	hud_shift = Vector2(-maxf(0.0, offset.x - safe.position.x), maxf(0.0, safe.end.x - (offset.x + img.x * scale_f)))
 	bg.position = offset - Vector2(pad_x, 0.0) * scale_f
 	hud_safe = safe
 	if not hud_tex.is_empty():
