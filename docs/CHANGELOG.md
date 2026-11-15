@@ -253,3 +253,8 @@
 - Alasan: layar lebar (19.5:9 ke atas) harus full screen tanpa blur/panel/potongan penting.
 - Perubahan: layar dengan rasio >= 2.14 memakai latar lebar 1870x841 (posisi slot, mask konter, pelanggan, bahan, dispenser diukur ulang; potongan masakan lama diskalakan lewat rect_k). Rasio lebih sempit (16:9, 18:9) tetap memakai latar 16:9 + pad. Latar lebar memakai skala cover (potongan hanya beberapa px di tepi bila rasio sedikit di bawah 20:9). HUD dihitung dari tepi area aman.
 - Hasil tes: 6 suite 0 gagal; render 16:9, 18:9, 19.5:9, 20:9, 21:9 diperiksa; belum diuji di HP asli.
+
+## 2026-11-15 - Slot terkunci memakai ikon gembok
+- File: assets/ui/gembok.png (baru), scripts/screens/gameplay_scene_screen.gd
+- Alasan: bayangan hitam pada slot terkunci diganti ikon gembok emas (aset dari user).
+- Hasil tes: responsive_layout, gameplay_scene, gameplay 0 gagal; render 20:9 diperiksa.

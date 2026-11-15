@@ -36,6 +36,7 @@ var pulse: float = 0.0
 const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya tergulir naik
 var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
+var lock_tex: Texture2D              # ikon gembok slot terkunci (di-cache)
 var glass_tex: Array = []
 var customer_tex: Dictionary = {}
 const TOAST_Y := 692.0   # pita batik di antara alat masak dan rak bahan (bisa ditimpa scene["toast_y"])
@@ -80,6 +81,7 @@ func _ready() -> void:
 					arr.append(load(path))
 				art_tex[dish][st] = arr
 	bubble_tex = load("res://assets/ui/bubble_pesanan.png")
+	lock_tex = load("res://assets/ui/gembok.png")
 	ting_player = AudioStreamPlayer.new()
 	ting_player.stream = load("res://assets/audio/ting.wav")
 	ting_player.volume_db = -4.0
@@ -657,7 +659,9 @@ func _draw_slot(slot: Dictionary, s: float) -> void:
 	var r: float = float(slot["r"]) * s
 	var st: String = slot["state"]
 	if st == "locked":
-		fx.draw_circle(c, r, Color(0, 0, 0, 0.5))
+		var lh: float = 58.0 * s   # ukuran seragam di semua alat
+		var lw: float = lh * lock_tex.get_size().x / lock_tex.get_size().y
+		fx.draw_texture_rect(lock_tex, Rect2(c - Vector2(lw, lh) * 0.5, Vector2(lw, lh)), false)
 		return
 	if st == "empty":
 		return
