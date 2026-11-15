@@ -61,11 +61,12 @@ const APPLIANCE_NAMES := {
 	"plate": "Piring", "bowl": "Mangkuk",
 }
 
-# Latar per area + titik ketuk (koordinat piksel gambar latar 1672x941).
+# Latar per area + titik ketuk (koordinat piksel area inti 1672x941; gambar latar diperlebar `pad` px tiap sisi).
 const SCENES := {
 	"indonesia": {
 		"image": "res://assets/scene_indonesia.jpg",
-		"size": Vector2(1672, 941),
+		"size": Vector2(1672, 941),   # area inti (piksel koordinat data)
+		"pad": 230.0,                  # perluasan latar di kiri & kanan inti (gambar lebar 2132 px)
 		# Pelanggan berdiri di celah antar alat masak (kaki = garis konter), kepala + bahu terlihat.
 		"customer_spots": [Vector2(316, 426), Vector2(611, 426), Vector2(906, 426), Vector2(1202, 426)],
 		# siluet bagian atas konter (piksel gambar latar); menimpa pelanggan agar mereka

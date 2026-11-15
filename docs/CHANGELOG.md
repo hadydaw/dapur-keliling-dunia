@@ -220,3 +220,10 @@
 - Akar masalah: gambar latar gameplay 16:9 dimuat utuh (supaya HUD yang menyatu dengan gambar tidak terpotong), sehingga di layar 20:9 sisi kiri-kanan kosong/hitam. Menu utama memakai skala "penuhi layar", jadi tampak berbeda.
 - Isi: sisi layar diisi wash warna blur dari latar yang sama (bukan stretch gambar); area main, aset, HUD, dan area ketuk tidak berubah.
 - Hasil tes: 5 suite 0 gagal; render 2400x1080 dan 1920x1080 dicek; belum diuji di HP.
+
+## 2026-11-15 - Layout responsif landscape (16:9, 18:9, 19.5:9, 20:9)
+- File: scripts/screens/gameplay_scene_screen.gd, scripts/game_data.gd, assets/scene_indonesia.jpg (diperlebar 1672 -> 2132 px: inti + pad 230 px tiap sisi), assets/scene_side_fill.png (dihapus), tests/responsive_layout_test.gd/.tscn (baru), docs/CHANGELOG.md
+- Isi: skala ditentukan tinggi layar (aset tidak diregangkan, proporsi sama di semua rasio); area inti (HUD + permainan) selalu utuh; lebar ekstra diisi perluasan latar. Area aman layar (notch) dibaca dari DisplayServer; bila lebih sempit dari area inti, skala turun proporsional dan HUD tetap di dalamnya. Menu utama tetap memenuhi layar di semua rasio.
+- Catatan: bingkai HUD menyatu dengan gambar latar, jadi HUD ikut skala area inti (bukan menempel ke tepi layar). Penempelan ke tepi memerlukan bingkai HUD sebagai PNG terpisah.
+- Platform yang diuji: render headless 1920x1080, 2160x1080, 2340x1080, 2400x1080 (gameplay + menu); belum diuji di perangkat nyata.
+- Hasil tes: 6 suite, 0 gagal (responsive_layout_test baru: 31 pemeriksaan).

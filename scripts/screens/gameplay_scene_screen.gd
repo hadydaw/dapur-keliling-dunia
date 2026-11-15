@@ -6,7 +6,7 @@ extends "res://scripts/screens/gameplay_screen.gd"
 
 var scene: Dictionary = {}
 var bg: TextureRect
-var bg_fill: TextureRect
+var safe_insets_override := Vector4(-1, 0, 0, 0)   # untuk uji; x<0 = pakai area aman perangkat
 var fx: Control
 var bubble_tex: Texture2D            # bingkai gelembung pesanan (ada slot bar kesabaran vertikal di kanan)
 var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
@@ -45,12 +45,6 @@ func _ready() -> void:
 	UI.fill(self)
 	UI.background(self, Color(0.1, 0.04, 0.03))
 	# sisi layar yang lebih lebar dari 16:9: wash warna blur dari latar (bukan bar hitam)
-	bg_fill = TextureRect.new()
-	bg_fill.texture = load("res://assets/scene_side_fill.png")
-	bg_fill.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg_fill.stretch_mode = TextureRect.STRETCH_SCALE
-	bg_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg_fill)
 	bg = TextureRect.new()
 	bg.texture = load(scene["image"])
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -84,7 +78,11 @@ func _ready() -> void:
 	counter = Polygon2D.new()
 	counter.texture = bg.texture
 	counter.polygon = PackedVector2Array(scene["counter_mask"])
-	counter.uv = counter.polygon
+	var pad_x: float = float(scene.get("pad", 0.0))
+	var uv := PackedVector2Array()
+	for pt in counter.polygon:
+		uv.append(pt + Vector2(pad_x, 0.0))
+	counter.uv = uv
 	add_child(counter)
 	fx = Control.new()
 	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -187,18 +185,39 @@ func _m(p: Vector2) -> Vector2:
 	return offset + p * scale_f
 
 
+## Inset area aman (notch/lekuk layar) dalam satuan piksel viewport game: [kiri, atas, kanan, bawah].
+func _safe_insets() -> Vector4:
+	var win: Vector2 = Vector2(DisplayServer.window_get_size())
+	if win.x <= 0.0 or win.y <= 0.0:
+		return Vector4.ZERO
+	var sa: Rect2i = DisplayServer.get_display_safe_area()
+	var scr: Vector2i = DisplayServer.screen_get_size()
+	if sa.size.x <= 0 or scr.x <= 0:
+		return Vector4.ZERO
+	var f: float = size.x / win.x
+	var l: float = maxf(0.0, float(sa.position.x)) * f
+	var r: float = maxf(0.0, float(scr.x - sa.position.x - sa.size.x)) * f
+	var tp: float = maxf(0.0, float(sa.position.y)) * f
+	var bt: float = maxf(0.0, float(scr.y - sa.position.y - sa.size.y)) * f
+	return Vector4(l, tp, r, bt)
+
+
+## Tata letak responsif (landscape 16:9 s.d. 20:9 dan lebih lebar):
+## skala ditentukan tinggi layar, sehingga seluruh area inti (termasuk HUD yang menyatu
+## dengan gambar) selalu terlihat utuh dan proporsi aset tidak berubah. Lebar ekstra
+## diisi perluasan latar (pad); ukuran aset TIDAK diregangkan. Bila area aman layar
+## (notch) lebih sempit daripada area inti, skala diturunkan agar HUD tetap di dalamnya.
 func _layout() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 	var img: Vector2 = scene["size"]
-	# Seluruh gambar harus terlihat (HUD ada di tepi atas/bawah): muat ke layar, tanpa dipotong.
-	# Acuan 16:9; rasio lain hanya mendapat bar hitam di sisi.
-	scale_f = minf(size.x / img.x, size.y / img.y)
-	offset = (size - img * scale_f) * 0.5
-	bg_fill.position = Vector2.ZERO
-	bg_fill.size = size
-	bg.position = offset
-	bg.size = img * scale_f
+	var pad_x: float = float(scene.get("pad", 0.0))
+	var ins: Vector4 = safe_insets_override if safe_insets_override.x >= 0.0 else _safe_insets()
+	var safe := Rect2(Vector2(ins.x, ins.y), size - Vector2(ins.x + ins.z, ins.y + ins.w))
+	scale_f = minf(safe.size.x / img.x, safe.size.y / img.y)
+	offset = safe.position + (safe.size - img * scale_f) * 0.5
+	bg.position = offset - Vector2(pad_x, 0.0) * scale_f
+	bg.size = Vector2(img.x + 2.0 * pad_x, img.y) * scale_f
 	cust_fx.position = Vector2.ZERO
 	cust_fx.size = size
 	counter.position = offset
