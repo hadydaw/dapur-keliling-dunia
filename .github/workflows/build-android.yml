@@ -144,8 +144,8 @@ jobs:
           echo "=== UKURAN ==="; ls -la "$APK" "$AAB"
           echo "=== APK: integritas ZIP ==="; unzip -tq "$APK" || FAIL=1
           echo "=== APK: manifest (badging) ==="
-          "$BT/aapt2" dump badging "$APK" | grep -E "^package:|sdkVersion|targetSdkVersion|native-code|launchable-activity|application-label:|supports-screens|uses-feature" || FAIL=1
-          "$BT/aapt2" dump badging "$APK" 2>/dev/null | grep -q "^sdkVersion:'24'" || { echo "minSdk 24 TIDAK tercatat di manifest APK"; FAIL=1; }
+          "$BT/aapt2" dump badging "$APK" | grep -iE "^package:|sdkVersion|native-code|launchable-activity|application-label:|supports-screens|uses-feature" || FAIL=1
+          "$BT/aapt2" dump badging "$APK" 2>/dev/null | grep -qi "^sdkVersion:'24'\|^minSdkVersion:'24'" || { echo "minSdk 24 TIDAK tercatat di manifest APK"; FAIL=1; }
           echo "=== APK: ABI di dalam ==="
           unzip -l "$APK" | grep -E "lib/.*libgodot_android.so"
           for a in armeabi-v7a arm64-v8a x86_64; do unzip -l "$APK" | grep -q "lib/$a/libgodot_android.so" || { echo "ABI HILANG: $a"; FAIL=1; }; done
@@ -163,7 +163,7 @@ jobs:
           java -jar /tmp/bundletool.jar build-apks --bundle="$AAB" --mode=universal --output=/tmp/u.apks --ks="$AAB_KS" --ks-key-alias="$AAB_USER" --ks-pass=pass:"$AAB_PASS" || FAIL=1
           mkdir -p /tmp/uni && unzip -q -o /tmp/u.apks -d /tmp/uni
           "$BT/zipalign" -c -P 16 -v 4 /tmp/uni/universal.apk 2>&1 | tail -3 || { echo "AAB: .so TIDAK selaras 16 KB"; FAIL=1; }
-          "$BT/aapt2" dump badging /tmp/uni/universal.apk | grep -E "sdkVersion|targetSdkVersion|native-code"
+          "$BT/aapt2" dump badging /tmp/uni/universal.apk | grep -iE "sdkVersion|native-code"
           echo "=== Penandatangan AAB: $AAB_SIGN ==="
           if [ "$AAB_SIGN" != "upload" ]; then echo "PERHATIAN: AAB ini ditandatangani kunci debug. Google Play MENOLAK. Isi secret ANDROID_UPLOAD_KEYSTORE_*"; fi
           exit $FAIL
