@@ -35,6 +35,9 @@ const FISH_LENGTH := 7.0      # panjang ikan_bakar.wav (detik)
 var soup_players: Array = []         # kuah soto mendidih di panci (satu pemain per slot)
 var soup_count: int = 0
 const SOUP_LENGTH := 8.0      # panjang soto_mendidih.wav (detik)
+var serve_players: Array = []        # bunyi piring/mangkuk diletakkan ke pelanggan (bergantian)
+var serve_count: int = 0
+var _serve_next: int = 0
 const FILL_LENGTH := 3.0      # panjang isi_dispenser.wav (detik)
 const POUR_LENGTH := 2.6      # panjang tuang_es.wav (detik)
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
@@ -146,6 +149,12 @@ func _ready() -> void:
 		cp.volume_db = -6.0
 		add_child(cp)
 		soup_players.append(cp)
+	for i in 3:
+		var vp := AudioStreamPlayer.new()
+		vp.stream = load("res://assets/audio/sajikan_piring.wav")
+		vp.volume_db = -4.0
+		add_child(vp)
+		serve_players.append(vp)
 	fill_player = AudioStreamPlayer.new()
 	fill_player.stream = load("res://assets/audio/isi_dispenser.wav")
 	fill_player.volume_db = -4.0
@@ -520,7 +529,10 @@ func _on_slot(kind: String, i: int) -> void:
 
 
 func _serve_from(slot: Dictionary) -> void:
+	var kind: String = slot["kind"]
 	if _serve(slot["dish"]):
+		if kind == "plate" or kind == "bowl":
+			_serve_sound()
 		_reset(slot)
 	else:
 		_toast("Belum ada yang memesan ini")
@@ -625,6 +637,14 @@ func _soup_sound(idx: int, dur: float) -> void:
 	var cp: AudioStreamPlayer = soup_players[clampi(idx, 0, soup_players.size() - 1)]
 	cp.pitch_scale = clampf(SOUP_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
 	cp.play()
+
+
+## Bunyi piring/mangkuk diletakkan di depan pelanggan (3 pemain bergantian agar bisa tumpang tindih).
+func _serve_sound() -> void:
+	serve_count += 1
+	var vp: AudioStreamPlayer = serve_players[_serve_next]
+	_serve_next = (_serve_next + 1) % serve_players.size()
+	vp.play()
 
 
 func _burn_sound() -> void:

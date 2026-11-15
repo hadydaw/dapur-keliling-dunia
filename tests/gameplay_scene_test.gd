@@ -131,8 +131,10 @@ func _ready() -> void:
 	_check(g.ting_count == ting_before + 1, "bel ting berbunyi sekali saat nasi goreng matang")
 	await _tap_slot(g, "wok", 0)
 	_check(g.appliances["plate"][0]["state"] == "full" and g.appliances["wok"][0]["state"] == "empty", "ketuk wajan matang: pindah ke piring")
+	var serve_before: int = g.serve_count
 	await _tap_slot(g, "plate", 0)
 	_check(g.earned > 0 and g.customers.is_empty(), "ketuk piring: pelanggan membayar")
+	_check(g.serve_count == serve_before + 1 and g.serve_players[0].playing, "bunyi piring berbunyi sekali saat disajikan ke pelanggan")
 
 	# --- piring tanpa pesanan tidak hilang ---
 	g.appliances["plate"][0]["state"] = "full"
