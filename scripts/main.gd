@@ -28,6 +28,9 @@ func _ready() -> void:
 			p["area"] = int(a.substr(7))
 		elif a.begins_with("--level="):
 			p["level"] = int(a.substr(8))
+	# Pemicu cadangan untuk CI: berkas penanda di folder data aplikasi (hanya bisa ditulis lewat adb).
+	if OS.get_name() == "Android" and FileAccess.file_exists("/sdcard/Android/data/com.hadydaw.dapurkelilingdunia/files/selftest"):
+		selftest = true
 	_go(screen, p)
 	if selftest:
 		var st := Node.new()

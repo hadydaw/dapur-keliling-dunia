@@ -373,3 +373,9 @@
 - File: scripts/selftest.gd (baru), scripts/main.gd (argumen `--selftest`), scripts/ui/settings_panel.gd (baris info versi/layar/GPU untuk laporan tester), project.godot (config/version), tools/emulator_check.sh, .github/workflows/build-android.yml (job `release`, SHA-256, emulator API 31 18:9), tests/selftest_run.gd/.tscn (baru)
 - Isi: self-test di dalam game memakai sentuhan nyata (menu -> peta -> pilih level -> level 1 dengan 40 ketukan -> Jeda -> Pengaturan -> simpan/muat -> audio) dan mencetak penanda ke logcat; CI menjalankannya di emulator Android 7/10/12/14/16 dan gagal bila ada pemeriksaan gagal, SCRIPT ERROR, atau proses mati. APK dipublikasikan langsung (bukan ZIP) sebagai pra-rilis `dev-latest` beserta SHA-256. Pekerjaan Play Store (keystore upload, secret) dihentikan; job AAB tetap ada.
 - Hasil uji lokal (Godot 4.7.2 headless): semua suite + selftest lulus. Emulator/HP fisik: lihat entri hasil CI.
+
+## 2026-11-15 - Perbaikan pemicu self-test CI
+- File: scripts/main.gd, tools/emulator_check.sh
+- Alasan: argumen `--selftest` lewat intent tidak sampai ke game di emulator (InitEngine tidak memuatnya); ditambah berkas penanda di folder data aplikasi sebagai pemicu cadangan, plus satu percobaan ulang bila proses mati saat menu (API 36 sempat mati sekali).
+- Dampak: hanya jalur uji; gameplay tidak berubah.
+- Hasil tes: lihat hasil CI berikutnya.

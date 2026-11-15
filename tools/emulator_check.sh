@@ -67,6 +67,10 @@ run_case() { # nama  param
   fi
   sleep 25
   if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
+    echo "   (percobaan 1: proses mati; log:)"; adb logcat -d -b crash | tail -15; adb logcat -d | grep -iE "am_proc_died|am_kill|lowmemorykiller|Process $PKG.*died|ANR in" | tail -8
+    adb logcat -c; adb shell am start -W -n "$COMP" | tail -2; sleep 25
+  fi
+  if [ -z "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then
     echo "   PROSES MATI (crash) pada $NAME"; adb logcat -d -b crash | tail -30; adb logcat -d | grep -iE "godot|AndroidRuntime|FATAL|signal|vulkan|GLES" | tail -30; FAIL=1; return
   fi
   adb exec-out screencap -p > "shots/${LABEL}_${NAME}_t25.png"
@@ -86,6 +90,8 @@ run_case menu ""
 echo "== SELF-TEST di dalam game (sentuhan nyata, menu, level, main, Jeda, simpan, audio)"
 adb logcat -c
 adb shell am force-stop "$PKG"
+adb shell "mkdir -p /sdcard/Android/data/$PKG/files && echo 1 > /sdcard/Android/data/$PKG/files/selftest"
+adb shell ls -l /sdcard/Android/data/$PKG/files/ || true
 adb shell am start -W -n "$COMP" --esa command_line_params "--,--selftest" | tail -2
 DONE=0
 for i in $(seq 1 60); do
