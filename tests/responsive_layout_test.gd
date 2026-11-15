@@ -47,11 +47,22 @@ func _ready() -> void:
 		_check(g.bg.position.x <= 0.5 and g.bg.position.x + g.bg.size.x >= sz.x - 0.5, "%s: latar menutupi lebar layar (tanpa bar)" % name)
 		_check(g.bg.position.y <= 0.5 and g.bg.position.y + g.bg.size.y >= sz.y - 0.5, "%s: latar menutupi tinggi layar" % name)
 		var bad := 0
-		for it in g.hud_items():
-			var rr := Rect2(g._hm(it["rect"].position, it["side"]), it["rect"].size * g.scale_f)
-			if not view.grow(-4.0).encloses(rr):
+		for key in g.hud_r:
+			if not view.grow(-4.0).encloses(g.hud_r[key]):
 				bad += 1
 		_check(bad == 0, "%s: semua elemen HUD di dalam layar (%d keluar)" % [name, bad])
+		var keys: Array = g.hud_r.keys()
+		var overlap := 0
+		for i in keys.size():
+			for j in range(i + 1, keys.size()):
+				if g.hud_r[keys[i]].intersects(g.hud_r[keys[j]]):
+					overlap += 1
+		_check(overlap == 0, "%s: elemen HUD tidak saling bertumpuk (%d)" % [name, overlap])
+		var bl: float = g._m(Vector2(g.scene["hud"]["banner"].x, 0)).x
+		var bnr: float = g._m(Vector2(g.scene["hud"]["banner"].y, 0)).x
+		_check(g.hud_r["pill1"].end.x <= bl and g.hud_r["pill2"].position.x >= bnr, "%s: HUD tidak menabrak emblem tengah (f=%.2f)" % [name, g.hud_u / g.scale_f])
+		var bub := Rect2(g._m(Vector2(g.scene["customer_spots"][3].x + 92.0, g.scene["customer_spots"][3].y - 184.0)), Vector2(96.0, 96.0 * 480.0 / 296.0) * g.scale_f)
+		_check(not g.hud_r["panel"].intersects(bub), "%s: panel menu tidak menutupi gelembung pelanggan ke-4" % name)
 		var small := 0
 		var out := 0
 		for h in g.hotspots:
@@ -81,8 +92,8 @@ func _ready() -> void:
 	var safe := Rect2(Vector2(90, 0), Vector2(sz2.x - 180.0, sz2.y))
 	_check(safe.encloses(Rect2(g.offset, img * g.scale_f)), "20:9 + notch 90 px: area inti di dalam area aman")
 	var bad2 := 0
-	for it in g.hud_items():
-		if not safe.encloses(Rect2(g._hm(it["rect"].position, it["side"]), it["rect"].size * g.scale_f)):
+	for key in g.hud_r:
+		if not safe.encloses(g.hud_r[key]):
 			bad2 += 1
 	_check(bad2 == 0, "20:9 + notch: HUD di dalam area aman")
 	g.safe_insets_override = Vector4(-1, 0, 0, 0)

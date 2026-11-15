@@ -7,7 +7,11 @@ extends "res://scripts/screens/gameplay_screen.gd"
 var scene: Dictionary = {}
 var bg: TextureRect
 var hud_shift := Vector2.ZERO   # geser HUD kiri (<=0) dan kanan (>=0) ke tepi area aman
-var hud_pill_tex: Texture2D
+var hud_tex: Dictionary = {}     # nama sprite HUD -> Texture2D (di-cache di _ready)
+var hud_r: Dictionary = {}       # nama elemen HUD -> Rect2 layar (dihitung di _layout)
+var hud_hot: Dictionary = {}     # area ketuk HUD -> Rect2 layar
+var hud_u: float = 1.0           # piksel layar per piksel inti untuk HUD (skala k*f)
+var hud_safe := Rect2()
 var safe_insets_override := Vector4(-1, 0, 0, 0)   # untuk uji; x<0 = pakai area aman perangkat
 var fx: Control
 var bubble_tex: Texture2D            # bingkai gelembung pesanan (ada slot bar kesabaran vertikal di kanan)
@@ -143,7 +147,7 @@ func _build_appliances() -> void:
 		appliances[aname] = slots
 
 
-func _make_hot(rect: Rect2, cb: Callable, side: String = "") -> void:
+func _make_hot(rect: Rect2, cb: Callable, hud_key: String = "") -> void:
 	var b := Button.new()
 	b.flat = true
 	b.focus_mode = Control.FOCUS_NONE
@@ -151,7 +155,7 @@ func _make_hot(rect: Rect2, cb: Callable, side: String = "") -> void:
 		b.add_theme_stylebox_override(st, StyleBoxEmpty.new())
 	b.pressed.connect(cb)
 	add_child(b)
-	hotspots.append({"rect": rect, "btn": b, "side": side})
+	hotspots.append({"rect": rect, "btn": b, "hud_key": hud_key})
 
 
 func _build_hotspots() -> void:
@@ -169,12 +173,13 @@ func _build_hotspots() -> void:
 
 func _build_hud() -> void:
 	# Bingkai HUD digambar di fx (lihat _draw_hud_frames); di sini area ketuk + penampung nilai.
-	var hud: Dictionary = scene["hud"]
-	_make_hot(hud["gear"], _toggle_pause, "R")
+	for nm in scene["hud"]["sprites"]:
+		hud_tex[nm] = load(String(scene["hud"]["sprites"][nm]["img"]))
+	_make_hot(Rect2(), _toggle_pause, "gear")
 	pause_btn = hotspots[hotspots.size() - 1]["btn"]
 	pause_btn.name = "BtnJeda"
-	_make_hot(hud["squares"][0], _toast.bind("Misi segera hadir"), "L")
-	_make_hot(hud["squares"][1], _toast.bind("Toko dibuka dari menu utama"), "L")
+	_make_hot(Rect2(), _toast.bind("Misi segera hadir"), "tile0")
+	_make_hot(Rect2(), _toast.bind("Toko dibuka dari menu utama"), "tile1")
 	title_label = UI.label("", 22)
 	coins_label = UI.label("", 22)
 	time_label = UI.label("", 32)
@@ -187,25 +192,66 @@ func _m(p: Vector2) -> Vector2:
 	return offset + p * scale_f
 
 
-## Seperti _m, tetapi untuk elemen HUD: sisi "L"/"R" menempel ke tepi area aman layar
-## (bergeser keluar dari area inti pada layar yang lebih lebar dari 16:9).
-func _hm(p: Vector2, side: String) -> Vector2:
-	var sh: float = hud_shift.x if side == "L" else (hud_shift.y if side == "R" else 0.0)
-	return _m(p) + Vector2(sh, 0.0)
+func _sprite_size(name: String) -> Vector2:
+	var tex: Texture2D = hud_tex[name]
+	var w: float = float(scene["hud"]["sprites"][name]["w"])
+	return Vector2(w, w * tex.get_height() / float(tex.get_width()))
 
 
-## Semua elemen HUD sebagai daftar {rect, side} (dipakai gambar, tata letak, dan tes).
-func hud_items() -> Array:
+## Area isi sprite (pecahan `inner`) dalam koordinat layar.
+func _inr(sprite_rect: Rect2, key: String) -> Rect2:
+	var f: Rect2 = scene["hud"]["inner"][key]
+	return Rect2(sprite_rect.position + f.position * sprite_rect.size, f.size * sprite_rect.size)
+
+
+## Susun HUD secara responsif. Kelompok kiri menempel ke tepi kiri area aman, kelompok kanan
+## ke tepi kanan. Bila lebar sempit (16:9) HUD diperkecil (faktor f <= 1) agar tidak menabrak
+## emblem tengah-atas; makin lebar layar, HUD makin menjauh ke tepi dan kembali ke ukuran penuh.
+func _compute_hud() -> void:
 	var hud: Dictionary = scene["hud"]
-	var sd: Dictionary = hud["sides"]
-	var out: Array = []
-	for k in ["avatar", "strip1", "strip2", "gear", "panel_head", "panel_body"]:
-		out.append({"rect": hud[k], "side": sd[k]})
-	for i in 4:
-		out.append({"rect": hud["pills"][i], "side": sd["pills"][i]})
-	for r in hud["squares"]:
-		out.append({"rect": r, "side": sd["squares"]})
-	return out
+	var k: float = scale_f
+	var img: Vector2 = scene["size"]
+	var banner: Vector2 = hud["banner"]
+	var m: float = float(hud["margin"])
+	var gap: float = float(hud["gap"])
+	var ext_l: float = -hud_shift.x / k
+	var ext_r: float = hud_shift.y / k
+	var cl: Vector2 = _sprite_size("cluster")
+	var pl: Vector2 = _sprite_size("pill")
+	var pg: Vector2 = _sprite_size("pillgear")
+	var tl: Vector2 = _sprite_size("tile")
+	var pn: Vector2 = _sprite_size("panel")
+	var l_ext: float = m + cl.x + gap + pl.x + gap + pl.x
+	var r_ext: float = m + pg.x + gap + pl.x
+	var f: float = minf(1.0, minf((banner.x - 8.0 + ext_l) / l_ext, (img.x - banner.y - 8.0 + ext_r) / r_ext))
+	f = maxf(f, 0.6)
+	var u: float = k * f
+	hud_u = u
+	var lo: float = offset.x + hud_shift.x                       # tepi kiri HUD (layar)
+	var ro: float = offset.x + img.x * k + hud_shift.y           # tepi kanan HUD (layar)
+	var y0: float = offset.y
+	hud_r.clear()
+	hud_r["cluster"] = Rect2(Vector2(lo + m * u, y0 + 8.0 * u), cl * u)
+	var pill_y: float = y0 + (8.0 + cl.y * 0.5 - pl.y * 0.5 - 16.0) * u
+	hud_r["pill0"] = Rect2(Vector2(lo + (m + cl.x + gap) * u, pill_y), pl * u)
+	hud_r["pill1"] = Rect2(Vector2(lo + (m + cl.x + gap + pl.x + gap) * u, pill_y), pl * u)
+	var tx: float = m + cl.x * 0.169 - tl.x * 0.5 + 4.0
+	hud_r["tile0"] = Rect2(Vector2(lo + tx * u, y0 + (8.0 + cl.y + 14.0) * u), tl * u)
+	hud_r["tile1"] = Rect2(Vector2(lo + tx * u, y0 + (8.0 + cl.y + 14.0 + tl.y + 10.0) * u), tl * u)
+	hud_r["pillgear"] = Rect2(Vector2(ro - (m + pg.x) * u, y0 + 8.0 * u), pg * u)
+	hud_r["pill2"] = Rect2(Vector2(ro - (m + pg.x + gap + pl.x) * u, y0 + (8.0 + pg.y * 0.5 - pl.y * 0.5) * u), pl * u)
+	hud_r["panel"] = Rect2(Vector2(ro - (m + pn.x) * u, y0 + (8.0 + pg.y + 12.0) * u), pn * u)
+	# area ketuk (minimal 44 px, diperluas dari tengah bila lebih kecil)
+	hud_hot.clear()
+	hud_hot["gear"] = _min_touch(_inr(hud_r["pillgear"], "pillgear_ring"))
+	hud_hot["tile0"] = _min_touch(hud_r["tile0"])
+	hud_hot["tile1"] = _min_touch(hud_r["tile1"])
+
+
+func _min_touch(r: Rect2) -> Rect2:
+	var c: Vector2 = r.get_center()
+	var sz := Vector2(maxf(r.size.x, 44.0), maxf(r.size.y, 44.0))
+	return Rect2(c - sz * 0.5, sz)
 
 
 ## Inset area aman (notch/lekuk layar) dalam satuan piksel viewport game: [kiri, atas, kanan, bawah].
@@ -241,6 +287,9 @@ func _layout() -> void:
 	offset = safe.position + (safe.size - img * scale_f) * 0.5
 	hud_shift = Vector2(-maxf(0.0, offset.x - safe.position.x), maxf(0.0, safe.end.x - (offset.x + img.x * scale_f)))
 	bg.position = offset - Vector2(pad_x, 0.0) * scale_f
+	hud_safe = safe
+	if not hud_tex.is_empty():
+		_compute_hud()
 	bg.size = Vector2(img.x + 2.0 * pad_x, img.y) * scale_f
 	cust_fx.position = Vector2.ZERO
 	cust_fx.size = size
@@ -251,8 +300,13 @@ func _layout() -> void:
 	for h in hotspots:
 		var r: Rect2 = h["rect"]
 		var b: Button = h["btn"]
-		b.position = _hm(r.position, String(h.get("side", "")))
-		b.size = r.size * scale_f
+		var hk: String = String(h.get("hud_key", ""))
+		if hk != "" and hud_hot.has(hk):
+			b.position = hud_hot[hk].position
+			b.size = hud_hot[hk].size
+		elif hk == "":
+			b.position = _m(r.position)
+			b.size = r.size * scale_f
 	var u: float = size.y / 720.0
 	toast_label.size = Vector2(size.x, 40.0 * u)
 	toast_label.position = Vector2(0, _m(Vector2(0, TOAST_Y)).y - toast_label.size.y * 0.5)
@@ -506,112 +560,71 @@ func _text_at(pos: Vector2, txt: String, fs: int, col: Color, align: int = 0) ->
 	fx.draw_string(font, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 
 
-func _frame_box(fill: Color, border: Color, radius: int, bw: int) -> StyleBoxFlat:
+func _frame_box(fill: Color, radius: int) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = fill
-	sb.border_color = border
-	sb.set_border_width_all(bw)
 	sb.set_corner_radius_all(radius)
 	sb.anti_aliasing = true
 	return sb
 
 
-## Bingkai HUD: pil memakai aset assets/hud/pill.png; sisanya gambar prosedural sementara
-## (cokelat tua + tepi emas) sampai aset bingkai masing-masing tersedia.
-func _draw_hud_frames(s: float) -> void:
-	var hud: Dictionary = scene["hud"]
-	var sd: Dictionary = hud["sides"]
-	var brown := Color(0.27, 0.1, 0.04)
-	var gold_c := Color(0.98, 0.72, 0.18)
-	var gold_hi := Color(1, 0.9, 0.5)
-	# bar panel & strip
-	for k in ["strip1", "strip2"]:
-		var r: Rect2 = hud[k]
-		fx.draw_style_box(_frame_box(brown, gold_c, int(r.size.y * 0.5 * s), maxi(2, int(3.0 * s))), Rect2(_hm(r.position, sd[k]), r.size * s))
-	# lingkaran: avatar & tombol jeda
-	for k in ["avatar", "gear"]:
-		var r: Rect2 = hud[k]
-		var c: Vector2 = _hm(r.get_center(), sd[k])
-		var rad: float = r.size.x * 0.5 * s
-		fx.draw_circle(c, rad, gold_c)
-		fx.draw_circle(c, rad - 4.0 * s, gold_hi)
-		fx.draw_circle(c, rad - 7.0 * s, brown)
-	# kotak samping
-	for r in hud["squares"]:
-		fx.draw_style_box(_frame_box(brown, gold_c, int(18.0 * s), maxi(3, int(5.0 * s))), Rect2(_hm(r.position, sd["squares"]), r.size * s))
-	# panel menu: header cokelat + badan krem
-	var ph: Rect2 = hud["panel_head"]
-	var pb: Rect2 = hud["panel_body"]
-	fx.draw_style_box(_frame_box(Color(0.99, 0.88, 0.6), gold_c, int(12.0 * s), maxi(3, int(5.0 * s))), Rect2(_hm(Vector2(pb.position.x, ph.position.y + 8.0), "R"), Vector2(pb.size.x, pb.end.y - ph.position.y - 8.0) * s))
-	fx.draw_style_box(_frame_box(brown, gold_c, int(12.0 * s), maxi(3, int(5.0 * s))), Rect2(_hm(ph.position, "R"), ph.size * s))
-	# pil (aset)
-	var pills: Array = hud["pills"]
-	if hud_pill_tex == null:
-		hud_pill_tex = load(String(hud["pill_image"]))
-	for i in 4:
-		var pr: Rect2 = pills[i]
-		fx.draw_texture_rect(hud_pill_tex, Rect2(_hm(pr.position, sd["pills"][i]), pr.size * s), false)
+func _draw_hud_frames(_s: float) -> void:
+	for nm in ["cluster", "pill0", "pill1", "pill2", "pillgear", "tile0", "tile1", "panel"]:
+		var key: String = nm.trim_suffix("0").trim_suffix("1").trim_suffix("2")
+		fx.draw_texture_rect(hud_tex[key], hud_r[nm], false)
 
 
-func _draw_hud(s: float) -> void:
-	var hud: Dictionary = scene["hud"]
-	var sd: Dictionary = hud["sides"]
+func _draw_hud(_s: float) -> void:
+	var u: float = hud_u
 	var gold := Color(1, 0.88, 0.45)
 	var target: int = int(params["target"])
 	var t: int = int(ceil(time_left))
-	# avatar: nomor level
-	var av: Rect2 = hud["avatar"]
-	_text_at(_hm(av.get_center(), "L"), str(level + 1), int(40.0 * s), Color.WHITE, 1)
-	# strip 1: nama area singkat; strip 2: bar target + angka
-	var s1: Rect2 = hud["strip1"]
-	var short_name: String = String(area["name"]).split(" ")[-1]
-	_text_at(_hm(s1.get_center(), "L"), short_name, int(18.0 * s), gold, 1)
-	var s2: Rect2 = hud["strip2"]
+	# lencana: nomor level; strip atas: nama area; strip bawah: bar target + angka
+	var cr: Rect2 = hud_r["cluster"]
+	_text_at(_inr(cr, "cluster_circle").get_center(), str(level + 1), int(44.0 * u), Color.WHITE, 1)
+	var s1: Rect2 = _inr(cr, "cluster_s1")
+	_text_at(s1.get_center(), String(area["name"]).split(" ")[-1], int(19.0 * u), gold, 1)
+	var s2: Rect2 = _inr(cr, "cluster_s2")
 	var frac: float = clampf(float(earned) / maxf(float(target), 1.0), 0.0, 1.0)
-	var inner := Rect2(s2.position + Vector2(5, 6), s2.size - Vector2(10, 12))
 	if frac > 0.0:
-		fx.draw_style_box(_frame_box(Color(0.35, 0.82, 0.3), Color(0, 0, 0, 0), int(inner.size.y * 0.5 * s), 0), Rect2(_hm(inner.position, "L"), Vector2(maxf(inner.size.x * frac, inner.size.y), inner.size.y) * s))
-	_text_at(_hm(s2.get_center(), "L"), "%d/%d" % [earned, target], int(15.0 * s), Color.WHITE, 1)
-	# pil: waktu, target, hasil level, koin total (area teks = bagian cokelat di tengah pil)
-	var pills: Array = hud["pills"]
-	var vals: Array = [
-		["Waktu", "%d:%02d" % [t / 60, t % 60]],
-		["Target", str(target)],
-		["Hasil", str(earned)],
-		["Koin", str(GameState.coins)],
+		var bar := Rect2(s2.position + Vector2(2, 2), Vector2(maxf((s2.size.x - 4.0) * frac, s2.size.y * 0.6), s2.size.y - 4.0))
+		fx.draw_style_box(_frame_box(Color(0.35, 0.82, 0.3), int(bar.size.y * 0.5)), bar)
+	_text_at(s2.get_center(), "%d/%d" % [earned, target], int(16.0 * u), Color.WHITE, 1)
+	# pil: label kiri + nilai kanan di area isi
+	var rows := [
+		["pill0", "pill", "Waktu", "%d:%02d" % [t / 60, t % 60]],
+		["pill1", "pill", "Target", str(target)],
+		["pill2", "pill", "Hasil", str(earned)],
+		["pillgear", "pillgear_bar", "Koin", str(GameState.coins)],
 	]
-	for i in 4:
-		var pr: Rect2 = pills[i]
-		var side: String = sd["pills"][i]
-		var cy: float = _hm(Vector2(pr.position.x, pr.position.y + pr.size.y * 0.515), side).y
-		var x_l: float = _hm(Vector2(pr.position.x + pr.size.x * 0.09, 0), side).x
-		var x_r: float = _hm(Vector2(pr.position.x + pr.size.x * 0.91, 0), side).x
-		_text_at(Vector2(x_l, cy), vals[i][0], int(14.0 * s), Color(0.95, 0.75, 0.45), 0)
-		_text_at(Vector2(x_r, cy), vals[i][1], int(20.0 * s), Color.WHITE, 2)
-	# tombol jeda: dua batang
-	var gr: Rect2 = hud["gear"]
-	var gc: Vector2 = gr.get_center()
-	for dx in [-7.0, 7.0]:
-		fx.draw_rect(Rect2(_hm(gc + Vector2(dx - 4.5, -13.0), "R"), Vector2(9.0, 26.0) * s), Color(1, 0.93, 0.7))
-	# tombol samping
+	for rw in rows:
+		var ir: Rect2 = _inr(hud_r[rw[0]], rw[1])
+		_text_at(Vector2(ir.position.x + ir.size.x * 0.04, ir.get_center().y), rw[2], int(15.0 * u), Color(0.95, 0.75, 0.45), 0)
+		_text_at(Vector2(ir.end.x - ir.size.x * 0.04, ir.get_center().y), rw[3], int(21.0 * u), Color.WHITE, 2)
+	# tombol jeda di cincin pillgear
+	var ring: Rect2 = _inr(hud_r["pillgear"], "pillgear_ring")
+	var rc: Vector2 = ring.get_center()
+	for dx in [-0.17, 0.17]:
+		fx.draw_rect(Rect2(rc + Vector2(dx * ring.size.x - 4.0 * u, -12.0 * u), Vector2(8.0 * u, 24.0 * u)), Color(1, 0.93, 0.7))
+	# kotak samping
 	var names := ["Misi", "Toko"]
 	for i in 2:
-		var sq: Rect2 = hud["squares"][i]
-		_text_at(_hm(sq.get_center(), "L"), names[i], int(20.0 * s), gold, 1)
+		_text_at(_inr(hud_r["tile%d" % i], "tile").get_center(), names[i], int(21.0 * u), gold, 1)
 	# panel menu: daftar hidangan level ini
-	var ph: Rect2 = hud["panel_head"]
-	_text_at(_hm(ph.get_center(), "R"), "Menu Level", int(21.0 * s), gold, 1)
-	var pb: Rect2 = hud["panel_body"]
+	var pr: Rect2 = hud_r["panel"]
+	_text_at(_inr(pr, "panel_head").get_center(), "Menu Level", int(22.0 * u), gold, 1)
+	var pb: Rect2 = _inr(pr, "panel_body")
 	var n: int = mini(dishes.size(), 5)
 	var row_h: float = pb.size.y / 5.0
-	for k in n:
-		var id: String = dishes[k]
-		var cy: float = pb.position.y + row_h * (k + 0.5)
+	for kk in n:
+		var id: String = dishes[kk]
+		var cy: float = pb.position.y + row_h * (kk + 0.5)
 		var d: Dictionary = GameData.DISHES[id]
+		var isz: float = minf(row_h * 0.85, 24.0 * u)
 		if icon_tex.has(id):
-			fx.draw_texture_rect(icon_tex[id], Rect2(_hm(Vector2(pb.position.x + 10.0, cy - 13.0), "R"), Vector2(26, 26) * s), false)
-		_text_at(_hm(Vector2(pb.position.x + 42.0, cy), "R"), String(d["name"]), int(17.0 * s), Color(0.28, 0.12, 0.05), 0)
-		_text_at(_hm(Vector2(pb.position.x + pb.size.x - 12.0, cy), "R"), str(int(d["price"])), int(17.0 * s), Color(0.55, 0.25, 0.05), 2)
+			fx.draw_texture_rect(icon_tex[id], Rect2(Vector2(pb.position.x + 6.0 * u, cy - isz * 0.5), Vector2(isz, isz)), false)
+		_text_at(Vector2(pb.position.x + 8.0 * u + isz, cy), String(d["name"]), int(15.0 * u), Color(0.28, 0.12, 0.05), 0)
+		_text_at(Vector2(pb.end.x - 8.0 * u, cy), str(int(d["price"])), int(15.0 * u), Color(0.55, 0.25, 0.05), 2)
 
 
 func _on_cust_draw() -> void:

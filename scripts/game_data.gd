@@ -109,19 +109,32 @@ const SCENES := {
 				"full": ["res://assets/scene/sate/full_0.png", "res://assets/scene/sate/full_1.png", "res://assets/scene/sate/full_2.png", "res://assets/scene/sate/full_3.png", "res://assets/scene/sate/full_4.png", "res://assets/scene/sate/full_5.png"],
 			},
 		},
-		# HUD digambar game (bingkai = aset di assets/hud/, atau gambar prosedural sementara),
-		# dalam piksel area inti. Sisi "L"/"R" menentukan penempelan ke tepi layar kiri/kanan.
+		# HUD: bingkai = aset di assets/hud/ (dari desain HUD user); teks/angka digambar game.
+		# "w" = lebar sprite (piksel area inti) pada skala penuh; tinggi mengikuti rasio gambar.
+		# "inner" = area isi (cokelat/krem) sebagai pecahan dari ukuran sprite.
+		# "banner" = rentang x emblem tengah-atas (bagian latar) yang tidak boleh ditabrak HUD.
 		"hud": {
-			"avatar": Rect2(16, 10, 100, 100),
-			"strip1": Rect2(122, 24, 126, 28),
-			"strip2": Rect2(122, 62, 126, 30),
-			"pills": [Rect2(256, 10, 196, 54), Rect2(462, 10, 196, 54), Rect2(1130, 10, 196, 54), Rect2(1344, 10, 196, 54)],
-			"gear": Rect2(1590, 10, 68, 68),
-			"squares": [Rect2(16, 134, 92, 92), Rect2(16, 236, 92, 92)],
-			"panel_head": Rect2(1400, 100, 256, 40),
-			"panel_body": Rect2(1400, 146, 256, 170),
-			"pill_image": "res://assets/hud/pill.png",
-			"sides": {"avatar": "L", "strip1": "L", "strip2": "L", "pills": ["L", "L", "R", "R"], "gear": "R", "squares": "L", "panel_head": "R", "panel_body": "R"},
+			"banner": Vector2(655, 1015),
+			"margin": 10.0,
+			"gap": 10.0,
+			"sprites": {
+				"cluster": {"img": "res://assets/hud/cluster.png", "w": 300.0},
+				"pill": {"img": "res://assets/hud/pill.png", "w": 220.0},
+				"pillgear": {"img": "res://assets/hud/pillgear.png", "w": 300.0},
+				"tile": {"img": "res://assets/hud/tile.png", "w": 92.0},
+				"panel": {"img": "res://assets/hud/panel.png", "w": 310.0},
+			},
+			"inner": {
+				"cluster_circle": Rect2(0.038, 0.172, 0.262, 0.714),
+				"cluster_s1": Rect2(0.309, 0.231, 0.606, 0.258),
+				"cluster_s2": Rect2(0.312, 0.588, 0.606, 0.205),
+				"pill": Rect2(0.11, 0.2, 0.78, 0.6),
+				"pillgear_bar": Rect2(0.07, 0.27, 0.68, 0.46),
+				"pillgear_ring": Rect2(0.775, 0.05, 0.22, 0.9),
+				"tile": Rect2(0.1, 0.2, 0.8, 0.6),
+				"panel_head": Rect2(0.06, 0.085, 0.88, 0.16),
+				"panel_body": Rect2(0.06, 0.31, 0.88, 0.62),
+			},
 		},
 		"customer_art": {
 			"senang": "res://assets/customers/pria_batik_senang.png",

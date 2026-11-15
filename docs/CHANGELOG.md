@@ -233,3 +233,10 @@
 - Isi: bingkai HUD tidak lagi menyatu dengan latar. Pil memakai aset assets/hud/pill.png; avatar, strip, tombol jeda, kotak Misi/Toko, dan panel menu masih gambar prosedural sementara sampai asetnya tersedia. Elemen HUD bersisi L/R menempel ke tepi area aman layar (bergeser keluar di layar lebih lebar dari 16:9); area ketuk ikut bergeser.
 - Platform yang diuji: render headless 1920/2160/2340/2400 x 1080; belum diuji di perangkat nyata.
 - Hasil tes: 6 suite 0 gagal.
+
+## 2026-11-15 - HUD memakai 5 aset final dari desain user + tata letak HUD responsif
+- File: assets/hud/{cluster,pill,pillgear,tile,panel}.png, scripts/game_data.gd, scripts/screens/gameplay_scene_screen.gd, tests/responsive_layout_test.gd, docs/CHANGELOG.md
+- Isi: gambar HUD prosedural sementara diganti aset asli (lencana+strip, pil, pil+tombol jeda, kotak, panel). HUD kiri/kanan menempel ke tepi area aman; pada layar sempit (16:9) HUD diperkecil (f=0.84) agar tidak menabrak emblem tengah, makin lebar makin besar hingga ukuran penuh (f=1 di 19.5:9 dan 20:9). Pil kini: Waktu, Target (kiri), Hasil, Koin+Jeda (kanan). Area ketuk min 44 px.
+- Tes baru: HUD tidak saling bertumpuk, tidak menabrak emblem, panel tidak menutupi gelembung pelanggan ke-4.
+- Platform yang diuji: render headless 1920/2160/2340/2400 x 1080; belum diuji di perangkat nyata.
+- Hasil tes: 6 suite 0 gagal.
