@@ -42,6 +42,7 @@ const BUBBLE_WINDOW := 2   # ikon yang terlihat sekaligus di gelembung; sisanya 
 var jar: Dictionary = {"state": "empty", "t": 0.0, "dur": 0.0, "uses": 0}
 var jar_tex: Texture2D
 var alarm_tex: Texture2D             # ikon jam alarm timer memasak
+var fire_tex: Texture2D              # api: fase "akan gosong" dan gosong
 var alarm_ring_tex: Texture2D        # sprite sheet 8x8: cincin progres (64 langkah, putih, diwarnai saat digambar)
 var lock_tex: Texture2D              # ikon gembok slot terkunci (di-cache)
 var glass_tex: Array = []
@@ -91,6 +92,7 @@ func _ready() -> void:
 	lock_tex = load("res://assets/ui/gembok.png")
 	alarm_tex = load("res://assets/ui/alarm.png")
 	alarm_ring_tex = load("res://assets/ui/alarm_ring.png")
+	fire_tex = load("res://assets/ui/api.png")
 	ting_player = AudioStreamPlayer.new()
 	ting_player.stream = load("res://assets/audio/ting.wav")
 	ting_player.volume_db = -4.0
@@ -603,7 +605,8 @@ func _on_fx_draw() -> void:
 
 
 ## Timer memasak: jam alarm di kanan-atas alat. Cincin terisi searah jarum jam (hijau -> kuning -> merah).
-## Saat matang jam goyang sekali searah irama "ting" (amplitudo meredam), lalu memudar.
+## Saat matang jam goyang sekali searah irama "ting" (amplitudo meredam), lalu diganti api yang
+## makin besar mendekati gosong; saat gosong api menyala penuh sampai masakan dibuang.
 func _draw_timers(s: float) -> void:
 	var asz: Vector2 = alarm_tex.get_size()
 	var h: float = ALARM_H * s
@@ -613,47 +616,61 @@ func _draw_timers(s: float) -> void:
 			continue
 		for slot in appliances[kind]:
 			var st: String = slot["state"]
-			var p := 0.0
-			var rot := 0.0
-			var alpha := 1.0
-			var burn_phase := false
-			if st == "cooking":
-				p = clampf(float(slot["t"]) / maxf(float(slot["dur"]), 0.01), 0.0, 1.0)
-			elif st == "ready" and slot.has("ring"):
-				var t: float = float(slot["ring"])
-				p = 1.0
-				rot = sin(t * TAU * 7.0) * deg_to_rad(20.0) * exp(-t * 4.5)   # goyang cepat, meredam bersama ting
-			elif st == "ready" and GameData.RECIPES[slot["dish"]].get("burns", true):
-				# fase gosong: cincin terisi lagi (kuning-jingga -> merah tua) sampai gosong
-				burn_phase = true
-				p = clampf(float(slot["t"]) / BURN_WINDOW, 0.0, 1.0)
-			elif st == "burnt" and slot.has("bring"):
-				var t2: float = float(slot["bring"])
-				burn_phase = true
-				p = 1.0
-				rot = sin(t2 * TAU * 5.0) * deg_to_rad(24.0) * exp(-t2 * 3.5)    # goyang lebih berat dari "ting"
-				alpha = clampf((DING_SHAKE - t2) / 0.25, 0.0, 1.0)
-			else:
-				continue
 			var base: Vector2 = slot["pos"]
 			var r: float = float(slot["r"])
 			var c: Vector2 = _m(base + Vector2(r * 0.85, -r * 0.5))
-			fx.draw_set_transform(c, rot, Vector2.ONE)
-			var rect := Rect2(Vector2(-w, -h) * 0.5, Vector2(w, h))
-			fx.draw_texture_rect(alarm_tex, rect, false, Color(1, 1, 1, alpha))
-			var step: int = clampi(int(ceil(p * ALARM_STEPS)) - 1, 0, ALARM_STEPS - 1)
-			var src := Rect2(Vector2(step % 8, step / 8) * asz, asz)
-			var col: Color = Color(0.35, 0.85, 0.3).lerp(Color(1.0, 0.85, 0.2), smoothstep(0.0, 0.6, p))
-			col = col.lerp(Color(1.0, 0.3, 0.2), smoothstep(0.6, 1.0, p))
-			if burn_phase:
-				col = Color(1.0, 0.62, 0.1).lerp(Color(0.5, 0.04, 0.04), smoothstep(0.0, 1.0, p))
-				if p > 0.75 and p < 1.0:
-					col = col.lerp(Color(1, 0.2, 0.1), 0.5 + 0.5 * sin(pulse * 16.0))   # berkedip cepat mendekati gosong
-			col.a = alpha
-			if p > 0.0:
-				fx.draw_texture_rect_region(alarm_ring_tex, rect, src, col)
-			fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			if st == "cooking" or (st == "ready" and slot.has("ring")):
+				var p := 1.0
+				var rot := 0.0
+				var alpha := 1.0
+				if st == "cooking":
+					p = clampf(float(slot["t"]) / maxf(float(slot["dur"]), 0.01), 0.0, 1.0)
+				else:
+					var t: float = float(slot["ring"])
+					rot = sin(t * TAU * 7.0) * deg_to_rad(20.0) * exp(-t * 4.5)   # goyang cepat, meredam bersama ting
+					alpha = clampf((DING_SHAKE - t) / 0.25, 0.0, 1.0)
+				fx.draw_set_transform(c, rot, Vector2.ONE)
+				var rect := Rect2(Vector2(-w, -h) * 0.5, Vector2(w, h))
+				fx.draw_texture_rect(alarm_tex, rect, false, Color(1, 1, 1, alpha))
+				var step: int = clampi(int(ceil(p * ALARM_STEPS)) - 1, 0, ALARM_STEPS - 1)
+				var src := Rect2(Vector2(step % 8, step / 8) * asz, asz)
+				var col: Color = Color(0.35, 0.85, 0.3).lerp(Color(1.0, 0.85, 0.2), smoothstep(0.0, 0.6, p))
+				col = col.lerp(Color(1.0, 0.3, 0.2), smoothstep(0.6, 1.0, p))
+				col.a = alpha
+				if p > 0.0:
+					fx.draw_texture_rect_region(alarm_ring_tex, rect, src, col)
+				fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			elif (st == "ready" and GameData.RECIPES[slot["dish"]].get("burns", true)) or st == "burnt":
+				_draw_fire(slot, c, s)
 
+
+## Api animasi (kedip, meliuk): kecil lalu makin besar selama fase "akan gosong"; penuh + hentakan saat gosong.
+func _draw_fire(slot: Dictionary, c: Vector2, s: float) -> void:
+	var fsz: Vector2 = fire_tex.get_size()
+	var ph: float = float(int(slot["idx"]) * 7 + String(slot["kind"]).length() * 3)
+	var scl := 1.0
+	var alpha := 1.0
+	var speed := 1.0
+	if slot["state"] == "ready":
+		var p: float = clampf(float(slot["t"]) / BURN_WINDOW, 0.0, 1.0)
+		scl = lerpf(0.55, 1.05, p)
+		speed = lerpf(1.0, 1.8, p)
+		alpha = clampf((float(slot["t"]) - DING_SHAKE) / 0.25, 0.0, 1.0)   # muncul setelah jam alarm selesai goyang
+	else:
+		scl = 1.2
+		speed = 2.0
+		if slot.has("bring"):
+			scl *= 1.0 + 0.35 * exp(-float(slot["bring"]) * 5.0)   # hentakan saat baru gosong
+	var tm: float = pulse * speed + ph
+	var sy: float = 1.0 + 0.10 * sin(tm * 13.0) + 0.05 * sin(tm * 21.0)
+	var sx: float = 1.0 - 0.06 * sin(tm * 11.0)
+	var rot: float = deg_to_rad(5.0) * sin(tm * 7.0)
+	var fh: float = ALARM_H * 1.15 * s * scl
+	var fw: float = fh * fsz.x / fsz.y
+	var anchor: Vector2 = c + Vector2(0.0, ALARM_H * 0.5 * s)   # pangkal api di bawah titik timer
+	fx.draw_set_transform(anchor, rot, Vector2(sx, sy))
+	fx.draw_texture_rect(fire_tex, Rect2(Vector2(-fw * 0.5, -fh), Vector2(fw, fh)), false, Color(1, 1, 1, alpha))
+	fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # Teks HUD di atas bingkai kosong pada latar. Hanya data yang benar-benar ada di game.
 func _text_at(pos: Vector2, txt: String, fs: int, col: Color, align: int = 0) -> void:

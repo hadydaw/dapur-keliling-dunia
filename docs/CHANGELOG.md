@@ -273,3 +273,8 @@
 - File: assets/audio/gosong.wav (baru, dibuat sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: setelah matang dan tidak diambil, jam alarm tetap tampil dengan cincin terisi lagi (jingga -> merah tua, berkedip mendekati gosong) selama BURN_WINDOW. Saat gosong: bunyi gosong (nada turun, beda dari "ting") + jam goyang lebih berat lalu memudar. Mekanik gosong tidak berubah.
 - Hasil tes: gameplay_scene, responsive_layout, gameplay 0 gagal; kualitas bunyi belum didengar di perangkat.
+
+## 2026-11-15 - Api menggantikan jam alarm pada fase "akan gosong"
+- File: assets/ui/api.png (baru, dari user), scripts/screens/gameplay_scene_screen.gd (_draw_fire)
+- Perubahan: setelah matang jam alarm goyang sekali ("ting"), lalu diganti api animasi (kedip, meliuk) yang makin besar dan cepat sampai gosong; saat gosong api penuh + hentakan, tetap menyala sampai dibuang. Cincin fase gosong dihapus. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene, responsive_layout, gameplay 0 gagal; render diperiksa.
