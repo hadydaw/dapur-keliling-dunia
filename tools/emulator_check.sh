@@ -8,6 +8,9 @@ mkdir -p shots
 adb wait-for-device
 adb shell wm size ${W}x${H}
 adb shell wm density 420
+# tutup dialog sistem "Viewing full screen" (mode imersif) agar tangkapan layar menampilkan game
+adb shell settings put secure immersive_mode_confirmations confirmed
+adb shell settings put secure immersive_mode_confirmations "*" || true
 echo "== perangkat: Android API $(adb shell getprop ro.build.version.sdk), ABI $(adb shell getprop ro.product.cpu.abi), layar $(adb shell wm size | tr '\n' ' ')"
 
 echo "== pasang APK"
