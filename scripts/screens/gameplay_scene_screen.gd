@@ -653,19 +653,19 @@ func _draw_fire(slot: Dictionary, c: Vector2, s: float) -> void:
 	var speed := 1.0
 	if slot["state"] == "ready":
 		var p: float = clampf(float(slot["t"]) / BURN_WINDOW, 0.0, 1.0)
-		scl = lerpf(0.55, 1.05, p)
+		scl = lerpf(0.5, 1.0, p)
 		speed = lerpf(1.0, 1.8, p)
 		alpha = clampf((float(slot["t"]) - DING_SHAKE) / 0.25, 0.0, 1.0)   # muncul setelah jam alarm selesai goyang
 	else:
-		scl = 1.2
+		scl = 1.0
 		speed = 2.0
 		if slot.has("bring"):
-			scl *= 1.0 + 0.35 * exp(-float(slot["bring"]) * 5.0)   # hentakan saat baru gosong
+			scl *= 1.0 + 0.15 * exp(-float(slot["bring"]) * 5.0)   # hentakan saat baru gosong
 	var tm: float = pulse * speed + ph
 	var sy: float = 1.0 + 0.10 * sin(tm * 13.0) + 0.05 * sin(tm * 21.0)
 	var sx: float = 1.0 - 0.06 * sin(tm * 11.0)
 	var rot: float = deg_to_rad(5.0) * sin(tm * 7.0)
-	var fh: float = ALARM_H * 1.15 * s * scl
+	var fh: float = ALARM_H * s * scl          # tinggi maksimum = tinggi ikon alarm
 	var fw: float = fh * fsz.x / fsz.y
 	var anchor: Vector2 = c + Vector2(0.0, ALARM_H * 0.5 * s)   # pangkal api di bawah titik timer
 	fx.draw_set_transform(anchor, rot, Vector2(sx, sy))
