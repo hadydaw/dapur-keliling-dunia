@@ -98,8 +98,10 @@ func _ready() -> void:
 	_check(g.jar["state"] == "full" and g.jar["uses"] == GameData.JAR_CAPACITY, "dispenser penuh setelah waktu isi")
 	await _tap_ingredient(g, "es")
 	_check(g.jar["state"] == "full", "ketuk es saat penuh: tidak mengulang")
+	var pour_before: int = g.pour_count
 	await _tap_dispenser(g)
 	_check(g.appliances["dispenser"][0]["state"] == "cooking", "ketuk dispenser sekali: gelas pertama terisi (timer)")
+	_check(g.pour_count == pour_before + 1 and g.pour_players[0].playing, "suara menuang es teh berbunyi sekali saat gelas mulai terisi")
 	_check(g.appliances["dispenser"][1]["state"] == "empty", "gelas kedua tetap kosong")
 	_check(g.jar["uses"] == GameData.JAR_CAPACITY - 1, "satu porsi terpakai")
 	g._update_slots(3.5)

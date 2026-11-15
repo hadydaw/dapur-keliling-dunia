@@ -19,6 +19,9 @@ var ting_player: AudioStreamPlayer   # bel "ting" saat masakan matang
 var ting_count: int = 0
 var burn_player: AudioStreamPlayer   # bunyi gosong (beda dari "ting")
 var burn_count: int = 0
+var pour_players: Array = []         # suara menuang es teh ke gelas (satu pemain per gelas)
+var pour_count: int = 0
+const POUR_LENGTH := 2.6      # panjang tuang_es.wav (detik)
 var art_tex: Dictionary = {}         # dish -> state -> Array[Texture2D] (potongan tahap masakan)
 var icon_tex: Dictionary = {}        # id hidangan -> Texture2D ikon (di-cache, jangan load tiap frame)
 var cust_fx: Control                 # lapisan pelanggan (di belakang konter)
@@ -98,6 +101,12 @@ func _ready() -> void:
 	ting_player.stream = load("res://assets/audio/ting.wav")
 	ting_player.volume_db = -4.0
 	add_child(ting_player)
+	for i in 3:
+		var pp := AudioStreamPlayer.new()
+		pp.stream = load("res://assets/audio/tuang_es.wav")
+		pp.volume_db = -5.0
+		add_child(pp)
+		pour_players.append(pp)
 	burn_player = AudioStreamPlayer.new()
 	burn_player.stream = load("res://assets/audio/gosong.wav")
 	burn_player.volume_db = -3.0
@@ -419,6 +428,7 @@ func _on_dispenser() -> void:
 			slot["dish"] = "es_teh"
 			slot["t"] = 0.0
 			slot["dur"] = float(GameData.DISHES["es_teh"]["cook"]) * GameState.cook_mult()
+			_pour_sound(int(slot["idx"]), float(slot["dur"]))
 			jar["uses"] = int(jar["uses"]) - 1
 			if int(jar["uses"]) <= 0:
 				jar["state"] = "empty"
@@ -521,6 +531,14 @@ func _update_slots(delta: float) -> void:
 						slot["bring"] = float(slot["bring"]) + delta
 						if float(slot["bring"]) > DING_SHAKE:
 							slot.erase("bring")
+
+
+## Suara menuang es teh ke gelas; kecepatan diatur agar panjangnya sama dengan waktu isi gelas.
+func _pour_sound(idx: int, dur: float) -> void:
+	pour_count += 1
+	var pp: AudioStreamPlayer = pour_players[clampi(idx, 0, pour_players.size() - 1)]
+	pp.pitch_scale = clampf(POUR_LENGTH / maxf(dur, 0.1), 0.7, 1.6)
+	pp.play()
 
 
 func _burn_sound() -> void:

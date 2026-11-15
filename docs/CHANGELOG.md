@@ -278,3 +278,8 @@
 - File: assets/ui/api.png (baru, dari user), scripts/screens/gameplay_scene_screen.gd (_draw_fire)
 - Perubahan: setelah matang jam alarm goyang sekali ("ting"), lalu diganti api animasi (kedip, meliuk) yang makin besar dan cepat sampai gosong; saat gosong api penuh + hentakan, tetap menyala sampai dibuang. Cincin fase gosong dihapus. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene, responsive_layout, gameplay 0 gagal; render diperiksa.
+
+## 2026-11-15 - Suara menuang es teh ke gelas
+- File: assets/audio/tuang_es.wav (baru, sintetis), scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
+- Perubahan: saat gelas mulai terisi dari dispenser terdengar suara air dituang (nada naik, gemericik + denting es). Kecepatan diatur agar panjangnya sama dengan waktu isi gelas; satu pemain suara per gelas supaya bisa tumpang tindih. Mekanik tidak berubah.
+- Hasil tes: gameplay_scene 0 gagal; kualitas suara belum didengar di perangkat.
