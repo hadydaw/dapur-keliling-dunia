@@ -333,3 +333,8 @@
 - File: scripts/screens/gameplay_scene_screen.gd, tests/gameplay_scene_test.gd
 - Perubahan: saat sate ayam atau ikan bakar dibakar di panggangan, permukaan masakan sesekali meletup (kilatan kecil lalu beberapa tetes minyak keemasan terlempar naik dan jatuh). Titik, waktu, dan arahnya acak per petak dan per letupan; ikan lebih berminyak (lebih banyak dan lebih besar). Hanya aktif selama fase memasak; berhenti saat matang/gosong dan saat jeda. Mekanik tidak berubah.
 - Hasil tes: gameplay_scene 0 gagal; tampilan diperiksa lewat render beberapa frame; gerak animasi belum dilihat di perangkat.
+
+## 2026-11-15 - Musik latar: menu, Indonesia (gamelan), dan umum
+- File: scripts/music.gd (autoload `Music`, baru), project.godot, scripts/main.gd, assets/audio/musik_menu.wav, musik_indonesia.wav, musik_umum.wav (baru, sintetis), tools/gen_music.py (pembuat lagu), tests/music_test.gd/.tscn (baru)
+- Perubahan: tiga lagu orisinal berulang 32 detik. Menu (semua layar di luar permainan): hangat dan tenang (petikan gitar, kalimba, pad). Level Warung Nusantara: gamelan slendro tempo lancaran (saron, peking, bonang, kenong, kempul, gong, kendang, suling). Level area lain: riang (marimba, bass, perkusi). Pindah lagu dengan crossfade 0,7 dtk; lagu menu tidak mulai ulang saat pindah antar layar menu; musik berhenti sementara saat aplikasi di latar belakang. Volume musik -9 dB agar efek suara tetap menonjol. Mekanik tidak berubah.
+- Hasil tes: music_test 0 gagal (lagu per layar, loop, panjang). Kualitas dan rasa musik belum didengar di perangkat; belum ada pengaturan untuk mematikan musik.

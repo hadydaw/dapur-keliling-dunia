@@ -45,6 +45,7 @@ func _go(screen: String, params: Dictionary) -> void:
 		_:
 			push_error("Layar tidak dikenal: " + screen)
 			return
+	Music.play(Music.track_for(screen, params))
 	s.setup(params)
 	s.navigate.connect(_go)
 	if current != null:
