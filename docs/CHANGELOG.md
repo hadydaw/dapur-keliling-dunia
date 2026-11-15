@@ -258,3 +258,8 @@
 - File: assets/ui/gembok.png (baru), scripts/screens/gameplay_scene_screen.gd
 - Alasan: bayangan hitam pada slot terkunci diganti ikon gembok emas (aset dari user).
 - Hasil tes: responsive_layout, gameplay_scene, gameplay 0 gagal; render 20:9 diperiksa.
+
+## 2026-11-15 - Gembok dipusatkan di tiap slot (latar lebar)
+- File: scripts/game_data.gd (titik slot SCENES_WIDE), scripts/screens/gameplay_scene_screen.gd (ukuran gembok)
+- Alasan: gembok tidak tepat di tengah panggangan/mangkuk/wajan/panci; titik slot diukur ulang dari gambar.
+- Hasil tes: responsive_layout, gameplay_scene, gameplay 0 gagal; render 20:9 diperiksa.
