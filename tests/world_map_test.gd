@@ -58,16 +58,19 @@ func _ready() -> void:
 		_tap(c.global_position + c.size * 0.5)
 		await _frames()
 		_check(_scr() == "world_map_screen.gd", "area %d terkunci: tidak masuk" % i)
-		_check(main.current.toast_label.text.begins_with("Kumpulkan"), "area %d terkunci: pesan bintang tampil" % i)
+		_check(main.current.toast_label.text.begins_with("Selesaikan Level 50"), "area %d terkunci: pesan syarat level 50 tampil" % i)
 	# beri bintang -> terbuka
-	for l in 5:
+	for l in 49:
 		GameState.finish_level("indonesia", l, 3, 0)
+	_check(not GameState.area_unlocked(1), "level 1-49 selesai (147 bintang): Meksiko masih terkunci")
+	GameState.finish_level("indonesia", 49, 1, 0)
+	_check(GameState.area_unlocked(1) and not GameState.area_unlocked(2), "level 50 selesai: Meksiko terbuka, Jepang masih terkunci")
 	for i in [1]:
 		await _open()
 		var c: Control = main.current.columns[i]
 		_tap(c.global_position + c.size * 0.5)
 		await _frames()
-		_check(_scr() == "level_select_screen.gd", "setelah 15 bintang, Meksiko terbuka -> pilih level")
+		_check(_scr() == "level_select_screen.gd", "setelah level 50 selesai, Meksiko terbuka -> pilih level")
 	# tombol atas
 	for pair in [["recipes", "recipe_book_screen.gd"], ["shop", "shop_screen.gd"], ["menu", "menu_screen.gd"]]:
 		await _open()

@@ -91,7 +91,7 @@ func _build_area(i: int) -> void:
 	plate.modulate = Color.WHITE if unlocked else Color(0.6, 0.6, 0.62)
 	var name_l := UI.label(a["name"] if unlocked else "Terkunci", 24, Color(1, 0.93, 0.7), HORIZONTAL_ALIGNMENT_CENTER)
 	name_l.name = "Nama"
-	var count_text: String = "%d / %d" % [GameState.area_stars(i), GameData.LEVELS_PER_AREA * 3] if unlocked else "Butuh %d" % int(a["stars_needed"])
+	var count_text: String = "%d / %d" % [GameState.area_stars(i), GameData.LEVELS_PER_AREA * 3] if unlocked else "Terkunci"
 	var count_l := UI.label(count_text, 22, Color(1, 0.88, 0.4) if unlocked else Color(0.85, 0.85, 0.85), HORIZONTAL_ALIGNMENT_LEFT)
 	for l in [name_l, count_l]:
 		l.add_theme_color_override("font_outline_color", Color(0.12, 0.04, 0.02))
@@ -272,8 +272,7 @@ func _on_area(i: int) -> void:
 	if GameState.area_unlocked(i):
 		navigate.emit("level_select", {"area": i})
 	else:
-		var need: int = int(GameData.AREAS[i]["stars_needed"]) - GameState.total_stars()
-		_toast("Kumpulkan %d bintang lagi untuk membuka" % need)
+		_toast("Selesaikan Level %d di %s dulu" % [GameData.LEVELS_PER_AREA, GameData.AREAS[i - 1]["name"]])
 
 
 func _toast(msg: String) -> void:

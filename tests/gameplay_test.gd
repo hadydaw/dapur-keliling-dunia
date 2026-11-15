@@ -140,7 +140,7 @@ func _ready() -> void:
 		_check(got == int(case[1]), "bintang %d untuk pendapatan %d dari target %d (dapat %d)" % [case[1], g.earned, target, got])
 	_check(GameState.level_unlocked(0, 1) or GameState.coins > 0, "selesai level 1 membuka level 2 / menambah koin")
 
-	# --- 9. simulasi bot: seimbangkah target 20 level? ---
+	# --- 9. simulasi bot: seimbangkah target 200 level? (gagal bila bot ideal tak mencapai target) ---
 	print("--- Simulasi bot (pemain ideal, jeda reaksi 0,6 dtk), 3 percobaan per level ---")
 	for a in GameData.AREAS.size():
 		for lv in GameData.LEVELS_PER_AREA:
@@ -152,6 +152,8 @@ func _ready() -> void:
 			var tgt: int = int(res[0]["target"])
 			for r in res:
 				avg += float(r["earned"]) / 3.0
+			if avg < float(tgt):
+				_check(false, "balance: bot ideal tidak mencapai target %s L%d (%d dari %d)" % [GameData.AREAS[a]["name"], lv + 1, int(avg), tgt])
 			print("%-9s L%d  target %4d | bot rata2 %4d (%3d%% target)" % [GameData.AREAS[a]["name"], lv + 1, tgt, int(avg), int(100.0 * avg / tgt)])
 	print("TOTAL GAGAL: %d" % fails)
 	get_tree().quit(1 if fails > 0 else 0)

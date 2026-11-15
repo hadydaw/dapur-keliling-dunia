@@ -1,7 +1,10 @@
 extends RefCounted
 ## Data statis: hidangan, area, dan parameter level. Konten ditambah lewat data di sini.
 
-const LEVELS_PER_AREA := 5
+const LEVELS_PER_AREA := 50
+const TARGET_FACTOR_START := 0.55  # pengali target di level 1
+const TARGET_FACTOR_END := 0.80    # di level 50 (area lebih akhir sedikit lebih rendah, lihat level_params)
+const BOSS_EVERY := 10          # level bos: tiap kelipatan 10 (10, 20, 30, 40, 50)
 
 const DISHES := {
 	"es_teh": {"name": "Es Teh Manis", "station": "Dispenser", "cook": 3.0, "price": 15, "color": "c98b3c", "icon": "res://assets/icons/es_teh.png"},
@@ -27,13 +30,13 @@ const DISHES := {
 }
 
 const AREAS := [
-	{"id": "indonesia", "name": "Warung Nusantara", "place": "Indonesia", "color": "c0392b", "stars_needed": 0,
+	{"id": "indonesia", "name": "Warung Nusantara", "place": "Indonesia", "color": "c0392b",
 		"dishes": ["es_teh", "nasi_goreng", "sate_ayam", "soto_ayam", "ikan_bakar"]},
-	{"id": "meksiko", "name": "Cantina Fiesta", "place": "Meksiko", "color": "d35400", "stars_needed": 6,
+	{"id": "meksiko", "name": "Cantina Fiesta", "place": "Meksiko", "color": "d35400",
 		"dishes": ["limonada", "taco", "burrito", "quesadilla"]},
-	{"id": "jepang", "name": "Kedai Sakura", "place": "Jepang", "color": "c2185b", "stars_needed": 14,
+	{"id": "jepang", "name": "Kedai Sakura", "place": "Jepang", "color": "c2185b",
 		"dishes": ["teh_hijau", "onigiri", "tempura", "ramen"]},
-	{"id": "prancis", "name": "Bistro Menara", "place": "Prancis", "color": "2e5eaa", "stars_needed": 24,
+	{"id": "prancis", "name": "Bistro Menara", "place": "Prancis", "color": "2e5eaa",
 		"dishes": ["kopi_susu", "crepe", "croissant", "sup_bawang"]},
 ]
 
@@ -256,27 +259,49 @@ static func scene_for(area_id: String, aspect: float) -> Dictionary:
 	return s
 
 
+static func is_boss(level: int) -> bool:
+	return (level + 1) % BOSS_EVERY == 0
+
+
+## Kemajuan 0..1 di dalam satu area (level 1 = 0, level 50 = 1).
+static func level_progress(level: int) -> float:
+	return clampf(float(level) / float(LEVELS_PER_AREA - 1), 0.0, 1.0)
+
+
+## Parameter level: menu dibuka bertahap, pelanggan makin banyak/cepat/tidak sabar; level bos lebih berat.
 static func level_params(area_idx: int, level: int) -> Dictionary:
 	var area: Dictionary = AREAS[area_idx]
-	var g: int = area_idx * LEVELS_PER_AREA + level
 	var all_dishes: Array = area["dishes"]
-	var n: int = clampi(2 + level / 2, 2, all_dishes.size())
-	if all_dishes.size() >= 5 and level >= LEVELS_PER_AREA - 1:
-		n = all_dishes.size()  # menu kelima dibuka di level terakhir
+	var p: float = level_progress(level)
+	var boss: bool = is_boss(level)
+	var n: int = clampi(2 + level / 12, 2, all_dishes.size())   # menu ke-3 di level 13, ke-4 di 25, ke-5 di 37
 	var ids: Array = all_dishes.slice(0, n)
 	var total_price := 0.0
 	for id in ids:
 		total_price += float(DISHES[id]["price"])
 	var avg: float = total_price / float(n)
-	var duration: float = 75.0 + level * 5.0
-	var interval: float = maxf(4.5, 9.0 - g * 0.2)
+	var duration: float = 75.0 + 40.0 * p + 5.0 * area_idx
+	var interval: float = lerpf(9.0 - 0.7 * area_idx, 4.8 - 0.2 * area_idx, p)
+	var patience: float = lerpf(42.0 - 2.0 * area_idx, 26.0 - 1.5 * area_idx, p)
+	var max_c: int = 3
+	if area_idx == 0 and level < 6:
+		max_c = 2
+	elif level >= 20:
+		max_c = 4
+	var factor: float = lerpf(TARGET_FACTOR_START, TARGET_FACTOR_END - 0.05 * area_idx, p)
+	if boss:
+		duration *= 1.15
+		interval *= 0.8
+		patience *= 0.9
+		factor *= lerpf(1.35, 1.10, p)   # target bos lebih tinggi, tapi tidak melampaui kemampuan di level akhir
 	var expected: float = duration / interval
-	var target: int = int(round(avg * 1.4 * expected * 0.55 / 10.0)) * 10
+	var target: int = int(round(avg * 1.4 * expected * factor / 10.0)) * 10
 	return {
 		"dishes": ids,
 		"duration": duration,
 		"spawn_interval": interval,
 		"target": target,
-		"patience": maxf(22.0, 42.0 - g * 0.9),
-		"max_customers": 3 if g < 8 else 4,
+		"patience": maxf(18.0, patience),
+		"max_customers": max_c,
+		"boss": boss,
 	}

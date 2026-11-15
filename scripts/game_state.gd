@@ -46,8 +46,12 @@ func total_stars() -> int:
 	return total
 
 
+## Area pertama selalu terbuka; area berikutnya terbuka setelah level terakhir area sebelumnya selesai.
 func area_unlocked(area_idx: int) -> bool:
-	return total_stars() >= int(GameData.AREAS[area_idx]["stars_needed"])
+	if area_idx <= 0:
+		return true
+	var prev: String = GameData.AREAS[area_idx - 1]["id"]
+	return get_stars(prev, GameData.LEVELS_PER_AREA - 1) >= 1
 
 
 func level_unlocked(area_idx: int, level: int) -> bool:

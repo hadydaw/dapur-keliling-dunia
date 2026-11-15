@@ -174,8 +174,10 @@ func _ready() -> void:
 	_check(g.appliances["grill"][0]["state"] == "empty", "ikan belum dibuka di level 1: tidak memasak")
 
 	# --- level terakhir membuka ikan bakar ---
-	g = await _open(4)
-	_check(g.dishes.has("ikan_bakar") and g.dishes.size() == 5, "level 5 membuka 5 menu termasuk ikan bakar")
+	g = await _open(35)
+	_check(not g.dishes.has("ikan_bakar") and g.dishes.size() == 4, "level 36 masih 4 menu (ikan bakar belum dibuka)")
+	g = await _open(36)
+	_check(g.dishes.has("ikan_bakar") and g.dishes.size() == 5, "level 37 membuka 5 menu termasuk ikan bakar")
 	await _tap_ingredient(g, "ikan")
 	_check(g.appliances["grill"][0]["state"] == "cooking" and g.appliances["grill"][0]["dish"] == "ikan_bakar", "ikan masuk panggangan")
 	_check(g.sizzle_count == 0, "ikan bakar tidak memakai suara desis sate")

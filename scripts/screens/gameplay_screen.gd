@@ -208,12 +208,14 @@ func _spawn_customer() -> void:
 	if slot_i < 0:
 		return
 	var count := 1
+	# rumus jumlah item lama dibuat untuk level 0..4; skala ke 50 level agar perilaku tetap sama
+	var lvl_k: float = float(level) * 4.0 / float(GameData.LEVELS_PER_AREA - 1)
 	if max_order_items <= 2:
-		if dishes.size() >= 2 and rng.randf() < 0.3 + level * 0.06:
+		if dishes.size() >= 2 and rng.randf() < 0.3 + lvl_k * 0.06:
 			count = 2
 	else:
 		# jumlah acak: tiap tambahan item punya peluang yang naik sedikit per level
-		var more: float = minf(0.35 + level * 0.04, 0.6)
+		var more: float = minf(0.35 + lvl_k * 0.04, 0.6)
 		while count < max_order_items and rng.randf() < more:
 			count += 1
 	var items: Array = []
